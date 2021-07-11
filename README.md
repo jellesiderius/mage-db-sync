@@ -3,7 +3,6 @@ This tool downloads Magento databases and imports it for development purposes
 
 ### Requirements
 - NodeJS
-- Composer
 - PHP
 - Magerun
 - Magerun2
