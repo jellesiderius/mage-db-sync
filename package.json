@@ -3,9 +3,7 @@
   "version": "0.0.1",
   "description": "Database synchronizer for Magento, based on Magerun",
   "author": {
-    "name": "Jelle Siderius",
-    "email": "jelle@hypershop.nl",
-    "url": "https://www.hypershop.nl"
+    "name": "Jelle Siderius"
   },
   "main": "./src/mage-db-sync.js",
   "bin": {
