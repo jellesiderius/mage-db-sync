@@ -19,7 +19,7 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 ### Configuring databases
 in the files `config/databases/production.json` and `config/databases/staging.json` all the databases are configured. These files must contain the following placeholders:
 
-- `username-1-placeholder` can be replaced with a name by choice, this is used as the username in the `scraper --username` command (Required)
+- `username-1-placeholder` can be replaced with a name by choice, this is used as a key for the tool (Required)
 - `username` is the ssh username to log in to the server (Required)
 - `password` is the ssh password that goes with the ssh username. (Optional if you use SSH keys to login)
 - `server` is the server to log in to (Required)
@@ -31,6 +31,7 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 - The import function does only show "yes" when you're current directory is a Magento installed directory or if a local project folder is set in the database json file
 - Tool requires `magerun / magerun2` command to be globally available in shell
 - Everything is developed/tested with Magerun2 version 4.7.0
+- Wordpress import is currently experimental
 
 ### TODO
 - Elasticsearch for amasty / mirasvit compatibility
