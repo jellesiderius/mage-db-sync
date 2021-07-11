@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "commonjs",
+      "lib": [
+        "es6",
+        "es2015",
+        "dom"
+      ],
+      "outDir": "dist",
+      "rootDir": "src",
+      "typeRoots": [
+        "./node_modules/@types",
+        "./src/types"
+      ],
+      "strict": true,
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "importHelpers": true,
+      "allowSyntheticDefaultImports": true,
+      "forceConsistentCasingInFileNames": true,
+      "moduleResolution": "node",
+      "pretty": true,
+      "sourceMap": true,
+      "allowJs": true,
+      "noEmit": false,
+      "watch": true
+    },
+    "include": [
+      "./src/**/*"
+    ],
+    "exclude": [
+      "node_modules",
+      "tests",
+      "dist"
+    ]
+  }

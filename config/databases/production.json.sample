@@ -1,0 +1,13 @@
+{
+    "databases": {
+        "username-1-placeholder": {
+            "username": "example",
+            "password": "",
+            "server": "example.io",
+            "domainFolder": "example.io",
+            "port": "2222",
+            "localProjectFolder": "",
+            "externalProjectFolder": ""
+        }
+    }
+}
