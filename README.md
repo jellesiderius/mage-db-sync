@@ -34,6 +34,9 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 
 ### TODO
 - Elasticsearch for amasty / mirasvit compatibility
+- Remove custom admin URL's (admin/url/use_custom & admin/url/use_custom_path)
+- For elasticsearch, replace the name with a random generated value
+- Before import functionality, check magerun version with -V 
 - Make PHP on server a setting in database configuration 
 - Make SSH username + password work
 - Tests on Magento 2.3.x
