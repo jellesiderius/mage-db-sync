@@ -5,6 +5,7 @@ This tool downloads Magento databases over SSH and imports it for development pu
 - NodeJS
 - PHP
 - Magerun2
+- WP CLI
 
 ### NOTES
 - The import function does only show "yes" when you're current directory is a Magento installed directory or if a local project folder is set in the database json file
@@ -33,8 +34,11 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options
 
 ### TODO
-- Elasticsearch for amasty / mirasvit compatibility
-- For elasticsearch, replace the name with a random generated value
-- Import Wordpress if project has it
+- Wordpress
+    - Make import not only work when subfolder is '/wp/'
+    - Create same admin user from settings.json
+- Elasticsearch
+    - Amasty / Mirasvit compatibility
+    - Replace the index name with a random generated value
 - Tests on Magento 2.3.x
 - Magento 1 compatibility

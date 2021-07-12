@@ -34,7 +34,8 @@ class MagentoController {
         this.ssh = new node_ssh_1.NodeSSH();
         this.strip = '';
         this.finalMessages = {
-            'databaseLocation': '',
+            'magentoDatabaseLocation': '',
+            'wordpressDatabaseLocation': '',
             'importDomain': ''
         };
         this.currentFolder = '';
@@ -47,6 +48,7 @@ class MagentoController {
             'database': ''
         };
         this.magerun2Version = '4.7.0';
+        this.magentoLocalhostDomainName = '';
         this.databaseTypeQuestions = [
             {
                 type: 'list',
@@ -80,17 +82,7 @@ class MagentoController {
                 validate: (input) => {
                     return input !== '';
                 }
-            },
-            {
-                type: 'list',
-                name: 'import',
-                default: 'yes',
-                message: 'Import database?',
-                choices: ['no'],
-                validate: (input) => {
-                    return false;
-                }
-            },
+            }
         ];
         // Starts the controller
         this.executeStart = (serviceName) => tslib_1.__awaiter(this, void 0, void 0, function* () {
@@ -136,10 +128,39 @@ class MagentoController {
             }
             // Set current folder name based on current folder
             this.currentFolderName = path.basename(path.resolve(this.currentFolder));
-            // Determine if current folder is possible and check if Magento is available
+            this.magentoLocalhostDomainName = this.currentFolderName + settings_json_1.default.general.localDomainExtension;
+            // Check if current folder is Magento
+            var currentFolderIsMagento = false;
             if (fs.existsSync(this.currentFolder + '/vendor/magento') || fs.existsSync(this.currentFolder + '/app/Mage.php')) {
+                currentFolderIsMagento = true;
+            }
+            // Determine if current folder is possible and check if Magento is available
+            if (currentFolderIsMagento) {
+                // Add import options
                 // @ts-ignore
-                this.databaseConfigurationQuestions[1].choices = ['yes', ...this.databaseConfigurationQuestions[1].choices];
+                this.databaseConfigurationQuestions.push({
+                    type: 'list',
+                    name: 'import',
+                    default: 'yes',
+                    message: 'Import Magento database?',
+                    choices: ['yes', 'no'],
+                    validate: (input) => {
+                        return false;
+                    },
+                });
+                if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
+                    // Add wordpress download and import option if server config has it
+                    this.databaseConfigurationQuestions.push({
+                        type: 'list',
+                        name: 'wordpressImport',
+                        default: 'yes',
+                        message: 'Download and import Wordpress database?',
+                        choices: ['yes', 'no'],
+                        validate: (input) => {
+                            return false;
+                        },
+                    });
+                }
             }
             yield inquirer_1.default
                 .prompt(this.databaseConfigurationQuestions)
@@ -289,6 +310,10 @@ class MagentoController {
                                                 if (entry.includes('DB_HOST')) {
                                                     this.wordpressConfig.host = self.wordpressReplaces(entry, `DB_HOST`);
                                                 }
+                                                // Get table prefix from config file
+                                                if (entry.includes('table_prefix')) {
+                                                    this.wordpressConfig.prefix = self.wordpressReplaces(entry, `table_prefix`);
+                                                }
                                             });
                                         }
                                     });
@@ -302,13 +327,14 @@ class MagentoController {
                                 // Download file and place it on localhost
                                 var localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
                                 yield this.ssh.getFile(localDatabaseLocation, self.serverVariables.databaseName + '.sql').then(function (Contents) {
-                                    self.finalMessages.databaseLocation = localDatabaseLocation;
+                                    self.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
                                 }, function (error) {
                                     throw new Error(error);
                                 });
                                 if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
                                     var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
                                     yield this.ssh.getFile(wordpresslocalDatabaseLocation, `${this.wordpressConfig.database}.sql`).then(function (Contents) {
+                                        self.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
                                     }, function (error) {
                                         throw new Error(error);
                                     });
@@ -332,8 +358,6 @@ class MagentoController {
                         },
                     ]),
                 });
-                // TODO: Magento 1 compatibility
-                // TODO: Import Wordpress file
                 if (answers.import && answers.import == 'yes') {
                     // Setup all import tasks and add to main list
                     tasks.add({
@@ -372,7 +396,7 @@ class MagentoController {
                                 })
                             },
                             {
-                                title: 'Removing SQL file from localhost',
+                                title: 'Cleaning up',
                                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                     // Remove local SQL file
                                     yield this.localhostMagentoRootExec('rm ' + self.serverVariables.databaseName + '.sql');
@@ -380,7 +404,6 @@ class MagentoController {
                             },
                         ]),
                     });
-                    // TODO: Magento 1 compatibility
                     // Configure magento tasks and add to main list
                     tasks.add({
                         title: 'Configure Magento for development usage',
@@ -393,7 +416,7 @@ class MagentoController {
                                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';";
                                     // Update queries
                                     var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';", dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';";
-                                    var baseUrl = 'http://' + this.currentFolderName + settings_json_1.default.general.localDomainExtension + '/';
+                                    var baseUrl = 'http://' + this.magentoLocalhostDomainName + '/';
                                     // Insert queries
                                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '0');";
                                     // Build up query
@@ -426,16 +449,22 @@ class MagentoController {
                                 })
                             },
                             {
-                                title: "Disabling Fishpig's Wordpress module",
+                                title: "Configuring Fishpig's Wordpress module",
                                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                                    var dbQuery = '';
-                                    // Remove queries
-                                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
-                                    // Insert commands
-                                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
-                                    // Build up query
-                                    dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
-                                    yield this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
+                                    // If wordpress is imported, we do nothing
+                                    if (answers.wordpressImport && answers.wordpressImport == 'yes') {
+                                        return;
+                                    }
+                                    else {
+                                        var dbQuery = '';
+                                        // Remove queries
+                                        var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
+                                        // Insert commands
+                                        var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
+                                        // Build up query
+                                        dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
+                                        yield this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
+                                    }
                                 })
                             },
                             {
@@ -469,6 +498,43 @@ class MagentoController {
                         ]),
                     });
                 }
+                if (answers.wordpressImport && answers.wordpressImport == 'yes') {
+                    // Setup all import tasks and add to main list
+                    tasks.add({
+                        title: 'Import Wordpress database',
+                        task: (ctx, task) => task.newListr([
+                            {
+                                title: 'Importing database',
+                                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                                    // Import SQL file to database
+                                    yield this.localhostMagentoRootExec(`mv ${this.wordpressConfig.database}.sql wp; cd wp; wp db import ${this.wordpressConfig.database}.sql`);
+                                })
+                            },
+                            {
+                                title: 'Configuring for development',
+                                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                                    // Retrieve current site URL from database
+                                    var wordpressUrl = yield this.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${self.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`);
+                                    // @ts-ignore
+                                    wordpressUrl = this.wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
+                                    // Replace options for localhost
+                                    yield this.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${self.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'${wordpressUrl}', '${this.magentoLocalhostDomainName}');"`);
+                                    yield this.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${self.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'https://', 'http://');"`);
+                                    // Replace blogs for localhost
+                                    yield this.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${self.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'${wordpressUrl}', '${this.magentoLocalhostDomainName}');"`);
+                                    yield this.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${self.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'https://', 'http://');"`);
+                                })
+                            },
+                            {
+                                title: 'Cleaning up',
+                                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                                    // Remove wordpress database from localhost
+                                    yield this.localhostMagentoRootExec(`cd wp; rm ${this.wordpressConfig.database}.sql`);
+                                })
+                            },
+                        ]),
+                    });
+                }
                 // Run all tasks
                 try {
                     yield tasks.run();
@@ -476,8 +542,16 @@ class MagentoController {
                     if (this.finalMessages.importDomain.length > 0) {
                         console_1.success(`Magento is successfully imported to localhost. ${this.finalMessages.importDomain} is now available`);
                     }
-                    else if (this.finalMessages.databaseLocation.length > 0) {
-                        console_1.success(`Downloaded database to: ${this.finalMessages.databaseLocation}`);
+                    else if (this.finalMessages.magentoDatabaseLocation.length > 0) {
+                        console_1.success(`Downloaded Magento database to: ${this.finalMessages.magentoDatabaseLocation}`);
+                        // Show wordpress download message if downloaded
+                        if (this.finalMessages.wordpressDatabaseLocation.length > 0 && answers.wordpressImport == 'no') {
+                            console_1.success(`Downloaded Wordpress database to: ${this.finalMessages.wordpressDatabaseLocation}`);
+                        }
+                    }
+                    // Show wordpress import message if imported
+                    if (answers.wordpressImport && answers.wordpressImport == 'yes') {
+                        console_1.success(`Wordpress is successfully imported to localhost.`);
                     }
                 }
                 catch (e) {
@@ -512,7 +586,7 @@ class MagentoController {
             return this.sshMagentoRootFolderPhpCommand(this.serverVariables.magerunFile + ' ' + command);
         };
         this.localhostMagentoRootExec = (command) => {
-            return this.execShellCommand(`cd ${this.currentFolder}; ${command}`);
+            return this.execShellCommand(`cd ${this.currentFolder}; ${command};`);
         };
         // Execute shell command with a Promise
         this.execShellCommand = (cmd) => {
@@ -559,7 +633,7 @@ class MagentoController {
             }
         };
         this.wordpressReplaces = (entry, text) => {
-            var replacedText = entry.replace(text, ''), replacedText = replacedText.replace(`,`, ''), replacedText = replacedText.replace(`DEFINE`, ''), replacedText = replacedText.replace(`define`, ''), replacedText = replacedText.replace(`(`, ''), replacedText = replacedText.replace(` `, ''), replacedText = replacedText.replace(`;`, ''), replacedText = replacedText.replace(`)`, ''), replacedText = replacedText.replace("'", '').replace(/'/g, '');
+            var replacedText = entry.replace(text, ''), replacedText = replacedText.replace(`,`, ''), replacedText = replacedText.replace(`DEFINE`, ''), replacedText = replacedText.replace(`define`, ''), replacedText = replacedText.replace(`(`, ''), replacedText = replacedText.replace(` `, ''), replacedText = replacedText.replace(`;`, ''), replacedText = replacedText.replace(`$`, ''), replacedText = replacedText.replace(`)`, ''), replacedText = replacedText.replace(`=`, ''), replacedText = replacedText.replace("'", '').replace(/'/g, '');
             return replacedText.trim();
         };
     }
