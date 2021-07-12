@@ -29,6 +29,7 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 - `localProjectFolder` is the local project folder (Optional)
 - `externalProjectFolder` is the external project folder (Optional)
 - `externalPhpPath` is the PHP path on the server, use this if the logged in user has a different PHP version than the server's PHP version (Optional)
+- `wordpress` can be set to `true/false` to synchronize wordpress database (Optional) [EXPERIMENTAL]
 
 ### Using this tool
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options

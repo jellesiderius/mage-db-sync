@@ -8,7 +8,8 @@
             "port": "2222",
             "localProjectFolder": "",
             "externalProjectFolder": "",
-            "externalPhpPath": ""
+            "externalPhpPath": "",
+            "wordpress": false
         }
     }
 }
