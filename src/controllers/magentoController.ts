@@ -29,7 +29,7 @@ class MagentoController {
     };
     private databaseType = '';
     private sshKeyLocation = '';
-    private localDatabaseFolderLocation = configFile.settings.databaseLocation
+    private localDatabaseFolderLocation = configFile.general.databaseLocation
     private ssh = new NodeSSH();
     private strip = '';
     private finalMessages = {
@@ -101,7 +101,7 @@ class MagentoController {
         clearConsole();
 
         // Fetch SSH key location
-        this.sshKeyLocation = configFile.settings.sshKeyLocation;
+        this.sshKeyLocation = configFile.ssh.keyLocation;
         if (!this.sshKeyLocation) {
             this.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
         }
@@ -214,7 +214,8 @@ class MagentoController {
                                             host: this.databaseData.server,
                                             username: this.databaseData.username,
                                             port: this.databaseData.port,
-                                            privateKey: this.sshKeyLocation
+                                            privateKey: this.sshKeyLocation,
+                                            passphrase: configFile.ssh.passphrase
                                         });
                                     }
                                 },
@@ -373,19 +374,19 @@ class MagentoController {
                                         title: 'Checking if config/settings.json is correctly filled',
                                         task: async (): Promise<void> => {
                                             // Lets make sure everything is filled in
-                                            if (configFile.settings.adminUsername.length == 0) {
+                                            if (configFile.magentoBackend.adminUsername.length == 0) {
                                                 throw new Error('Admin username is missing config/settings.json');
                                             }
 
-                                            if (configFile.settings.adminPassword.length == 0) {
+                                            if (configFile.magentoBackend.adminPassword.length == 0) {
                                                 throw new Error('Admin password is missing in config/settings.json');
                                             }
 
-                                            if (configFile.settings.localDomainExtension.length == 0) {
+                                            if (configFile.general.localDomainExtension.length == 0) {
                                                 throw new Error('Local domain extension is missing in config/settings.json');
                                             }
 
-                                            if (configFile.settings.elasticsearchPort.length == 0) {
+                                            if (configFile.general.elasticsearchPort.length == 0) {
                                                 throw new Error('ElasticSearch port is missing in config/settings.json');
                                             }
                                         }
@@ -442,7 +443,7 @@ class MagentoController {
                                             var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';",
                                                 dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
 
-                                            var baseUrl = 'http://' + this.currentFolderName + configFile.settings.localDomainExtension + '/';
+                                            var baseUrl = 'http://' + this.currentFolderName + configFile.general.localDomainExtension + '/';
 
                                             // Insert queries
                                             var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
@@ -477,7 +478,7 @@ class MagentoController {
                                             var dbQueryUpdate = "UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';";
 
                                             // Insert commands
-                                            var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '" + configFile.settings.elasticsearchPort + "');",
+                                            var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '" + configFile.general.elasticsearchPort + "');",
                                                 dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_index_prefix', '" + this.currentFolderName + "_development');",
                                                 dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'localhost');";
 
@@ -491,7 +492,7 @@ class MagentoController {
                                         title: 'Creating admin user',
                                         task: async (): Promise<void> => {
                                             // Create a new admin user
-                                            await this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.settings.adminUsername} --admin-password=${configFile.settings.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
+                                            await this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
                                         }
                                     },
                                     {

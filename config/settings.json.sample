@@ -1,10 +1,15 @@
 {
-  "settings": {
-    "sshKeyLocation": "",
+  "general": {
     "localDomainExtension": ".development",
     "elasticsearchPort": "9200",
-    "databaseLocation": "/Users/username/Databases",
-    "adminUsername": "username",
-    "adminPassword": "Magento2!"
+    "databaseLocation": "/Users/{username}/Databases"
+  },
+  "ssh": {
+    "keyLocation": "",
+    "passphrase": ""
+  },
+  "magentoBackend": {
+    "adminUsername": "admin",
+    "adminPassword": "Password1!"
   }
 }

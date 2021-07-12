@@ -30,7 +30,7 @@ class MagentoController {
         };
         this.databaseType = '';
         this.sshKeyLocation = '';
-        this.localDatabaseFolderLocation = settings_json_1.default.settings.databaseLocation;
+        this.localDatabaseFolderLocation = settings_json_1.default.general.databaseLocation;
         this.ssh = new node_ssh_1.NodeSSH();
         this.strip = '';
         this.finalMessages = {
@@ -96,7 +96,7 @@ class MagentoController {
             var self = this;
             console_1.clearConsole();
             // Fetch SSH key location
-            this.sshKeyLocation = settings_json_1.default.settings.sshKeyLocation;
+            this.sshKeyLocation = settings_json_1.default.ssh.keyLocation;
             if (!this.sshKeyLocation) {
                 this.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
             }
@@ -185,7 +185,8 @@ class MagentoController {
                                     host: this.databaseData.server,
                                     username: this.databaseData.username,
                                     port: this.databaseData.port,
-                                    privateKey: this.sshKeyLocation
+                                    privateKey: this.sshKeyLocation,
+                                    passphrase: settings_json_1.default.ssh.passphrase
                                 });
                             })
                         },
@@ -322,16 +323,16 @@ class MagentoController {
                                 title: 'Checking if config/settings.json is correctly filled',
                                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                     // Lets make sure everything is filled in
-                                    if (settings_json_1.default.settings.adminUsername.length == 0) {
+                                    if (settings_json_1.default.magentoBackend.adminUsername.length == 0) {
                                         throw new Error('Admin username is missing config/settings.json');
                                     }
-                                    if (settings_json_1.default.settings.adminPassword.length == 0) {
+                                    if (settings_json_1.default.magentoBackend.adminPassword.length == 0) {
                                         throw new Error('Admin password is missing in config/settings.json');
                                     }
-                                    if (settings_json_1.default.settings.localDomainExtension.length == 0) {
+                                    if (settings_json_1.default.general.localDomainExtension.length == 0) {
                                         throw new Error('Local domain extension is missing in config/settings.json');
                                     }
-                                    if (settings_json_1.default.settings.elasticsearchPort.length == 0) {
+                                    if (settings_json_1.default.general.elasticsearchPort.length == 0) {
                                         throw new Error('ElasticSearch port is missing in config/settings.json');
                                     }
                                 })
@@ -372,7 +373,7 @@ class MagentoController {
                                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';";
                                     // Update queries
                                     var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';", dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';";
-                                    var baseUrl = 'http://' + this.currentFolderName + settings_json_1.default.settings.localDomainExtension + '/';
+                                    var baseUrl = 'http://' + this.currentFolderName + settings_json_1.default.general.localDomainExtension + '/';
                                     // Insert queries
                                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '0');";
                                     // Build up query
@@ -391,7 +392,7 @@ class MagentoController {
                                     // Update queries
                                     var dbQueryUpdate = "UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';";
                                     // Insert commands
-                                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '" + settings_json_1.default.settings.elasticsearchPort + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_index_prefix', '" + this.currentFolderName + "_development');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'localhost');";
+                                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '" + settings_json_1.default.general.elasticsearchPort + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_index_prefix', '" + this.currentFolderName + "_development');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'localhost');";
                                     // Build up query
                                     dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
                                     yield this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
@@ -401,7 +402,7 @@ class MagentoController {
                                 title: 'Creating admin user',
                                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                     // Create a new admin user
-                                    yield this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.settings.adminUsername} --admin-password=${settings_json_1.default.settings.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
+                                    yield this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
                                 })
                             },
                             {
