@@ -22,7 +22,7 @@ class MagentoController {
     private databaseData: { [k: string]: any } = {};
     private serverVariables = {
         'magentoVersion': 2, // Default is 2
-        'php': '',
+        'externalPhpPath': '',
         'magentoRoot': '',
         'magerunFile': '',
         'databaseName': ''
@@ -45,6 +45,7 @@ class MagentoController {
         'host': '',
         'database': ''
     };
+    private magerun2Version = '4.7.0';
 
     private readonly databaseTypeQuestions = [
         {
@@ -170,6 +171,24 @@ class MagentoController {
                 // If option to import database is chosen, set download database folder to current folder.
                 if (answers.import && answers.import == 'yes') {
                     this.localDatabaseFolderLocation = this.currentFolder;
+
+                    tasks.add(
+                        {
+                            title: 'Checking Magerun2 version',
+                            task: async (): Promise<Boolean> => {
+                                // Check the local installed Magerun2 version before we continue and import the database
+                                var installedMagerun2Version = await this.execShellCommand('magerun2 -V');
+                                // @ts-ignore
+                                installedMagerun2Version = installedMagerun2Version.split(' ')[1];
+                                // @ts-ignore
+                                if (installedMagerun2Version < this.magerun2Version) {
+                                    throw new Error(`Your current Magerun2 version is too low. Magerun version ${this.magerun2Version} is required`);
+                                }
+
+                                return true;
+                            }
+                        }
+                    );
                 } else {
                     tasks.add(
                         {
@@ -212,6 +231,7 @@ class MagentoController {
                                         // Open connection to SSH server
                                         await this.ssh.connect({
                                             host: this.databaseData.server,
+                                            password: this.databaseData.password,
                                             username: this.databaseData.username,
                                             port: this.databaseData.port,
                                             privateKey: this.sshKeyLocation,
@@ -231,17 +251,17 @@ class MagentoController {
                                                 // Get Magento root
                                                 self.serverVariables.magentoRoot = serverValues[1];
                                                 // Get PHP path
-                                                self.serverVariables.php = serverValues[2];
+                                                self.serverVariables.externalPhpPath = serverValues[2];
                                             }
                                         });
 
-                                        // Dirty fix for Hipex servers
-                                        if (this.databaseData.server.includes('hipex')) {
-                                            self.serverVariables.php = '~/.bin/php';
+                                        // Use custom PHP path instead if given
+                                        if (this.databaseData.externalPhpPath && this.databaseData.externalPhpPath.length > 0) {
+                                            self.serverVariables.externalPhpPath = this.databaseData.externalPhpPath;
                                         }
 
                                         // Determine Magerun version based on magento version
-                                        self.serverVariables.magerunFile = 'n98-magerun2-4.7.0.phar';
+                                        self.serverVariables.magerunFile = `n98-magerun2-${this.magerun2Version}.phar`;
 
                                         if (self.serverVariables.magentoVersion == 1) {
                                             self.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
@@ -281,7 +301,10 @@ class MagentoController {
                                         }
 
                                         // Dump database and move to user root on server
-                                        await this.ssh.execCommand(self.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + self.serverVariables.databaseName + '.sql ~'));
+                                        await this.ssh.execCommand(self.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + self.serverVariables.databaseName + '.sql ~')).then(function (Contents) {
+                                        }, function (error) {
+                                            throw new Error(error)
+                                        });;
 
                                         // Download Wordpress database
                                         if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
@@ -583,7 +606,7 @@ class MagentoController {
 
     // Execute a PHP script in the root of magento
     sshMagentoRootFolderPhpCommand = (command: string) => {
-        return this.sshNavigateToMagentoRootCommand(this.serverVariables.php + ' ' + command);
+        return this.sshNavigateToMagentoRootCommand(this.serverVariables.externalPhpPath + ' ' + command);
     }
 
     // Execute a PHP script in the root of magento
@@ -622,6 +645,8 @@ class MagentoController {
             if (databaseKey == key) {
                 // Collect single database info
                 this.databaseData.username = database.username;
+                // @ts-ignore
+                this.databaseData.password = database.password;
                 this.databaseData.server = database.server;
                 this.databaseData.domainFolder = database.domainFolder;
                 this.databaseData.port = database.port;
@@ -631,6 +656,8 @@ class MagentoController {
                 this.databaseData.externalProjectFolder = database.externalProjectFolder;
                 // @ts-ignore
                 this.databaseData.wordpress = database.wordpress;
+                // @ts-ignore
+                this.databaseData.externalPhpPath = database.externalPhpPath
             } else {
                 // Collect all database
                 this.databases.push(`${database.domainFolder} / ${database.username} (${key})`);

@@ -1,10 +1,9 @@
 # Database synchronizer for Magento
-This tool downloads Magento databases and imports it for development purposes
+This tool downloads Magento databases over SSH and imports it for development purposes
 
 ### Requirements
 - NodeJS
 - PHP
-- Magerun
 - Magerun2
 
 ### NOTES
@@ -28,17 +27,15 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 - `port` the server port (Required)
 - `localProjectFolder` is the local project folder (Optional)
 - `externalProjectFolder` is the external project folder (Optional)
+- `externalPhpPath` is the PHP path on the server, use this if the logged in user has a different PHP version than the server's PHP version (Optional)
 
 ### Using this tool
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options
 
 ### TODO
 - Elasticsearch for amasty / mirasvit compatibility
-- Remove custom admin URL's (admin/url/use_custom & admin/url/use_custom_path)
 - For elasticsearch, replace the name with a random generated value
-- Before import functionality, check magerun version with -V 
-- Make PHP on server a setting in database configuration 
-- Make SSH username + password work
 - Tests on Magento 2.3.x
 - Import Wordpress if project has it
 - Magento 1 compatibility
+- Put config files outside of npm package ?
