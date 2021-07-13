@@ -17,7 +17,7 @@ import {ExecException} from "child_process"
 
 inquirer.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
 
-class MagentoController {
+class ImportController {
     private databases: { [k: string]: any } = [];
     private databaseData: { [k: string]: any } = {};
     private serverVariables = {
@@ -768,4 +768,4 @@ class MagentoController {
     }
 }
 
-export default MagentoController
+export default ImportController

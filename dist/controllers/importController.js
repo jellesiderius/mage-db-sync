@@ -17,7 +17,7 @@ const os = tslib_1.__importStar(require("os"));
 const fs = tslib_1.__importStar(require("fs"));
 const path = tslib_1.__importStar(require("path"));
 inquirer_1.default.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
-class MagentoController {
+class ImportController {
     constructor() {
         this.databases = [];
         this.databaseData = {};
@@ -638,5 +638,5 @@ class MagentoController {
         };
     }
 }
-exports.default = MagentoController;
-//# sourceMappingURL=magentoController.js.map
+exports.default = ImportController;
+//# sourceMappingURL=importController.js.map
