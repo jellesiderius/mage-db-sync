@@ -361,7 +361,7 @@ class ImportController {
                 if (answers.import && answers.import == 'yes') {
                     // Setup all import tasks and add to main list
                     tasks.add({
-                        title: 'Import database to local Magento folder',
+                        title: 'Import Magento database to localhost',
                         task: (ctx, task) => task.newListr([
                             {
                                 title: 'Checking if config/settings.json is correctly filled',
@@ -501,7 +501,7 @@ class ImportController {
                 if (answers.wordpressImport && answers.wordpressImport == 'yes') {
                     // Setup all import tasks and add to main list
                     tasks.add({
-                        title: 'Import Wordpress database',
+                        title: 'Import Wordpress database to localhost',
                         task: (ctx, task) => task.newListr([
                             {
                                 title: 'Importing database',

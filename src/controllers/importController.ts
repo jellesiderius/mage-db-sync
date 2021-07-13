@@ -422,7 +422,7 @@ class ImportController {
                     // Setup all import tasks and add to main list
                     tasks.add(
                         {
-                            title: 'Import database to local Magento folder',
+                            title: 'Import Magento database to localhost',
                             task: (ctx, task): Listr =>
                                 task.newListr([
                                     {
@@ -609,7 +609,7 @@ class ImportController {
                     // Setup all import tasks and add to main list
                     tasks.add(
                         {
-                            title: 'Import Wordpress database',
+                            title: 'Import Wordpress database to localhost',
                             task: (ctx, task): Listr =>
                                 task.newListr([
                                     {

@@ -38,8 +38,10 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Create same admin user from settings.json
+    - Split up Download & Import in 2 functions
 - Elasticsearch
     - Amasty / Mirasvit compatibility
     - Replace the index name with a random generated value
+- Test with rsync
 - Tests on Magento 2.3.x
 - Magento 1 compatibility
