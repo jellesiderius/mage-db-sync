@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
+// @ts-ignore
 const staging_json_1 = tslib_1.__importDefault(require("../../config/databases/staging.json"));
+// @ts-ignore
 const production_json_1 = tslib_1.__importDefault(require("../../config/databases/production.json"));
 class DatabasesModel {
     constructor() {

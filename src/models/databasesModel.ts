@@ -1,4 +1,6 @@
+// @ts-ignore
 import stagingDatabases from "../../config/databases/staging.json";
+// @ts-ignore
 import productionDatabases from "../../config/databases/production.json";
 
 class DatabasesModel {
