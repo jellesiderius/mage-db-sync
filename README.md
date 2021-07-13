@@ -1,5 +1,5 @@
 # Database synchronizer for Magento
-This tool downloads Magento databases over SSH and imports it for development purposes
+This tool downloads Magento databases over SSH and imports it for development purposes. Making life a little bit easier.
 
 ### Requirements
 - NodeJS
