@@ -36,17 +36,18 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 
 ### TODO
 - Rsync for images
+- Test download speed with rsync
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Before importing check if local wordpress folder +  exists
     - Create same admin user from settings.json
     - Split up Download & Import in 2 functions
-- Elasticsearch
-    - Amasty / Mirasvit compatibility
-    - Replace the index name with a random generated value
-- Test with rsync
 - Create dummy customer account
 - Tests on Magento 2.3.x
 - Magento 1 compatibility
 - Add self-update function
+- Elasticsearch
+  - Amasty / Mirasvit compatibility
+  - Replace the index name with a random generated value
 - Synchronize between production / staging servers
+- Clean up code
