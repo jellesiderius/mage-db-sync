@@ -35,13 +35,18 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options
 
 ### TODO
+- Rsync for images
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
+    - Before importing check if local wordpress folder +  exists
     - Create same admin user from settings.json
     - Split up Download & Import in 2 functions
 - Elasticsearch
     - Amasty / Mirasvit compatibility
     - Replace the index name with a random generated value
 - Test with rsync
+- Create dummy customer account
 - Tests on Magento 2.3.x
 - Magento 1 compatibility
+- Add self-update function
+- Synchronize between production / staging servers

@@ -5,10 +5,6 @@ const console_1 = require("../utils/console");
 const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
 const listr2_1 = require("listr2");
 // @ts-ignore
-const staging_json_1 = tslib_1.__importDefault(require("../../config/databases/staging.json"));
-// @ts-ignore
-const production_json_1 = tslib_1.__importDefault(require("../../config/databases/production.json"));
-// @ts-ignore
 const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
 // @ts-ignore
 const static_settings_json_1 = tslib_1.__importDefault(require("../../config/static-settings.json"));
@@ -16,11 +12,10 @@ const node_ssh_1 = require("node-ssh");
 const os = tslib_1.__importStar(require("os"));
 const fs = tslib_1.__importStar(require("fs"));
 const path = tslib_1.__importStar(require("path"));
+const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
 inquirer_1.default.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
 class ImportController {
     constructor() {
-        this.databases = [];
-        this.databaseData = {};
         this.serverVariables = {
             'magentoVersion': 2,
             'externalPhpPath': '',
@@ -28,10 +23,11 @@ class ImportController {
             'magerunFile': '',
             'databaseName': ''
         };
-        this.databaseType = '';
         this.sshKeyLocation = '';
         this.localDatabaseFolderLocation = settings_json_1.default.general.databaseLocation;
         this.ssh = new node_ssh_1.NodeSSH();
+        this.databases = new databasesModel_1.default();
+        this.databaseType = '';
         this.strip = '';
         this.finalMessages = {
             'magentoDatabaseLocation': '',
@@ -66,7 +62,7 @@ class ImportController {
                 type: 'search-list',
                 name: 'database',
                 message: 'Select or search database',
-                choices: this.databases,
+                choices: this.databases.databasesList,
                 validate: (input) => {
                     return input !== '';
                 }
@@ -99,8 +95,8 @@ class ImportController {
                 .then(answers => {
                 // Set the database type
                 this.databaseType = answers.databaseType;
-                // Retrieve database list
-                this.collectDatabaseData();
+                // Collect databases
+                this.databases.collectDatabaseData('', this.databaseType);
             })
                 .catch((err) => {
                 console_1.error(`Something went wrong: ${err.message}`);
@@ -115,7 +111,7 @@ class ImportController {
                 var selectedDatabase = answers.database;
                 var databaseKey = selectedDatabase.match(keyRegex)[1];
                 // Collects database data based on key
-                this.collectDatabaseData(databaseKey);
+                this.databases.collectDatabaseData(databaseKey, this.databaseType);
             })
                 .catch((err) => {
                 console_1.error(`Something went wrong: ${err.message}`);
@@ -123,8 +119,8 @@ class ImportController {
             // Get current folder from cwd
             this.currentFolder = process.cwd();
             // If local folder is set for project, use that as currentFolder
-            if (self.databaseData.localProjectFolder && self.databaseData.localProjectFolder.length > 0) {
-                this.currentFolder = self.databaseData.localProjectFolder;
+            if (this.databases.databaseData.localProjectFolder && this.databases.databaseData.localProjectFolder.length > 0) {
+                this.currentFolder = this.databases.databaseData.localProjectFolder;
             }
             // Set current folder name based on current folder
             this.currentFolderName = path.basename(path.resolve(this.currentFolder));
@@ -148,7 +144,7 @@ class ImportController {
                         return false;
                     },
                 });
-                if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
+                if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
                     // Add wordpress download and import option if server config has it
                     this.databaseConfigurationQuestions.push({
                         type: 'list',
@@ -211,17 +207,17 @@ class ImportController {
                 });
                 // Setup all download tasks and add to main list
                 tasks.add({
-                    title: 'Download database from server ' + '(' + this.databaseData.username + ')',
+                    title: 'Download database from server ' + '(' + this.databases.databaseData.username + ')',
                     task: (ctx, task) => task.newListr([
                         {
                             title: 'Connecting to server through SSH',
                             task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                 // Open connection to SSH server
                                 yield this.ssh.connect({
-                                    host: this.databaseData.server,
-                                    password: this.databaseData.password,
-                                    username: this.databaseData.username,
-                                    port: this.databaseData.port,
+                                    host: this.databases.databaseData.server,
+                                    password: this.databases.databaseData.password,
+                                    username: this.databases.databaseData.username,
+                                    port: this.databases.databaseData.port,
                                     privateKey: this.sshKeyLocation,
                                     passphrase: settings_json_1.default.ssh.passphrase
                                 });
@@ -243,8 +239,8 @@ class ImportController {
                                     }
                                 });
                                 // Use custom PHP path instead if given
-                                if (this.databaseData.externalPhpPath && this.databaseData.externalPhpPath.length > 0) {
-                                    self.serverVariables.externalPhpPath = this.databaseData.externalPhpPath;
+                                if (this.databases.databaseData.externalPhpPath && this.databases.databaseData.externalPhpPath.length > 0) {
+                                    self.serverVariables.externalPhpPath = this.databases.databaseData.externalPhpPath;
                                 }
                                 // Determine Magerun version based on magento version
                                 self.serverVariables.magerunFile = `n98-magerun2-${this.magerun2Version}.phar`;
@@ -289,7 +285,7 @@ class ImportController {
                                 });
                                 ;
                                 // Download Wordpress database
-                                if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
+                                if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
                                     yield this.ssh.execCommand(self.sshNavigateToMagentoRootCommand('cd wp; cat wp-config.php')).then((result) => {
                                         if (result) {
                                             let resultValues = result.stdout.split("\n");
@@ -331,7 +327,7 @@ class ImportController {
                                 }, function (error) {
                                     throw new Error(error);
                                 });
-                                if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
+                                if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
                                     var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
                                     yield this.ssh.getFile(wordpresslocalDatabaseLocation, `${this.wordpressConfig.database}.sql`).then(function (Contents) {
                                         self.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
@@ -349,7 +345,7 @@ class ImportController {
                                 // Remove Magerun and close connection to SSH
                                 yield this.ssh.execCommand(self.sshNavigateToMagentoRootCommand('rm ' + self.serverVariables.magerunFile));
                                 // Remove the wordpress database file on the server
-                                if (this.databaseData.wordpress && this.databaseData.wordpress == true) {
+                                if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
                                     yield this.ssh.execCommand(`rm ${this.wordpressConfig.database}.sql`);
                                 }
                                 // Close the SSH connection
@@ -566,12 +562,12 @@ class ImportController {
         // Navigate to Magento root folder
         this.sshNavigateToMagentoRootCommand = (command) => {
             // See if external project folder is filled in, otherwise try default path
-            if (this.databaseData.externalProjectFolder && this.databaseData.externalProjectFolder.length > 0) {
-                return `cd ${this.databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+            if (this.databases.databaseData.externalProjectFolder && this.databases.databaseData.externalProjectFolder.length > 0) {
+                return `cd ${this.databases.databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
             }
             else {
                 return 'cd domains > /dev/null 2>&1;' +
-                    'cd ' + this.databaseData.domainFolder + ' > /dev/null 2>&1;' +
+                    'cd ' + this.databases.databaseData.domainFolder + ' > /dev/null 2>&1;' +
                     'cd application > /dev/null 2>&1;' +
                     'cd public_html > /dev/null 2>&1;' +
                     'cd current > /dev/null 2>&1;' + command;
@@ -599,38 +595,6 @@ class ImportController {
                     resolve(stdout ? stdout : stderr);
                 });
             });
-        };
-        // Collect all databases | collect single database info
-        this.collectDatabaseData = (databaseKey) => {
-            // @ts-ignore
-            var databases = staging_json_1.default.databases;
-            if (this.databaseType == 'production') {
-                // @ts-ignore
-                databases = production_json_1.default.databases;
-            }
-            for (let [key, database] of Object.entries(databases)) {
-                if (databaseKey == key) {
-                    // Collect single database info
-                    this.databaseData.username = database.username;
-                    // @ts-ignore
-                    this.databaseData.password = database.password;
-                    this.databaseData.server = database.server;
-                    this.databaseData.domainFolder = database.domainFolder;
-                    this.databaseData.port = database.port;
-                    // @ts-ignore
-                    this.databaseData.localProjectFolder = database.localProjectFolder;
-                    // @ts-ignore
-                    this.databaseData.externalProjectFolder = database.externalProjectFolder;
-                    // @ts-ignore
-                    this.databaseData.wordpress = database.wordpress;
-                    // @ts-ignore
-                    this.databaseData.externalPhpPath = database.externalPhpPath;
-                }
-                else {
-                    // Collect all database
-                    this.databases.push(`${database.domainFolder} / ${database.username} (${key})`);
-                }
-            }
         };
         this.wordpressReplaces = (entry, text) => {
             var replacedText = entry.replace(text, ''), replacedText = replacedText.replace(`,`, ''), replacedText = replacedText.replace(`DEFINE`, ''), replacedText = replacedText.replace(`define`, ''), replacedText = replacedText.replace(`(`, ''), replacedText = replacedText.replace(` `, ''), replacedText = replacedText.replace(`;`, ''), replacedText = replacedText.replace(`$`, ''), replacedText = replacedText.replace(`)`, ''), replacedText = replacedText.replace(`=`, ''), replacedText = replacedText.replace("'", '').replace(/'/g, '');
