@@ -46,6 +46,7 @@ class ImportController {
         };
         this.magerun2Version = '4.7.0';
         this.magentoLocalhostDomainName = '';
+        this.rsyncInstalled = false;
         this.databaseTypeQuestions = [
             {
                 type: 'list',
@@ -102,6 +103,12 @@ class ImportController {
             this.sshKeyLocation = settings_json_1.default.ssh.keyLocation;
             if (!this.sshKeyLocation) {
                 this.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
+            }
+            // Check if rsync is installed locally
+            let rsyncCheck = yield this.execShellCommand('which rsync');
+            // @ts-ignore
+            if (rsyncCheck.length > 0) {
+                this.rsyncInstalled = true;
             }
             // Set database type
             yield inquirer_1.default
@@ -164,7 +171,7 @@ class ImportController {
                         type: 'list',
                         name: 'wordpressImport',
                         default: 'yes',
-                        message: 'Download and import Wordpress database?',
+                        message: 'Import Wordpress database?',
                         choices: ['yes', 'no'],
                         validate: (input) => {
                             return false;
@@ -350,18 +357,30 @@ class ImportController {
                         task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                             // Download file and place it on localhost
                             var localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
-                            yield this.ssh.getFile(localDatabaseLocation, self.serverVariables.databaseName + '.sql').then(function (Contents) {
-                                self.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
-                            }, function (error) {
-                                throw new Error(error);
-                            });
-                            if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
-                                var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
-                                yield this.ssh.getFile(wordpresslocalDatabaseLocation, `${this.wordpressConfig.database}.sql`).then(function (Contents) {
-                                    self.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
+                            if (this.rsyncInstalled) {
+                                yield this.localhostRsyncDownloadCommand(`~/${this.serverVariables.databaseName}.sql`, `${self.localDatabaseFolderLocation}`);
+                            }
+                            else {
+                                yield this.ssh.getFile(localDatabaseLocation, self.serverVariables.databaseName + '.sql').then(function (Contents) {
                                 }, function (error) {
                                     throw new Error(error);
                                 });
+                            }
+                            // Set final message with Magento DB location
+                            self.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
+                            if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
+                                var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
+                                if (this.rsyncInstalled) {
+                                    yield this.localhostRsyncDownloadCommand(`~/${this.wordpressConfig.database}.sql`, `${self.localDatabaseFolderLocation}`);
+                                }
+                                else {
+                                    yield this.ssh.getFile(wordpresslocalDatabaseLocation, `${this.wordpressConfig.database}.sql`).then(function (Contents) {
+                                    }, function (error) {
+                                        throw new Error(error);
+                                    });
+                                }
+                                // Set final message with Wordpress database location
+                                self.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
                             }
                         })
                     },
@@ -569,7 +588,7 @@ class ImportController {
                 else if (this.finalMessages.magentoDatabaseLocation.length > 0) {
                     console_1.success(`Downloaded Magento database to: ${this.finalMessages.magentoDatabaseLocation}`);
                     // Show wordpress download message if downloaded
-                    if (this.finalMessages.wordpressDatabaseLocation.length > 0 && this.databaseConfigurationAnswers.wordpressImport == 'no') {
+                    if (this.finalMessages.wordpressDatabaseLocation.length > 0) {
                         console_1.success(`Downloaded Wordpress database to: ${this.finalMessages.wordpressDatabaseLocation}`);
                     }
                 }
@@ -608,14 +627,14 @@ class ImportController {
         this.localhostMagentoRootExec = (command) => {
             return this.execShellCommand(`cd ${this.currentFolder}; ${command};`);
         };
+        this.localhostRsyncDownloadCommand = (source, destination) => {
+            return this.execShellCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port}" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`);
+        };
         // Execute shell command with a Promise
         this.execShellCommand = (cmd) => {
             const exec = require('child_process').exec;
             return new Promise((resolve, reject) => {
                 exec(cmd, (error, stdout, stderr) => {
-                    if (error) {
-                        console.warn(error);
-                    }
                     resolve(stdout ? stdout : stderr);
                 });
             });

@@ -36,7 +36,6 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 
 ### TODO
 - Rsync for images
-- Test download speed with rsync
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Before importing check if local wordpress folder +  exists
