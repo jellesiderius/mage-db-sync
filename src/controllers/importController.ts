@@ -192,7 +192,7 @@ class ImportController {
                         type: 'list',
                         name: 'wordpressImport',
                         default: 'yes',
-                        message: 'Import Wordpress database?',
+                        message: 'Import Wordpress database? [EXPERIMENTAL]',
                         choices: ['yes', 'no'],
                         validate: (input: string) => {
                             return false;

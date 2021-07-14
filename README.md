@@ -37,6 +37,7 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 
 ### TODO
 - Rsync for images (Magento and Wordpress)
+- See if Magento database import could be faster with native MYSQL import
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Before importing check if local wordpress folder +  exists
@@ -47,7 +48,7 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 - Magento 1 compatibility
 - Add self-update function
 - Elasticsearch
-  - Amasty / Mirasvit compatibility
-  - Replace the index name with a random generated value
+    - Amasty / Mirasvit compatibility
+    - Replace the index name with a random generated value
 - Synchronize between production / staging servers
 - Clean up code

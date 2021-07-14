@@ -12,6 +12,7 @@
   "preferGlobal": true,
   "devDependencies": {
     "@types/commander": "^2.12.2",
+    "@types/get-installed-path": "^4.0.1",
     "@types/inquirer": "^7.3.1",
     "@types/node": "^14.14.10",
     "@types/ssh2": "^0.5.47",
@@ -25,7 +26,9 @@
   },
   "dependencies": {
     "commander": "^7.0.0",
+    "download-git-repo": "^3.0.2",
     "execa": "^5.0.0",
+    "get-installed-path": "^4.0.8",
     "inquirer": "^7.3.3",
     "inquirer-search-checkbox": "^1.0.0",
     "inquirer-search-list": "^1.2.6",
