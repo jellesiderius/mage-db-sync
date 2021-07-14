@@ -8,9 +8,10 @@ This tool downloads Magento databases over SSH and imports it for development pu
 - WP CLI
 
 ### NOTES
+- Currently only tested on macOS
 - The import function does only show "yes" when you're current directory is a Magento installed directory or if a local project folder is set in the database json file
-- Tool requires `magerun2` command to be globally available in shell
 - Everything is developed/tested with Magerun2 version 4.7.0. Make sure at least this version is installed
+- Tool requires `magerun2` command to be globally available in shell
 - Wordpress import is currently experimental
 
 ### Installation
@@ -35,7 +36,7 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options
 
 ### TODO
-- Rsync for images
+- Rsync for images (Magento and Wordpress)
 - Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Before importing check if local wordpress folder +  exists
