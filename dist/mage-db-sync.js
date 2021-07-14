@@ -17,7 +17,7 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
         'config/databases/staging.json',
         'config/databases/production.json'
     ];
-    var bar = new Promise((resolve, reject) => {
+    new Promise((resolve, reject) => {
         requiredFiles.forEach((path) => {
             if (!fs_1.default.existsSync(`${npmPath}/${path}`)) {
                 console_1.error(`${path} was not found. Make sure this file exists (${npmPath}/${path})`);
