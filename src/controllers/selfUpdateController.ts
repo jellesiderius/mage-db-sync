@@ -1,14 +1,14 @@
 // @ts-ignore
 import download from 'download-git-repo'
+// @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
 import {success} from "../utils/console";
-// @ts-ignore
 
 class SelfUpdateController {
     executeStart = async (serviceName: string | undefined): Promise<boolean> => {
         let npmPath = '';
 
-        await getInstalledPath('mage-db-sync').then((path) => {
+        await getInstalledPath('mage-db-sync').then((path: string) => {
             npmPath = path;
         });
 
