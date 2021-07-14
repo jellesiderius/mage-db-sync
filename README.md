@@ -35,6 +35,9 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 ### Using this tool
 Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` and follow the given options
 
+### Updating this tool
+Run the command `mage-db-sync self-update` in any CLI
+
 ### TODO
 - Rsync for images (Magento and Wordpress)
 - See if Magento database import could be faster with native MYSQL import
