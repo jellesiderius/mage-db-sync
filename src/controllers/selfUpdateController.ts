@@ -1,6 +1,7 @@
 // @ts-ignore
 import download from 'download-git-repo'
 import {getInstalledPath} from 'get-installed-path'
+import {success} from "../utils/console";
 // @ts-ignore
 
 class SelfUpdateController {
@@ -12,7 +13,7 @@ class SelfUpdateController {
         });
 
         await download('jellesiderius/mage-db-sync#master', npmPath, function (err: any) {
-            console.log('Updated to newest version of mage-db-sync');
+            success(`Updated to newest version of mage-db-sync`);
         });
 
         return true;

@@ -4,6 +4,7 @@ const tslib_1 = require("tslib");
 // @ts-ignore
 const download_git_repo_1 = tslib_1.__importDefault(require("download-git-repo"));
 const get_installed_path_1 = require("get-installed-path");
+const console_1 = require("../utils/console");
 // @ts-ignore
 class SelfUpdateController {
     constructor() {
@@ -13,7 +14,7 @@ class SelfUpdateController {
                 npmPath = path;
             });
             yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', npmPath, function (err) {
-                console.log('Updated to newest version of mage-db-sync');
+                console_1.success(`Updated to newest version of mage-db-sync`);
             });
             return true;
         });
