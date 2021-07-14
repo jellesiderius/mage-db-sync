@@ -694,6 +694,7 @@ class ImportController {
 
         // Run all tasks
         try {
+            clearConsole();
             await tasks.run();
 
             // Show final message when done with all tasks

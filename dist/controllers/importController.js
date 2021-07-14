@@ -580,6 +580,7 @@ class ImportController {
             }
             // Run all tasks
             try {
+                console_1.clearConsole();
                 yield tasks.run();
                 // Show final message when done with all tasks
                 if (this.finalMessages.importDomain.length > 0) {
