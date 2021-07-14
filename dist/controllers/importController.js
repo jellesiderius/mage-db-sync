@@ -187,16 +187,16 @@ class ImportController {
                 .catch((err) => {
                 console_1.error(`Something went wrong: ${err.message}`);
             });
-            if (this.databaseConfigurationAnswers.import && this.databaseConfigurationAnswers.import == 'yes') {
-                yield inquirer_1.default
+            /*if (this.databaseConfigurationAnswers.import && this.databaseConfigurationAnswers.import == 'yes') {
+                await inquirer
                     .prompt(this.synchronizeImagesQuestions)
                     .then(answers => {
-                    this.syncImages = answers.syncImages;
-                })
+                        this.syncImages = answers.syncImages;
+                    })
                     .catch((err) => {
-                    console_1.error(`Something went wrong: ${err.message}`);
-                });
-            }
+                        error(`Something went wrong: ${err.message}`)
+                    });
+            }*/
             // Main tasks list
             const tasks = new listr2_1.Listr([], { concurrent: false });
             this.strip = this.databaseConfigurationAnswers.strip;

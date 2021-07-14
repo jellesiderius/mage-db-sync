@@ -211,7 +211,7 @@ class ImportController {
                 error(`Something went wrong: ${err.message}`)
             });
 
-        if (this.databaseConfigurationAnswers.import && this.databaseConfigurationAnswers.import == 'yes') {
+        /*if (this.databaseConfigurationAnswers.import && this.databaseConfigurationAnswers.import == 'yes') {
             await inquirer
                 .prompt(this.synchronizeImagesQuestions)
                 .then(answers => {
@@ -220,7 +220,7 @@ class ImportController {
                 .catch((err) => {
                     error(`Something went wrong: ${err.message}`)
                 });
-        }
+        }*/
 
         // Main tasks list
         const tasks = new Listr(
