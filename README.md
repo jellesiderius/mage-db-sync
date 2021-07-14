@@ -46,7 +46,6 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 - Create dummy customer account
 - Tests on Magento 2.3.x
 - Magento 1 compatibility
-- Add self-update function
 - Elasticsearch
     - Amasty / Mirasvit compatibility
     - Replace the index name with a random generated value
