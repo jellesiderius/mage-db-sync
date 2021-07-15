@@ -39,6 +39,7 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 Run the command `mage-db-sync self-update` in any CLI
 
 ### TODO
+- Replace 'cd' in code
 - Rsync for images (Magento and Wordpress)
 - See if Magento database import could be faster with native MYSQL import
 - Wordpress
