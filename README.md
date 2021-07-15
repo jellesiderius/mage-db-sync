@@ -1,5 +1,5 @@
 # Database synchronizer for Magento
-This tool downloads Magento databases over SSH, imports and configures it for development purposes. Have a fully functional production or staging environment on your local machine within minutes. Making life a little bit easier.
+This tool downloads clean/stripped Magento databases over SSH, imports and configures it for development purposes. Have a fully functional production or staging environment on your local machine within minutes. Making life a little bit easier.
 
 ### Requirements
 - NodeJS
@@ -13,6 +13,7 @@ This tool downloads Magento databases over SSH, imports and configures it for de
 - Everything is developed/tested with Magerun2 version 4.7.0. Make sure at least this version is installed
 - Tool requires `magerun2` command to be globally available in shell
 - Wordpress import is currently experimental
+- Overwrites current Magento database with the staging/production database. Be aware that you might lose data on your local machine
 
 ### Installation
 1. `npm i -g` in the root folder of this tool
