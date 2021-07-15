@@ -7,7 +7,8 @@ const fs_1 = tslib_1.__importDefault(require("fs"));
 // @ts-ignore
 const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("./utils/console");
-get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
+const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
+get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     // Lets make sure all required files are in place before running the tool
     let npmPath = path;
     let missingFiles = false;
@@ -32,10 +33,16 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
     index_1.default(commander_1.default);
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const packageJson = require('../package.json');
+    let versionCheck = new versionCheck_1.default();
+    yield versionCheck.getToolVersions();
+    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}`;
+    if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
+        description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
+    }
     commander_1.default
         .version(packageJson.version)
         .usage('<command> [options]')
-        .description(`Magento Database Synchronizer, based on Magerun - ${packageJson.version}`);
+        .description(description);
     commander_1.default.on('command:*', () => {
         commander_1.default.help();
     });
@@ -44,5 +51,5 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
         commander_1.default.outputHelp();
         process.exit();
     }
-});
+}));
 //# sourceMappingURL=mage-db-sync.js.map

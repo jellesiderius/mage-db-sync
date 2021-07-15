@@ -6,26 +6,21 @@ const download_git_repo_1 = tslib_1.__importDefault(require("download-git-repo")
 // @ts-ignore
 const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("../utils/console");
-// @ts-ignore
-const fetch = tslib_1.__importStar(require("node-fetch"));
-// @ts-ignore
-const package_json_1 = tslib_1.__importDefault(require("../../package.json"));
+const versionCheck_1 = tslib_1.__importDefault(require("../utils/versionCheck"));
 class SelfUpdateController {
     constructor() {
+        this.versionCheck = new versionCheck_1.default();
         this.executeStart = (serviceName) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            yield this.versionCheck.getToolVersions();
             let self = this;
             let config = {
                 'npmPath': '',
-                'latestVersion': '',
-                'currentVersion': package_json_1.default.version
+                'currentVersion': this.versionCheck.config.currentVersion,
+                'latestVersion': this.versionCheck.config.latestVersion
             };
             yield get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
                 config.npmPath = path;
             });
-            // @ts-ignore
-            yield fetch('https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/package.json')
-                .then((res) => res.json())
-                .then((json) => config.latestVersion = json.version);
             if (config.currentVersion < config.latestVersion) {
                 yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', config.npmPath, function (err) {
                     return tslib_1.__awaiter(this, void 0, void 0, function* () {

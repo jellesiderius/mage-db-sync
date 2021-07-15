@@ -5,27 +5,25 @@ import {getInstalledPath} from 'get-installed-path'
 import {success} from "../utils/console";
 import {ExecException} from "child_process";
 // @ts-ignore
-import * as fetch from 'node-fetch'
-// @ts-ignore
 import packageFile from '../../package.json';
+import VersionCheck from "../utils/versionCheck";
 
 class SelfUpdateController {
+    private versionCheck = new VersionCheck();
+
     executeStart = async (serviceName: string | undefined): Promise<boolean> => {
+        await this.versionCheck.getToolVersions();
+
         let self = this;
         let config = {
             'npmPath': '',
-            'latestVersion': '',
-            'currentVersion': packageFile.version
-        }
+            'currentVersion': this.versionCheck.config.currentVersion,
+            'latestVersion': this.versionCheck.config.latestVersion
+        };
 
         await getInstalledPath('mage-db-sync').then((path: string) => {
             config.npmPath = path;
         });
-
-        // @ts-ignore
-        await fetch('https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/package.json')
-            .then((res: { json: () => any; }) => res.json())
-            .then((json: { version: string; }) => config.latestVersion = json.version);
 
         if (config.currentVersion < config.latestVersion) {
             await download('jellesiderius/mage-db-sync#master', config.npmPath, async function (err: any) {
