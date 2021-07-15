@@ -262,7 +262,7 @@ class ImportController {
                             return true;
                         }
 
-                        throw new Error(`SSH key ${this.localDatabaseFolderLocation} does not exist. This can be configured in config/settings.json`);
+                        throw new Error(`Download folder ${this.localDatabaseFolderLocation} does not exist. This can be configured in config/settings.json`);
                     }
                 },
             );
