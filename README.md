@@ -49,6 +49,7 @@ Run the command `mage-db-sync self-update` in any CLI
     - Create same admin user from settings.json
     - Split up Download & Import in 2 functions
 - Create dummy customer account
+- Remove SMTP settings
 - Elasticsearch
     - Amasty / Mirasvit compatibility
 - Synchronize between production / staging servers
