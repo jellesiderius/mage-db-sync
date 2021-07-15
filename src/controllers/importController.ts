@@ -748,7 +748,7 @@ class ImportController {
     }
 
     localhostRsyncDownloadCommand = (source: string, destination: string) => {
-        return this.execShellCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port}" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`)
+        return this.execShellCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port} -o StrictHostKeyChecking=no" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`)
     }
 
     // Execute shell command with a Promise
