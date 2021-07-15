@@ -15,7 +15,7 @@ class SelfUpdateController {
         });
 
         await download('jellesiderius/mage-db-sync#master', npmPath, async function (err: any) {
-            await self.execShellCommand(`cd ${npmPath}; npm i -g`);
+            await self.execShellCommand(`cd ${npmPath}; npm install`);
             success(`Updated to newest version of mage-db-sync`);
         });
 

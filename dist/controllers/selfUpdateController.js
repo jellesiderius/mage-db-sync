@@ -16,7 +16,7 @@ class SelfUpdateController {
             });
             yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', npmPath, function (err) {
                 return tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    yield self.execShellCommand(`cd ${npmPath}; npm i -g`);
+                    yield self.execShellCommand(`cd ${npmPath}; npm install`);
                     console_1.success(`Updated to newest version of mage-db-sync`);
                 });
             });
