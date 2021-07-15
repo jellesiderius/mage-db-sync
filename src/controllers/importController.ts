@@ -46,6 +46,7 @@ class ImportController {
     private magerun2Version = '4.7.0';
     private magentoLocalhostDomainName = '';
     private rsyncInstalled = false;
+    private elasticSearchUsed = false;
 
     private readonly databaseTypeQuestions = [
         {
@@ -568,26 +569,28 @@ class ImportController {
                                 }
                             },
                             {
-                                title: "Configuring ElasticSearch",
+                                title: "Configuring ElasticSearch 7/MySQL",
                                 task: async (): Promise<void> => {
                                     var dbQuery = '';
-                                    // Remove queries
-                                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_server_port';",
-                                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_index_prefix';",
-                                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_server_hostname';";
+                                    let dbQueryUpdate = ''
+                                    let engineCheck = await this.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json');
+                                    var jsonEngineCheck = JSON.parse(<string>engineCheck)[0].Value;
 
-                                    // Update queries
-                                    var dbQueryUpdate = "UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';";
+                                    // Configure Elastic to use version 7
+                                    if (jsonEngineCheck && jsonEngineCheck != 'mysql') {
+                                        // Update queries
+                                        dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
+                                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${configFile.general.elasticsearchPort}' WHERE path LIKE '%_server_port%';`,
+                                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${this.currentFolderName}_development' WHERE path LIKE '%_index_prefix%';`,
+                                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${this.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
+                                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`,
+                                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
+                                        // Build up query
+                                        dbQuery = dbQueryUpdate;
 
-                                    // Insert commands
-                                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '" + configFile.general.elasticsearchPort + "');",
-                                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_index_prefix', '" + this.currentFolderName + "_development');",
-                                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'localhost');";
-
-                                    // Build up query
-                                    dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
-
-                                    await this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
+                                        await this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
+                                        this.elasticSearchUsed = true;
+                                    }
                                 }
                             },
                             {
@@ -636,7 +639,9 @@ class ImportController {
                                 title: 'Reindexing Magento',
                                 task: async (): Promise<void> => {
                                     // Reindex data
-                                    await this.localhostMagentoRootExec(`magerun2 index:reindex`);
+                                    if (this.elasticSearchUsed) {
+                                        await this.localhostMagentoRootExec(`magerun2 index:reindex`);
+                                    }
                                 }
                             },
                             {
