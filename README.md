@@ -13,7 +13,7 @@ This tool downloads clean/stripped Magento databases over SSH, imports and confi
 - Everything is developed/tested with Magerun2 version 4.7.0. Make sure at least this version is installed
 - Tool requires `magerun2` command to be globally available in shell
 - Wordpress import is currently experimental
-- Overwrites current Magento database with the staging/production database. Be aware that you might lose data on your local machine
+- Overwrites current localhost's Magento database with the staging/production database. Be aware that you might lose data on your localhost
 
 ### Installation
 1. `npm i -g` in the root folder of this tool
