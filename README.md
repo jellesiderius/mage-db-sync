@@ -27,8 +27,8 @@ in the files `config/databases/production.json` and `config/databases/staging.js
 - `password` is the ssh password that goes with the ssh username. (Optional if you use SSH keys to login)
 - `server` is the server to log in to (Required)
 - `port` the server port (Required)
-- `localProjectFolder` is the local project folder (Optional)
-- `externalProjectFolder` is the external project folder (Optional)
+- `localProjectFolder` is the local Magento root folder (Optional)
+- `externalProjectFolder` is the external Magento root folder (Optional)
 - `externalPhpPath` is the PHP path on the server, use this if the logged in user has a different PHP version than the server's PHP version (Optional)
 - `wordpress` can be set to `true/false` to synchronize wordpress database (Optional) [EXPERIMENTAL]
 
