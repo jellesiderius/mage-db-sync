@@ -9,7 +9,7 @@
             "localProjectFolder": "",
             "externalProjectFolder": "",
             "externalPhpPath": "",
-            "localProjectUrl": "example1.development"
+            "localProjectUrl": "example1.development",
             "wordpress": false
         },
         "username-2-placeholder": {
@@ -21,7 +21,7 @@
             "localProjectFolder": "",
             "externalProjectFolder": "",
             "externalPhpPath": "",
-            "localProjectUrl": "example2.development"
+            "localProjectUrl": "example2.development",
             "wordpress": false
         }
     }
