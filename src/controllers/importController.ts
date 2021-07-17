@@ -484,8 +484,8 @@ class ImportController {
                                         throw new Error('Admin password is missing in config/settings.json');
                                     }
 
-                                    if (configFile.magentoBackend.adminPassword.length == 0) {
-                                        throw new Error('Admin email is missing in config/settings.json');
+                                    if (configFile.magentoBackend.adminEmailAddress.length == 0) {
+                                        throw new Error('Admin email address is missing in config/settings.json');
                                     }
 
                                     if (configFile.general.localDomainExtension.length == 0) {
