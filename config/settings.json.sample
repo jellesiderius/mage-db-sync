@@ -10,6 +10,7 @@
   },
   "magentoBackend": {
     "adminUsername": "admin",
-    "adminPassword": "Password1!"
+    "adminPassword": "Password1!",
+    "adminEmailAddress": "info@example.com"
   }
 }

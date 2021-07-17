@@ -98,7 +98,7 @@ class ImportController {
         ];
         // Starts the controller
         this.executeStart = (serviceName) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            var self = this;
+            let self = this;
             console_1.clearConsole();
             // Fetch SSH key location
             this.sshKeyLocation = settings_json_1.default.ssh.keyLocation;
@@ -129,9 +129,9 @@ class ImportController {
                 .then(answers => {
                 // Set the database type
                 // Get database key to get database settings
-                var keyRegex = /\((.*)\)/i;
-                var selectedDatabase = answers.database;
-                var databaseKey = selectedDatabase.match(keyRegex)[1];
+                let keyRegex = /\((.*)\)/i;
+                let selectedDatabase = answers.database;
+                let databaseKey = selectedDatabase.match(keyRegex)[1];
                 // Collects database data based on key
                 this.databases.collectDatabaseData(databaseKey, this.databaseType);
             })
@@ -208,7 +208,7 @@ class ImportController {
                     title: 'Checking Magerun2 version',
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Check the local installed Magerun2 version before we continue and import the database
-                        var installedMagerun2Version = yield this.execShellCommand('magerun2 -V');
+                        let installedMagerun2Version = yield this.execShellCommand('magerun2 -V');
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
@@ -227,7 +227,7 @@ class ImportController {
                         if (fs.existsSync(this.localDatabaseFolderLocation)) {
                             return true;
                         }
-                        throw new Error(`SSH key ${this.localDatabaseFolderLocation} does not exist. This can be configured in config/settings.json`);
+                        throw new Error(`Download folder ${this.localDatabaseFolderLocation} does not exist. This can be configured in config/settings.json`);
                     })
                 });
             }
@@ -307,7 +307,7 @@ class ImportController {
                                 }
                             });
                             // Dump database and move database to root of server
-                            var stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '"';
+                            let stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '"';
                             if (self.strip == 'keep customer data') {
                                 stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"';
                             }
@@ -357,7 +357,7 @@ class ImportController {
                         title: 'Downloading database to localhost',
                         task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                             // Download file and place it on localhost
-                            var localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
+                            let localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
                             if (this.rsyncInstalled) {
                                 yield this.localhostRsyncDownloadCommand(`~/${this.serverVariables.databaseName}.sql`, `${self.localDatabaseFolderLocation}`);
                             }
@@ -370,7 +370,7 @@ class ImportController {
                             // Set final message with Magento DB location
                             self.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
                             if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
-                                var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
+                                let wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
                                 if (this.rsyncInstalled) {
                                     yield this.localhostRsyncDownloadCommand(`~/${this.wordpressConfig.database}.sql`, `${self.localDatabaseFolderLocation}`);
                                 }
@@ -457,10 +457,10 @@ class ImportController {
                             task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                 var dbQuery = '';
                                 // Delete queries
-                                var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';";
+                                var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%smtp%';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';";
                                 // Update queries
                                 var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';", dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';";
-                                var baseUrl = 'http://' + this.magentoLocalhostDomainName + '/';
+                                let baseUrl = 'http://' + this.magentoLocalhostDomainName + '/';
                                 // Insert queries
                                 var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '0');";
                                 // Build up query
@@ -473,10 +473,10 @@ class ImportController {
                         {
                             title: "Configuring ElasticSearch 7/MySQL",
                             task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                                var dbQuery = '';
+                                let dbQuery = '';
                                 let dbQueryUpdate = '';
                                 let engineCheck = yield this.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json');
-                                var jsonEngineCheck = JSON.parse(engineCheck)[0].Value;
+                                let jsonEngineCheck = JSON.parse(engineCheck)[0].Value;
                                 // Configure Elastic to use version 7
                                 if (jsonEngineCheck && jsonEngineCheck != 'mysql') {
                                     // Update queries
@@ -494,10 +494,25 @@ class ImportController {
                             })
                         },
                         {
-                            title: 'Creating admin user',
+                            title: 'Creating a admin user',
                             task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                 // Create a new admin user
-                                yield this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
+                                yield this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`);
+                            })
+                        },
+                        {
+                            title: 'Creating a dummy customer on every website',
+                            task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                                // Create new dummy customers for all websites
+                                // Get all websites
+                                let allWebsites = yield this.localhostMagentoRootExec(`magerun2 sys:website:list --format=json`);
+                                allWebsites = JSON.parse(allWebsites);
+                                // @ts-ignore
+                                for (const [key, value] of Object.entries(allWebsites)) {
+                                    // @ts-ignore
+                                    let code = value.code;
+                                    yield this.localhostMagentoRootExec(`magerun2 customer:create ${settings_json_1.default.magentoBackend.adminEmailAddress} ${settings_json_1.default.magentoBackend.adminPassword} Firstname Lastname ${code}`);
+                                }
                             })
                         },
                         {
@@ -508,11 +523,11 @@ class ImportController {
                                     return;
                                 }
                                 else {
-                                    var dbQuery = '';
+                                    let dbQuery = '';
                                     // Remove queries
-                                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
+                                    let dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
                                     // Insert commands
-                                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
+                                    let dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
                                     // Build up query
                                     dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
                                     yield this.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"');
@@ -568,7 +583,7 @@ class ImportController {
                             title: 'Configuring for development',
                             task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                                 // Retrieve current site URL from database
-                                var wordpressUrl = yield this.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${self.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`);
+                                let wordpressUrl = yield this.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${self.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`);
                                 // @ts-ignore
                                 wordpressUrl = this.wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
                                 // Replace options for localhost

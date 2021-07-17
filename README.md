@@ -40,17 +40,13 @@ Simply run `mage-db-sync start` in any CLI after installing it with `npm i -g` a
 Run the command `mage-db-sync self-update` in any CLI
 
 ### TODO
-- Replace 'cd' in code
 - Rsync for images (Magento and Wordpress)
-- See if Magento database import could be faster with native MYSQL import
-- Wordpress
+- Import: Wordpress
     - Make import not only work when subfolder is '/wp/'
     - Before importing check if local wordpress folder +  exists
     - Create same admin user from settings.json
     - Split up Download & Import in 2 functions
-- Create dummy customer account
-- Remove SMTP settings
-- Elasticsearch
+- Import: Elasticsearch
     - Amasty / Mirasvit compatibility
 - Synchronize between production / staging servers
 - Clean up code

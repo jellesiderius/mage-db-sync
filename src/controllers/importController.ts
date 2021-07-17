@@ -103,7 +103,7 @@ class ImportController {
 
     // Starts the controller
     executeStart = async (serviceName: string | undefined): Promise<boolean> => {
-        var self = this;
+        let self = this;
 
         clearConsole();
 
@@ -139,9 +139,9 @@ class ImportController {
             .then(answers => {
                 // Set the database type
                 // Get database key to get database settings
-                var keyRegex = /\((.*)\)/i;
-                var selectedDatabase = answers.database;
-                var databaseKey = selectedDatabase.match(keyRegex)[1];
+                let keyRegex = /\((.*)\)/i;
+                let selectedDatabase = answers.database;
+                let databaseKey = selectedDatabase.match(keyRegex)[1];
 
                 // Collects database data based on key
                 this.databases.collectDatabaseData(databaseKey, this.databaseType);
@@ -240,7 +240,7 @@ class ImportController {
                     title: 'Checking Magerun2 version',
                     task: async (): Promise<Boolean> => {
                         // Check the local installed Magerun2 version before we continue and import the database
-                        var installedMagerun2Version = await this.execShellCommand('magerun2 -V');
+                        let installedMagerun2Version = await this.execShellCommand('magerun2 -V');
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
@@ -355,7 +355,7 @@ class ImportController {
                                 });
 
                                 // Dump database and move database to root of server
-                                var stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripDevelopment + '"';
+                                let stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripDevelopment + '"';
 
                                 if (self.strip == 'keep customer data') {
                                     stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"';
@@ -412,7 +412,7 @@ class ImportController {
                             title: 'Downloading database to localhost',
                             task: async (): Promise<void> => {
                                 // Download file and place it on localhost
-                                var localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
+                                let localDatabaseLocation = self.localDatabaseFolderLocation + '/' + self.serverVariables.databaseName + '.sql';
 
                                 if (this.rsyncInstalled) {
                                     await this.localhostRsyncDownloadCommand(`~/${this.serverVariables.databaseName}.sql`, `${self.localDatabaseFolderLocation}`);
@@ -427,7 +427,7 @@ class ImportController {
                                 self.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
 
                                 if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
-                                    var wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
+                                    let wordpresslocalDatabaseLocation = self.localDatabaseFolderLocation + '/' + this.wordpressConfig.database + '.sql';
 
                                     if (this.rsyncInstalled) {
                                         await this.localhostRsyncDownloadCommand(`~/${this.wordpressConfig.database}.sql`, `${self.localDatabaseFolderLocation}`);
@@ -531,6 +531,7 @@ class ImportController {
                                     // Delete queries
                                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';",
                                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
+                                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%smtp%';",
                                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';",
                                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';",
                                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';",
@@ -546,7 +547,7 @@ class ImportController {
                                     var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';",
                                         dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
 
-                                    var baseUrl = 'http://' + this.magentoLocalhostDomainName + '/';
+                                    let baseUrl = 'http://' + this.magentoLocalhostDomainName + '/';
 
                                     // Insert queries
                                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
@@ -571,10 +572,10 @@ class ImportController {
                             {
                                 title: "Configuring ElasticSearch 7/MySQL",
                                 task: async (): Promise<void> => {
-                                    var dbQuery = '';
+                                    let dbQuery = '';
                                     let dbQueryUpdate = ''
                                     let engineCheck = await this.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json');
-                                    var jsonEngineCheck = JSON.parse(<string>engineCheck)[0].Value;
+                                    let jsonEngineCheck = JSON.parse(<string>engineCheck)[0].Value;
 
                                     // Configure Elastic to use version 7
                                     if (jsonEngineCheck && jsonEngineCheck != 'mysql') {
@@ -594,10 +595,26 @@ class ImportController {
                                 }
                             },
                             {
-                                title: 'Creating admin user',
+                                title: 'Creating a admin user',
                                 task: async (): Promise<void> => {
                                     // Create a new admin user
-                                    await this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=info@email.com --admin-firstname=Firstname --admin-lastname=Lastname`);
+                                    await this.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`);
+                                }
+                            },
+                            {
+                                title: 'Creating a dummy customer on every website',
+                                task: async (): Promise<void> => {
+                                    // Create new dummy customers for all websites
+                                    // Get all websites
+                                    let allWebsites = await this.localhostMagentoRootExec(`magerun2 sys:website:list --format=json`);
+                                    allWebsites = JSON.parse(<string>allWebsites);
+
+                                    // @ts-ignore
+                                    for (const [key, value] of Object.entries(allWebsites)) {
+                                        // @ts-ignore
+                                        let code = value.code;
+                                        await this.localhostMagentoRootExec(`magerun2 customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`);
+                                    }
                                 }
                             },
                             {
@@ -607,12 +624,12 @@ class ImportController {
                                     if (this.databaseConfigurationAnswers.wordpressImport && this.databaseConfigurationAnswers.wordpressImport == 'yes') {
                                         return;
                                     } else {
-                                        var dbQuery = '';
+                                        let dbQuery = '';
                                         // Remove queries
-                                        var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
+                                        let dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
 
                                         // Insert commands
-                                        var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
+                                        let dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
 
                                         // Build up query
                                         dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
@@ -674,7 +691,7 @@ class ImportController {
                                 title: 'Configuring for development',
                                 task: async (): Promise<void> => {
                                     // Retrieve current site URL from database
-                                    var wordpressUrl = await this.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${self.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`);
+                                    let wordpressUrl = await this.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${self.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`);
                                     // @ts-ignore
                                     wordpressUrl = this.wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
                                     // Replace options for localhost
