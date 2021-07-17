@@ -2,8 +2,8 @@ import kleur from 'kleur'
 import * as readline from 'readline'
 
 const prefix = {
-    verbose: kleur.gray(kleur.bold('🛠  ')),
-    info: kleur.gray(kleur.bold('✨  ')),
+    verbose: kleur.gray(kleur.bold('🛠 ')),
+    info: kleur.gray(kleur.bold('✨ ')),
     success: kleur.gray(kleur.bold('✅ ')),
     warning: kleur.yellow(kleur.bold('⚠️  Warning: ')),
     error: kleur.red(kleur.bold('🚨 Error: ')),

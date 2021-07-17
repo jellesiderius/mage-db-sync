@@ -1,4 +1,4 @@
-import {clearConsole, error, success} from '../utils/console'
+import {clearConsole, error, info, success} from '../utils/console'
 import inquirer from 'inquirer'
 import {Listr} from 'listr2'
 // @ts-ignore
@@ -721,7 +721,9 @@ class ImportController {
 
             // Show final message when done with all tasks
             if (this.finalMessages.importDomain.length > 0) {
-                success(`Magento is successfully imported to localhost. ${this.finalMessages.importDomain} is now available`);
+                success(`Magento is successfully imported to localhost. ${this.finalMessages.importDomain} is now available.`);
+                info(`You can log in to the Magento backend with username: ${configFile.magentoBackend.adminUsername} and password: ${configFile.magentoBackend.adminPassword}`);
+                info(`For each website there is a dummy customer account available. Email: ${configFile.magentoBackend.adminEmailAddress}, Password: ${configFile.magentoBackend.adminPassword}`);
             } else if (this.finalMessages.magentoDatabaseLocation.length > 0) {
                 success(`Downloaded Magento database to: ${this.finalMessages.magentoDatabaseLocation}`);
                 // Show wordpress download message if downloaded

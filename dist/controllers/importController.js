@@ -610,7 +610,9 @@ class ImportController {
                 yield tasks.run();
                 // Show final message when done with all tasks
                 if (this.finalMessages.importDomain.length > 0) {
-                    console_1.success(`Magento is successfully imported to localhost. ${this.finalMessages.importDomain} is now available`);
+                    console_1.success(`Magento is successfully imported to localhost. ${this.finalMessages.importDomain} is now available.`);
+                    console_1.info(`You can log in to the Magento backend with username: ${settings_json_1.default.magentoBackend.adminUsername} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
+                    console_1.info(`For each website there is a dummy customer account available. Email: ${settings_json_1.default.magentoBackend.adminEmailAddress}, Password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                 }
                 else if (this.finalMessages.magentoDatabaseLocation.length > 0) {
                     console_1.success(`Downloaded Magento database to: ${this.finalMessages.magentoDatabaseLocation}`);
