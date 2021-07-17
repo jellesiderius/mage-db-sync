@@ -5,7 +5,18 @@ import productionDatabases from "../../config/databases/production.json";
 
 class DatabasesModel {
 	public databasesList: { [k: string]: any } = [];
-	public databaseData: { [k: string]: any } = {};
+	public databaseData = {
+		'username': '',
+		'password': '',
+		'server': '',
+		'domainFolder': '',
+		'port': 22,
+		'localProjectFolder': '',
+		'externalProjectFolder': '',
+		'wordpress': false,
+		'externalPhpPath': '',
+		'localProjectUrl': ''
+	};
 
 	// Collect databases | collect single database
 	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void ) => {
@@ -25,15 +36,16 @@ class DatabasesModel {
 				this.databaseData.password = database.password;
 				this.databaseData.server = database.server;
 				this.databaseData.domainFolder = database.domainFolder;
+				// @ts-ignore
 				this.databaseData.port = database.port;
-				// @ts-ignore
 				this.databaseData.localProjectFolder = database.localProjectFolder;
-				// @ts-ignore
 				this.databaseData.externalProjectFolder = database.externalProjectFolder;
 				// @ts-ignore
 				this.databaseData.wordpress = database.wordpress;
 				// @ts-ignore
 				this.databaseData.externalPhpPath = database.externalPhpPath
+				// @ts-ignore
+				this.databaseData.localProjectUrl = database.localProjectUrl
 			} else {
 				// Collect all database
 				this.databasesList.push(`${database.domainFolder} / ${database.username} (${key})`);

@@ -147,6 +147,9 @@ class ImportController {
             // Set current folder name based on current folder
             this.currentFolderName = path.basename(path.resolve(this.currentFolder));
             this.magentoLocalhostDomainName = this.currentFolderName + settings_json_1.default.general.localDomainExtension;
+            if (this.databases.databaseData.localProjectUrl) {
+                this.magentoLocalhostDomainName = this.databases.databaseData.localProjectUrl;
+            }
             // Check if current folder is Magento
             var currentFolderIsMagento = false;
             if (fs.existsSync(this.currentFolder + '/vendor/magento') || fs.existsSync(this.currentFolder + '/app/Mage.php')) {
@@ -166,6 +169,7 @@ class ImportController {
                         return false;
                     },
                 });
+                // @ts-ignore
                 if (this.databases.databaseData.wordpress && this.databases.databaseData.wordpress == true) {
                     // Add wordpress download and import option if server config has it
                     this.databaseConfigurationQuestions.push({

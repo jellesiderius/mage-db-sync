@@ -1,14 +1,27 @@
 {
     "databases": {
         "username-1-placeholder": {
-            "username": "example",
+            "username": "example1",
             "password": "",
-            "server": "example.io",
-            "domainFolder": "example.io",
+            "server": "example1.io",
+            "domainFolder": "example1.io",
             "port": "2222",
             "localProjectFolder": "",
             "externalProjectFolder": "",
             "externalPhpPath": "",
+            "localProjectUrl": "example1.development"
+            "wordpress": false
+        },
+        "username-2-placeholder": {
+            "username": "example2",
+            "password": "",
+            "server": "example2.io",
+            "domainFolder": "example2.io",
+            "port": "2222",
+            "localProjectFolder": "",
+            "externalProjectFolder": "",
+            "externalPhpPath": "",
+            "localProjectUrl": "example2.development"
             "wordpress": false
         }
     }
