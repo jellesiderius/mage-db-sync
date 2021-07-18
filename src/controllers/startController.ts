@@ -10,7 +10,7 @@ import ImportTask from "../tasks/importTask";
 import MagentoConfigureTask from "../tasks/magentoConfigureTask";
 import WordpressConfigureTask from "../tasks/wordpressConfigureTask";
 
-class TestController extends MainController {    
+class StartController extends MainController {    
     executeStart = async (): Promise<void> => {
         // Ask all the questions to the user
         await this.askQuestions();
@@ -95,4 +95,4 @@ class TestController extends MainController {
     }
 }
 
-export default TestController
+export default StartController

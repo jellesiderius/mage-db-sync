@@ -12,7 +12,7 @@ const downloadTask_1 = tslib_1.__importDefault(require("../tasks/downloadTask"))
 const importTask_1 = tslib_1.__importDefault(require("../tasks/importTask"));
 const magentoConfigureTask_1 = tslib_1.__importDefault(require("../tasks/magentoConfigureTask"));
 const wordpressConfigureTask_1 = tslib_1.__importDefault(require("../tasks/wordpressConfigureTask"));
-class TestController extends mainController_1.default {
+class StartController extends mainController_1.default {
     constructor() {
         super(...arguments);
         this.executeStart = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
@@ -86,5 +86,5 @@ class TestController extends mainController_1.default {
         });
     }
 }
-exports.default = TestController;
-//# sourceMappingURL=testController.js.map
+exports.default = StartController;
+//# sourceMappingURL=startController.js.map
