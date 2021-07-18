@@ -3,7 +3,7 @@ import commandLoader from './commands/index'
 import fs from 'fs';
 // @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
-import {error} from "./utils/console";
+import {consoleCommand, error} from "./utils/console";
 import VersionCheck from "./utils/versionCheck";
 
 getInstalledPath('mage-db-sync').then(async (path: any) => {
@@ -41,6 +41,17 @@ getInstalledPath('mage-db-sync').then(async (path: any) => {
     if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
+
+    // Remove old files... Kinda dirty but it works
+    new Promise(async (resolve, reject) => {
+        if (fs.existsSync(`${npmPath}/dist/controllers/importController.js`)) {
+            fs.unlinkSync(`${npmPath}/dist/controllers/importController.js`)
+        }
+
+        if (fs.existsSync(`${npmPath}/dist/controllers/importController.js.map`)) {
+            fs.unlinkSync(`${npmPath}/dist/controllers/importController.js.map`)
+        }
+    });
 
     program
         .version(packageJson.version)
