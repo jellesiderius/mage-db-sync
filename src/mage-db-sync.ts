@@ -51,6 +51,14 @@ getInstalledPath('mage-db-sync').then(async (path: any) => {
         if (fs.existsSync(`${npmPath}/dist/controllers/importController.js.map`)) {
             fs.unlinkSync(`${npmPath}/dist/controllers/importController.js.map`)
         }
+
+        if (fs.existsSync(`${npmPath}/dist/commands/importCommand.js`)) {
+            fs.unlinkSync(`${npmPath}/dist/controllers/importCommand.js`)
+        }
+
+        if (fs.existsSync(`${npmPath}/dist/commands/importCommand.js.map`)) {
+            fs.unlinkSync(`${npmPath}/dist/controllers/importCommand.js.map`)
+        }
     });
 
     program
