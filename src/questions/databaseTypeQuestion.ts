@@ -3,22 +3,24 @@ import inquirer from 'inquirer'
 import DatabasesModel from "../models/databasesModel";
 
 class DatabaseTypeQuestion {
-    private databases = new DatabasesModel();
+    private databasesModel = new DatabasesModel();
     private questions = [];
 
     configure = async (config: any) => {
-        this.addQuestions();
+        this.addQuestions(config);
 
         // Set database type
         await inquirer
         .prompt(this.questions)
         .then((answers: { databaseType: any; }) => {
             // Set the database type
-            config.settings.databaseType = answers.databaseType;
+            config.databases.databaseType = answers.databaseType;
+
             // Collect databases
-            this.databases.collectDatabaseData('', config.settings.databaseType);
+            this.databasesModel.collectDatabaseData('', config.settings.databaseType);
+            
             // Set database list
-            config.databasesList = this.databases.databasesList;
+            config.databases.databasesList = this.databasesModel.databasesList;
         })
         .catch((err: { message: any; }) => {
             error(`Something went wrong: ${err.message}`)
@@ -26,7 +28,7 @@ class DatabaseTypeQuestion {
     }
 
     // Add questions
-    addQuestions = async () => {
+    addQuestions = async (config: any) => {
         this.questions.push(
             {
                 type: 'list',

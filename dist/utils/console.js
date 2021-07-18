@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
+exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
 const tslib_1 = require("tslib");
 const kleur_1 = tslib_1.__importDefault(require("kleur"));
 const readline = tslib_1.__importStar(require("readline"));
@@ -66,4 +66,37 @@ const consoleCommand = (cmd) => {
     });
 };
 exports.consoleCommand = consoleCommand;
+// Navigate to Magento root folder
+const sshNavigateToMagentoRootCommand = (command, config) => {
+    // See if external project folder is filled in, otherwise try default path
+    if (config.databases.databaseData.externalProjectFolder && config.databases.databaseData.externalProjectFolder.length > 0) {
+        return `cd ${config.databases.databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+    }
+    else {
+        return 'cd domains > /dev/null 2>&1;' +
+            'cd ' + config.databases.databaseData.domainFolder + ' > /dev/null 2>&1;' +
+            'cd application > /dev/null 2>&1;' +
+            'cd public_html > /dev/null 2>&1;' +
+            'cd current > /dev/null 2>&1;' + command;
+    }
+};
+exports.sshNavigateToMagentoRootCommand = sshNavigateToMagentoRootCommand;
+// Execute a PHP script in the root of magento
+const sshMagentoRootFolderPhpCommand = (command, config) => {
+    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config);
+};
+exports.sshMagentoRootFolderPhpCommand = sshMagentoRootFolderPhpCommand;
+// Execute a PHP script in the root of magento
+const sshMagentoRootFolderMagerunCommand = (command, config) => {
+    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config);
+};
+exports.sshMagentoRootFolderMagerunCommand = sshMagentoRootFolderMagerunCommand;
+const localhostMagentoRootExec = (command, config) => {
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`);
+};
+exports.localhostMagentoRootExec = localhostMagentoRootExec;
+const localhostRsyncDownloadCommand = (source, destination, config) => {
+    return consoleCommand(`rsync -avz -e "ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`);
+};
+exports.localhostRsyncDownloadCommand = localhostRsyncDownloadCommand;
 //# sourceMappingURL=console.js.map

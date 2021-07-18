@@ -68,6 +68,38 @@ const consoleCommand = (cmd: string) => {
     });
 }
 
+// Navigate to Magento root folder
+const sshNavigateToMagentoRootCommand = (command: string, config: any) => {
+    // See if external project folder is filled in, otherwise try default path
+    if (config.databases.databaseData.externalProjectFolder && config.databases.databaseData.externalProjectFolder.length > 0) {
+        return `cd ${config.databases.databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+    } else {
+        return 'cd domains > /dev/null 2>&1;' +
+            'cd ' + config.databases.databaseData.domainFolder + ' > /dev/null 2>&1;' +
+            'cd application > /dev/null 2>&1;' +
+            'cd public_html > /dev/null 2>&1;' +
+            'cd current > /dev/null 2>&1;' + command;
+    }
+}
+
+// Execute a PHP script in the root of magento
+const sshMagentoRootFolderPhpCommand = (command: string, config: any) => {
+    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config);
+}
+
+// Execute a PHP script in the root of magento
+const sshMagentoRootFolderMagerunCommand = (command: string, config: any) => {
+    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config);
+}
+
+const localhostMagentoRootExec = (command: string, config: any) => {
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`);
+}
+
+const localhostRsyncDownloadCommand = (source: string, destination: string, config: any) => {
+    return consoleCommand(`rsync -avz -e "ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`)
+}
+
 export {
     verbose,
     info,
@@ -77,5 +109,10 @@ export {
     url,
     emptyLine,
     clearConsole,
-    consoleCommand
+    consoleCommand,
+    sshNavigateToMagentoRootCommand,
+    sshMagentoRootFolderPhpCommand,
+    sshMagentoRootFolderMagerunCommand,
+    localhostMagentoRootExec,
+    localhostRsyncDownloadCommand
 }
