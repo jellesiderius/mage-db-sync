@@ -53,6 +53,12 @@ class TestController extends MainController {
         // Build up download list
         let downloadTask = await new DownloadTask();
         await downloadTask.configure(this.list, this.config, this.ssh);
+
+        // TODO: Make import tasks
+
+         // TODO: Make Magento configure tasks
+
+         // TODO: Make Wordpress configure tasks
     }
 }
 

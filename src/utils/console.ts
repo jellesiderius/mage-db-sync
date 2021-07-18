@@ -100,6 +100,22 @@ const localhostRsyncDownloadCommand = (source: string, destination: string, conf
     return consoleCommand(`rsync -avz -e "ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`)
 }
 
+const wordpressReplaces = (entry: string, text: string) => {
+    var replacedText = entry.replace(text, ''),
+        replacedText = replacedText.replace(`,`, ''),
+        replacedText = replacedText.replace(`DEFINE`, ''),
+        replacedText = replacedText.replace(`define`, ''),
+        replacedText = replacedText.replace(`(`, ''),
+        replacedText = replacedText.replace(` `, ''),
+        replacedText = replacedText.replace(`;`, ''),
+        replacedText = replacedText.replace(`$`, ''),
+        replacedText = replacedText.replace(`)`, ''),
+        replacedText = replacedText.replace(`=`, ''),
+        replacedText = replacedText.replace("'", '').replace(/'/g,'');
+
+    return replacedText.trim();
+}
+
 export {
     verbose,
     info,
@@ -114,5 +130,6 @@ export {
     sshMagentoRootFolderPhpCommand,
     sshMagentoRootFolderMagerunCommand,
     localhostMagentoRootExec,
-    localhostRsyncDownloadCommand
+    localhostRsyncDownloadCommand,
+    wordpressReplaces
 }

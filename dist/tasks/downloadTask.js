@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
+const static_settings_json_1 = tslib_1.__importDefault(require("../../config/static-settings.json"));
 class DownloadTask {
     constructor() {
         this.downloadTasks = [];
@@ -53,6 +54,121 @@ class DownloadTask {
                     if (config.serverVariables.magentoVersion == 1) {
                         config.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
                     }
+                })
+            });
+            this.downloadTasks.push({
+                title: 'Downloading Magerun to server',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Download Magerun to the server
+                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                })
+            });
+            this.downloadTasks.push({
+                title: 'Dumping database and moving it to server root (' + config.settings.strip + ')',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Retrieve database name
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:info --format=json', config)).then((result) => {
+                        if (result) {
+                            // Get json format string and extract database names from values
+                            let jsonResult = JSON.parse(result.stdout);
+                            config.serverVariables.databaseName = jsonResult[1].Value;
+                            if (config.serverVariables.magentoVersion == 1) {
+                                config.serverVariables.databaseName = jsonResult[3].Value;
+                            }
+                        }
+                    });
+                    // Dump database and move database to root of server
+                    let stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '"';
+                    if (config.settings.strip == 'keep customer data') {
+                        stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"';
+                    }
+                    else if (config.settings.strip == 'full') {
+                        stripCommand = 'db:dump';
+                    }
+                    // Dump database and move to user root on server
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
+                    }, function (error) {
+                        throw new Error(error);
+                    });
+                    ;
+                    // Download Wordpress database
+                    if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
+                        yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('cd wp; cat wp-config.php', config)).then((result) => {
+                            if (result) {
+                                let resultValues = result.stdout.split("\n");
+                                resultValues.forEach((entry) => {
+                                    // Get DB name from config file
+                                    if (entry.includes('DB_NAME')) {
+                                        config.wordpressConfig.database = console_1.wordpressReplaces(entry, `DB_NAME`);
+                                    }
+                                    // Get DB user from config file
+                                    if (entry.includes('DB_USER')) {
+                                        config.wordpressConfig.username = console_1.wordpressReplaces(entry, `DB_USER`);
+                                    }
+                                    // Get DB password from config file
+                                    if (entry.includes('DB_PASSWORD')) {
+                                        config.wordpressConfig.password = console_1.wordpressReplaces(entry, `DB_PASSWORD`);
+                                    }
+                                    // Get DB host from config file
+                                    if (entry.includes('DB_HOST')) {
+                                        config.wordpressConfig.host = console_1.wordpressReplaces(entry, `DB_HOST`);
+                                    }
+                                    // Get table prefix from config file
+                                    if (entry.includes('table_prefix')) {
+                                        config.wordpressConfig.prefix = console_1.wordpressReplaces(entry, `table_prefix`);
+                                    }
+                                });
+                            }
+                        });
+                        yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand(`mysqldump --user='${config.wordpressConfig.username}' --password='${config.wordpressConfig.password}' -h ${config.wordpressConfig.host} ${config.wordpressConfig.database} > ${config.wordpressConfig.database}.sql; mv ${config.wordpressConfig.database}.sql ~`, config));
+                    }
+                })
+            });
+            this.downloadTasks.push({
+                title: 'Downloading database to localhost',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Download file and place it on localhost
+                    let localDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
+                    if (config.settings.rsyncInstalled) {
+                        yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${config.localDatabaseFolderLocation}`, config);
+                    }
+                    else {
+                        yield ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents) {
+                        }, function (error) {
+                            throw new Error(error);
+                        });
+                    }
+                    // Set final message with Magento DB location
+                    config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
+                    if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
+                        let wordpresslocalDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.wordpressConfig.database + '.sql';
+                        if (config.settings.rsyncInstalled) {
+                            yield console_1.localhostRsyncDownloadCommand(`~/${config.wordpressConfig.database}.sql`, `${config.localDatabaseFolderLocation}`, config);
+                        }
+                        else {
+                            yield ssh.getFile(wordpresslocalDatabaseLocation, `${config.wordpressConfig.database}.sql`).then(function (Contents) {
+                            }, function (error) {
+                                throw new Error(error);
+                            });
+                        }
+                        // Set final message with Wordpress database location
+                        config.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
+                    }
+                })
+            });
+            this.downloadTasks.push({
+                title: 'Cleaning up and closing SSH connection',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Remove the magento database file on the server
+                    yield ssh.execCommand('rm ' + config.serverVariables.databaseName + '.sql');
+                    // Remove Magerun and close connection to SSH
+                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config));
+                    // Remove the wordpress database file on the server
+                    if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
+                        yield ssh.execCommand(`rm ${config.wordpressConfig.database}.sql`);
+                    }
+                    // Close the SSH connection
+                    yield ssh.dispose();
                 })
             });
         });

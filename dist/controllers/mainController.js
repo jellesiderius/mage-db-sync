@@ -52,6 +52,13 @@ class MainController {
                 'databasesList': null,
                 'databaseType': null,
                 'databaseData': null
+            },
+            'wordpressConfig': {
+                'prefix': '',
+                'username': '',
+                'password': '',
+                'host': '',
+                'database': ''
             }
         };
         this.list = new listr2_1.Listr([], { concurrent: false });
@@ -76,10 +83,6 @@ class MainController {
             if (fs.existsSync(this.config.settings.currentFolder + '/vendor/magento') || fs.existsSync(this.config.settings.currentFolder + '/app/Mage.php')) {
                 this.config.settings.currentFolderIsMagento = true;
             }
-        };
-        this.wordpressReplaces = (entry, text) => {
-            var replacedText = entry.replace(text, ''), replacedText = replacedText.replace(`,`, ''), replacedText = replacedText.replace(`DEFINE`, ''), replacedText = replacedText.replace(`define`, ''), replacedText = replacedText.replace(`(`, ''), replacedText = replacedText.replace(` `, ''), replacedText = replacedText.replace(`;`, ''), replacedText = replacedText.replace(`$`, ''), replacedText = replacedText.replace(`)`, ''), replacedText = replacedText.replace(`=`, ''), replacedText = replacedText.replace("'", '').replace(/'/g, '');
-            return replacedText.trim();
         };
         this.configureConfig();
     }

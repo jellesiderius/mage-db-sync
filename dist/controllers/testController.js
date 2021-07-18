@@ -49,6 +49,9 @@ class TestController extends mainController_1.default {
             // Build up download list
             let downloadTask = yield new downloadTask_1.default();
             yield downloadTask.configure(this.list, this.config, this.ssh);
+            // TODO: Make import tasks
+            // TODO: Make Magento configure tasks
+            // TODO: Make Wordpress configure tasks
         });
     }
 }
