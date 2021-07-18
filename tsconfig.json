@@ -24,7 +24,7 @@
       "sourceMap": true,
       "allowJs": true,
       "noEmit": false,
-      "watch": false
+      "watch": true
     },
     "include": [
       "./src/**/*"
