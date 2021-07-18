@@ -48,10 +48,10 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__a
             fs_1.default.unlinkSync(`${npmPath}/dist/controllers/importController.js.map`);
         }
         if (fs_1.default.existsSync(`${npmPath}/dist/commands/importCommand.js`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/controllers/importCommand.js`);
+            fs_1.default.unlinkSync(`${npmPath}/dist/commands/importCommand.js`);
         }
         if (fs_1.default.existsSync(`${npmPath}/dist/commands/importCommand.js.map`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/controllers/importCommand.js.map`);
+            fs_1.default.unlinkSync(`${npmPath}/dist/commands/importCommand.js.map`);
         }
     }));
     commander_1.default
