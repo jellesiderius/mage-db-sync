@@ -67,17 +67,17 @@ class MainController {
     public databases = new DatabasesModel();
 
     constructor() {
-        this.configureConfig();
+        this.configureConfig().then();
     }
 
-    configureConfig = () => {
+    configureConfig = async () => {
         // Fetch SSH key location
         if (!this.config.customConfig.sshKeyLocation) {
             this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
-         }
+        }
 
         // Check if rsync is installed locally
-        let rsyncCheck = consoleCommand('which rsync');
+        let rsyncCheck = await consoleCommand('which rsync');
         // @ts-ignore
         if (rsyncCheck.length > 0) {
             this.config.settings.rsyncInstalled = true;

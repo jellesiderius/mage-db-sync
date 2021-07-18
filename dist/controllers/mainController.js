@@ -64,13 +64,13 @@ class MainController {
         this.list = new listr2_1.Listr([], { concurrent: false });
         this.ssh = new node_ssh_1.NodeSSH();
         this.databases = new databasesModel_1.default();
-        this.configureConfig = () => {
+        this.configureConfig = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
             // Fetch SSH key location
             if (!this.config.customConfig.sshKeyLocation) {
                 this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
             }
             // Check if rsync is installed locally
-            let rsyncCheck = console_1.consoleCommand('which rsync');
+            let rsyncCheck = yield console_1.consoleCommand('which rsync');
             // @ts-ignore
             if (rsyncCheck.length > 0) {
                 this.config.settings.rsyncInstalled = true;
@@ -83,8 +83,8 @@ class MainController {
             if (fs.existsSync(this.config.settings.currentFolder + '/vendor/magento') || fs.existsSync(this.config.settings.currentFolder + '/app/Mage.php')) {
                 this.config.settings.currentFolderIsMagento = true;
             }
-        };
-        this.configureConfig();
+        });
+        this.configureConfig().then();
     }
 }
 exports.default = MainController;

@@ -130,7 +130,7 @@ class DownloadTask {
                     // Download file and place it on localhost
                     let localDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
                     if (config.settings.rsyncInstalled) {
-                        yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${config.localDatabaseFolderLocation}`, config);
+                        yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
                     }
                     else {
                         yield ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents) {
@@ -143,7 +143,7 @@ class DownloadTask {
                     if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
                         let wordpresslocalDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.wordpressConfig.database + '.sql';
                         if (config.settings.rsyncInstalled) {
-                            yield console_1.localhostRsyncDownloadCommand(`~/${config.wordpressConfig.database}.sql`, `${config.localDatabaseFolderLocation}`, config);
+                            yield console_1.localhostRsyncDownloadCommand(`~/${config.wordpressConfig.database}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
                         }
                         else {
                             yield ssh.getFile(wordpresslocalDatabaseLocation, `${config.wordpressConfig.database}.sql`).then(function (Contents) {
