@@ -1,0 +1,1 @@
+{"version":3,"file":"downloadTask.js","sourceRoot":"","sources":["../../src/tasks/downloadTask.ts"],"names":[],"mappings":";;;AAGA,MAAM,YAAY;IAAlB;QACI,cAAS,GAAG,CAAO,IAAI,EAAE,MAAM,EAAE,EAAE;YAC/B,OAAO,CAAC,GAAG,CAAC,IAAI,CAAC,MAAM,CAAC,CAAC;YAEzB,OAAO,IAAI,CAAC;QAChB,CAAC,CAAA,CAAA;IACL,CAAC;CAAA;AAED,kBAAe,YAAY,CAAA"}
