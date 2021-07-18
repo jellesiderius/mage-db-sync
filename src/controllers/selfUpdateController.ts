@@ -2,8 +2,7 @@
 import download from 'download-git-repo'
 // @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
-import {success} from "../utils/console";
-import {ExecException} from "child_process";
+import {consoleCommand, success} from "../utils/console";
 // @ts-ignore
 import packageFile from '../../package.json';
 import VersionCheck from "../utils/versionCheck";
@@ -27,7 +26,7 @@ class SelfUpdateController {
 
         if (config.currentVersion < config.latestVersion) {
             await download('jellesiderius/mage-db-sync#master', config.npmPath, async function (err: any) {
-                await self.execShellCommand(`cd ${config.npmPath}; npm install`);
+                await consoleCommand(`cd ${config.npmPath}; npm install`);
                 success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
             });
         } else {
@@ -35,16 +34,6 @@ class SelfUpdateController {
         }
 
         return true;
-    }
-
-    // Execute shell command with a Promise
-    execShellCommand = (cmd: string) => {
-        const exec = require('child_process').exec;
-        return new Promise((resolve, reject) => {
-            exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
-                resolve(stdout ? stdout : stderr);
-            });
-        });
     }
 }
 

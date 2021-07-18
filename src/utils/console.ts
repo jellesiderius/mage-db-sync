@@ -1,5 +1,6 @@
 import kleur from 'kleur'
 import * as readline from 'readline'
+import {ExecException} from "child_process";
 
 const prefix = {
     verbose: kleur.gray(kleur.bold('🛠 ')),
@@ -58,6 +59,15 @@ const clearConsole = (): void => {
     readline.clearScreenDown(process.stdout)
 }
 
+const consoleCommand = (cmd: string) => {
+    const exec = require('child_process').exec;
+    return new Promise((resolve, reject) => {
+        exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
+            resolve(stdout ? stdout : stderr);
+        });
+    });
+}
+
 export {
     verbose,
     info,
@@ -66,5 +76,6 @@ export {
     error,
     url,
     emptyLine,
-    clearConsole
+    clearConsole,
+    consoleCommand
 }

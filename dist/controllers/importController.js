@@ -106,7 +106,7 @@ class ImportController {
                 this.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
             }
             // Check if rsync is installed locally
-            let rsyncCheck = yield this.execShellCommand('which rsync');
+            let rsyncCheck = yield console_1.consoleCommand('which rsync');
             // @ts-ignore
             if (rsyncCheck.length > 0) {
                 this.rsyncInstalled = true;
@@ -212,7 +212,7 @@ class ImportController {
                     title: 'Checking Magerun2 version',
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Check the local installed Magerun2 version before we continue and import the database
-                        let installedMagerun2Version = yield this.execShellCommand('magerun2 -V');
+                        let installedMagerun2Version = yield console_1.consoleCommand('magerun2 -V');
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
@@ -661,19 +661,10 @@ class ImportController {
             return this.sshMagentoRootFolderPhpCommand(this.serverVariables.magerunFile + ' ' + command);
         };
         this.localhostMagentoRootExec = (command) => {
-            return this.execShellCommand(`cd ${this.currentFolder}; ${command};`);
+            return console_1.consoleCommand(`cd ${this.currentFolder}; ${command};`);
         };
         this.localhostRsyncDownloadCommand = (source, destination) => {
-            return this.execShellCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port} -o StrictHostKeyChecking=no" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`);
-        };
-        // Execute shell command with a Promise
-        this.execShellCommand = (cmd) => {
-            const exec = require('child_process').exec;
-            return new Promise((resolve, reject) => {
-                exec(cmd, (error, stdout, stderr) => {
-                    resolve(stdout ? stdout : stderr);
-                });
-            });
+            return console_1.consoleCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port} -o StrictHostKeyChecking=no" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`);
         };
         this.wordpressReplaces = (entry, text) => {
             var replacedText = entry.replace(text, ''), replacedText = replacedText.replace(`,`, ''), replacedText = replacedText.replace(`DEFINE`, ''), replacedText = replacedText.replace(`define`, ''), replacedText = replacedText.replace(`(`, ''), replacedText = replacedText.replace(` `, ''), replacedText = replacedText.replace(`;`, ''), replacedText = replacedText.replace(`$`, ''), replacedText = replacedText.replace(`)`, ''), replacedText = replacedText.replace(`=`, ''), replacedText = replacedText.replace("'", '').replace(/'/g, '');

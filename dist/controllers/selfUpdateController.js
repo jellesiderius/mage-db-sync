@@ -24,7 +24,7 @@ class SelfUpdateController {
             if (config.currentVersion < config.latestVersion) {
                 yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', config.npmPath, function (err) {
                     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-                        yield self.execShellCommand(`cd ${config.npmPath}; npm install`);
+                        yield console_1.consoleCommand(`cd ${config.npmPath}; npm install`);
                         console_1.success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
                     });
                 });
@@ -34,15 +34,6 @@ class SelfUpdateController {
             }
             return true;
         });
-        // Execute shell command with a Promise
-        this.execShellCommand = (cmd) => {
-            const exec = require('child_process').exec;
-            return new Promise((resolve, reject) => {
-                exec(cmd, (error, stdout, stderr) => {
-                    resolve(stdout ? stdout : stderr);
-                });
-            });
-        };
     }
 }
 exports.default = SelfUpdateController;

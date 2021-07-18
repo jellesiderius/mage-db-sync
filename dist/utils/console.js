@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
+exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
 const tslib_1 = require("tslib");
 const kleur_1 = tslib_1.__importDefault(require("kleur"));
 const readline = tslib_1.__importStar(require("readline"));
@@ -57,4 +57,13 @@ const clearConsole = () => {
     readline.clearScreenDown(process.stdout);
 };
 exports.clearConsole = clearConsole;
+const consoleCommand = (cmd) => {
+    const exec = require('child_process').exec;
+    return new Promise((resolve, reject) => {
+        exec(cmd, (error, stdout, stderr) => {
+            resolve(stdout ? stdout : stderr);
+        });
+    });
+};
+exports.consoleCommand = consoleCommand;
 //# sourceMappingURL=console.js.map

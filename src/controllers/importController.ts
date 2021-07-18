@@ -1,4 +1,4 @@
-import {clearConsole, error, info, success} from '../utils/console'
+import {clearConsole, error, info, success, consoleCommand} from '../utils/console'
 import inquirer from 'inquirer'
 import {Listr} from 'listr2'
 // @ts-ignore
@@ -114,7 +114,7 @@ class ImportController {
         }
 
         // Check if rsync is installed locally
-        let rsyncCheck = await this.execShellCommand('which rsync');
+        let rsyncCheck = await consoleCommand('which rsync');
         // @ts-ignore
         if (rsyncCheck.length > 0) {
             this.rsyncInstalled = true;
@@ -244,7 +244,7 @@ class ImportController {
                     title: 'Checking Magerun2 version',
                     task: async (): Promise<Boolean> => {
                         // Check the local installed Magerun2 version before we continue and import the database
-                        let installedMagerun2Version = await this.execShellCommand('magerun2 -V');
+                        let installedMagerun2Version = await consoleCommand('magerun2 -V');
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
@@ -776,21 +776,11 @@ class ImportController {
     }
 
     localhostMagentoRootExec = (command: string) => {
-        return this.execShellCommand(`cd ${this.currentFolder}; ${command};`);
+        return consoleCommand(`cd ${this.currentFolder}; ${command};`);
     }
 
     localhostRsyncDownloadCommand = (source: string, destination: string) => {
-        return this.execShellCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port} -o StrictHostKeyChecking=no" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`)
-    }
-
-    // Execute shell command with a Promise
-    execShellCommand = (cmd: string) => {
-        const exec = require('child_process').exec;
-        return new Promise((resolve, reject) => {
-            exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
-                resolve(stdout ? stdout : stderr);
-            });
-        });
+        return consoleCommand(`rsync -avz -e "ssh -p ${this.databases.databaseData.port} -o StrictHostKeyChecking=no" ${this.databases.databaseData.username}@${this.databases.databaseData.server}:${source} ${destination}`)
     }
 
     wordpressReplaces = (entry: string, text: string) => {
