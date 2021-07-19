@@ -31,7 +31,7 @@ class StartController extends MainController {
             } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
                 success(`Downloaded Magento database to: ${this.config.finalMessages.magentoDatabaseLocation}`);
                 // Show wordpress download message if downloaded
-                if (this.config.finalMessages.wordpressDatabaseLocation.length > 0 && this.config.settings.wordpressImport && this.config.settings.wordpressImport == 'no') {
+                if (this.config.finalMessages.wordpressDatabaseLocation.length > 0 && this.config.settings.wordpressDownload && this.config.settings.wordpressDownload == 'yes' && this.config.settings.wordpressImport != 'yes') {
                     success(`Downloaded Wordpress database to: ${this.config.finalMessages.wordpressDatabaseLocation}`);
                 }
             }

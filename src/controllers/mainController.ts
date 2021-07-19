@@ -6,6 +6,7 @@ import * as os from 'os'
 import * as path from 'path'
 import { consoleCommand } from '../utils/console';
 import { Listr } from 'listr2';
+import CommandExists from 'command-exists';
 import inquirer from 'inquirer'
 inquirer.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
 
@@ -78,11 +79,10 @@ class MainController {
         }
 
         // Check if rsync is installed locally
-        let rsyncCheck = await consoleCommand('which rsync');
-        // @ts-ignore
-        if (rsyncCheck.length > 0) {
+        await CommandExists('npm')
+        .then((command) =>{
             this.config.settings.rsyncInstalled = true;
-        }
+        }).catch(function(){});
 
         // Get current folder from cwd
         this.config.settings.currentFolder = process.cwd();
