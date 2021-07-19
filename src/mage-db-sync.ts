@@ -3,7 +3,7 @@ import commandLoader from './commands/index'
 import fs from 'fs';
 // @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
-import {consoleCommand, error} from "./utils/console";
+import {error} from "./utils/console";
 import VersionCheck from "./utils/versionCheck";
 
 getInstalledPath('mage-db-sync').then(async (path: any) => {
@@ -42,23 +42,22 @@ getInstalledPath('mage-db-sync').then(async (path: any) => {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
 
+    let deleteFiles = [
+        `${npmPath}/dist/controllers/importController.js`,
+        `${npmPath}/dist/commands/importCommand.js`
+    ];
+
     // Remove old files... Kinda dirty but it works
-    new Promise(async (resolve, reject) => {
-        if (fs.existsSync(`${npmPath}/dist/controllers/importController.js`)) {
-            fs.unlinkSync(`${npmPath}/dist/controllers/importController.js`)
-        }
+    new Promise((resolve, reject) => {
+        deleteFiles.forEach((path) => {
+            if (fs.existsSync(`${path}`)) {
+                fs.unlinkSync(`${path}`)
+            }
 
-        if (fs.existsSync(`${npmPath}/dist/controllers/importController.js.map`)) {
-            fs.unlinkSync(`${npmPath}/dist/controllers/importController.js.map`)
-        }
-
-        if (fs.existsSync(`${npmPath}/dist/commands/importCommand.js`)) {
-            fs.unlinkSync(`${npmPath}/dist/commands/importCommand.js`)
-        }
-
-        if (fs.existsSync(`${npmPath}/dist/commands/importCommand.js.map`)) {
-            fs.unlinkSync(`${npmPath}/dist/commands/importCommand.js.map`)
-        }
+            if (fs.existsSync(`${path}.map`)) {
+                fs.unlinkSync(`${path}.map`)
+            }
+        });
     });
 
     program

@@ -1,4 +1,5 @@
 import { clearConsole, info, success } from "../utils/console";
+// @ts-ignore
 import configFile from '../../config/settings.json'
 import MainController from "./mainController";
 import DatabaseTypeQuestion from "../questions/databaseTypeQuestion";

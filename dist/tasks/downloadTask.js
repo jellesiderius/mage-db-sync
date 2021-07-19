@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
+// @ts-ignore
 const static_settings_json_1 = tslib_1.__importDefault(require("../../config/static-settings.json"));
 const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
 class DownloadTask {

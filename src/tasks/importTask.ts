@@ -1,4 +1,4 @@
-import { consoleCommand, localhostMagentoRootExec, localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
+import { localhostMagentoRootExec } from '../utils/console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 

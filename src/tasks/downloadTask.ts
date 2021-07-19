@@ -1,5 +1,6 @@
-import { consoleCommand, localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
+import {localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
 import { Listr } from 'listr2';
+// @ts-ignore
 import staticConfigFile from '../../config/static-settings.json'
 import configFile from "../../config/settings.json";
 

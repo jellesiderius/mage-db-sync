@@ -39,21 +39,21 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__a
     if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
+    let deleteFiles = [
+        `${npmPath}/dist/controllers/importController.js`,
+        `${npmPath}/dist/commands/importCommand.js`
+    ];
     // Remove old files... Kinda dirty but it works
-    new Promise((resolve, reject) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-        if (fs_1.default.existsSync(`${npmPath}/dist/controllers/importController.js`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/controllers/importController.js`);
-        }
-        if (fs_1.default.existsSync(`${npmPath}/dist/controllers/importController.js.map`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/controllers/importController.js.map`);
-        }
-        if (fs_1.default.existsSync(`${npmPath}/dist/commands/importCommand.js`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/commands/importCommand.js`);
-        }
-        if (fs_1.default.existsSync(`${npmPath}/dist/commands/importCommand.js.map`)) {
-            fs_1.default.unlinkSync(`${npmPath}/dist/commands/importCommand.js.map`);
-        }
-    }));
+    new Promise((resolve, reject) => {
+        deleteFiles.forEach((path) => {
+            if (fs_1.default.existsSync(`${path}`)) {
+                fs_1.default.unlinkSync(`${path}`);
+            }
+            if (fs_1.default.existsSync(`${path}.map`)) {
+                fs_1.default.unlinkSync(`${path}.map`);
+            }
+        });
+    });
     commander_1.default
         .version(packageJson.version)
         .usage('<command> [options]')
