@@ -44,7 +44,7 @@ class WordpressConfigureTask {
                 title: 'Cleaning up',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove wordpress database from localhost
-                    //await localhostMagentoRootExec(`cd wp; rm ${config.wordpressConfig.database}.sql`, config);
+                    yield console_1.localhostMagentoRootExec(`cd wp; rm ${config.wordpressConfig.database}.sql`, config);
                 })
             });
         });
