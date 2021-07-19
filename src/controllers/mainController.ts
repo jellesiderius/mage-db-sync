@@ -39,7 +39,9 @@ class MainController {
             'elasticSearchUsed': false,
             'import': 'no',
             'wordpressImport': 'no',
-            'currentFolderIsMagento': false
+            'wordpressDownload': 'no',
+            'currentFolderIsMagento': false,
+            'currentFolderhasWordpress': false
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
@@ -88,11 +90,6 @@ class MainController {
 
         // Set current folder name based on current folder
         this.config.settings.currentFolderName = path.basename(path.resolve(this.config.settings.currentFolder));
-
-        // Check if current folder is Magento
-        if (fs.existsSync(this.config.settings.currentFolder + '/vendor/magento') || fs.existsSync(this.config.settings.currentFolder + '/app/Mage.php')) {
-            this.config.settings.currentFolderIsMagento = true;
-        }
     }
 }
 

@@ -30,7 +30,7 @@ class StartController extends MainController {
             } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
                 success(`Downloaded Magento database to: ${this.config.finalMessages.magentoDatabaseLocation}`);
                 // Show wordpress download message if downloaded
-                if (this.config.finalMessages.wordpressDatabaseLocation.length > 0) {
+                if (this.config.finalMessages.wordpressDatabaseLocation.length > 0 && this.config.settings.wordpressImport && this.config.settings.wordpressImport == 'no') {
                     success(`Downloaded Wordpress database to: ${this.config.finalMessages.wordpressDatabaseLocation}`);
                 }
             }
@@ -77,6 +77,7 @@ class StartController extends MainController {
         let downloadTask = await new DownloadTask();
         await downloadTask.configure(this.list, this.config, this.ssh);
 
+        // Import Magento if possible
         if (this.config.settings.import && this.config.settings.import == "yes") {
             // Build import list
             let importTask = await new ImportTask();
@@ -85,12 +86,13 @@ class StartController extends MainController {
             // Build Magento configure list
             let magentoConfigureTask = await new MagentoConfigureTask();
             await magentoConfigureTask.configure(this.list, this.config);
+        }
 
-            if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes") {
-                // Build Wordpress configure list
-                let wordpressConfigureTask = await new WordpressConfigureTask();
-                await wordpressConfigureTask.configure(this.list, this.config);
-            }
+        // Import wordpress if possible
+        if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+            // Build Wordpress configure list
+            let wordpressConfigureTask = await new WordpressConfigureTask();
+            await wordpressConfigureTask.configure(this.list, this.config);
         }
     }
 }

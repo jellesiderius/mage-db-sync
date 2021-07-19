@@ -9,7 +9,7 @@ class DatabaseTypeQuestion {
         this.databasesModel = new databasesModel_1.default();
         this.questions = [];
         this.configure = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            this.addQuestions(config);
+            yield this.addQuestions(config);
             // Set database type
             yield inquirer_1.default
                 .prompt(this.questions)

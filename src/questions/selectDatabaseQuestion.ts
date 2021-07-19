@@ -9,7 +9,7 @@ class SelectDatabaseQuestion {
     private questions = [];
 
     configure = async (config: any) => {
-        this.addQuestions(config);
+        await this.addQuestions(config);
 
         await inquirer
         .prompt(this.questions)
@@ -40,9 +40,17 @@ class SelectDatabaseQuestion {
                 config.settings.magentoLocalhostDomainName = config.databases.databaseData.localProjectUrl;
             }
 
-            // Check if current is magento. This will be used to determine if we can import
+            // Check if current is magento. This will be used to determine if we can import Magento
             if (fs.existsSync(config.settings.currentFolder + '/vendor/magento') || fs.existsSync(config.settings.currentFolder + '/app/Mage.php')) {
                 config.settings.currentFolderIsMagento = true;
+            }
+
+            // Check if current folder has Wordpress. This will be used to determine if we can import Wordpress
+            if (fs.existsSync(config.settings.currentFolder + '/wp/wp-config.php')
+                || fs.existsSync(config.settings.currentFolder + '/blog/wp-config.php')
+                || fs.existsSync(config.settings.currentFolder + '/wordpress/wp-config.php')
+            ) {
+                config.settings.currentFolderhasWordpress = true;
             }
         })
         .catch((err: { message: any; }) => {

@@ -7,7 +7,7 @@ class DatabaseTypeQuestion {
     private questions = [];
 
     configure = async (config: any) => {
-        this.addQuestions(config);
+        await this.addQuestions(config);
 
         // Set database type
         await inquirer

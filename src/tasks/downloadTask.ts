@@ -1,6 +1,7 @@
 import { consoleCommand, localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
 import { Listr } from 'listr2';
 import staticConfigFile from '../../config/static-settings.json'
+import configFile from "../../config/settings.json";
 
 class DownloadTask {
     private downloadTasks = [];
@@ -83,7 +84,7 @@ class DownloadTask {
 
         this.downloadTasks.push(
             {
-                title: 'Dumping database and moving it to server root (' + config.settings.strip + ')',
+                title: 'Dumping Magento database and moving it to server root (' + config.settings.strip + ')',
                 task: async (): Promise<void> => {
                     // Retrieve database name
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:info --format=json', config)).then((result: any) => {
@@ -111,10 +112,45 @@ class DownloadTask {
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents: any) {
                     }, function (error: any) {
                         throw new Error(error)
-                    });;
+                    });
+                }
+            }
+        );
 
-                    // Download Wordpress database
-                    if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
+        this.downloadTasks.push(
+            {
+                title: 'Downloading Magento database to localhost',
+                task: async (): Promise<void> => {
+                    // Download file and place it on localhost
+                    let localDatabaseFolderLocation = config.customConfig.localDatabaseFolderLocation;
+
+                    if (config.settings.import == 'no' && config.settings.wordpressImport == 'yes') {
+                        localDatabaseFolderLocation = configFile.general.databaseLocation;
+                    }
+
+                    let localDatabaseLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
+
+                    if (config.settings.rsyncInstalled) {
+                        await localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
+                    } else {
+                        await ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents: any) {
+                        }, function (error: any) {
+                            throw new Error(error)
+                        });
+                    }
+
+                    // Set final message with Magento DB location
+                    config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
+                }
+            }
+        );
+
+        if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true && config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
+            this.downloadTasks.push(
+                {
+                    title: 'Dumping Wordpress database and moving it to server root',
+                    task: async (): Promise<void> => {
+                        // Download Wordpress database
                         await ssh.execCommand(sshNavigateToMagentoRootCommand('cd wp; cat wp-config.php', config)).then((result: any) => {
                             if (result) {
                                 let resultValues = result.stdout.split("\n");
@@ -151,29 +187,12 @@ class DownloadTask {
                         await ssh.execCommand(sshNavigateToMagentoRootCommand(`mysqldump --user='${config.wordpressConfig.username}' --password='${config.wordpressConfig.password}' -h ${config.wordpressConfig.host} ${config.wordpressConfig.database} > ${config.wordpressConfig.database}.sql; mv ${config.wordpressConfig.database}.sql ~`, config));
                     }
                 }
-            }
-        );
+            );
 
-        this.downloadTasks.push(
-            {
-                title: 'Downloading database to localhost',
-                task: async (): Promise<void> => {
-                    // Download file and place it on localhost
-                    let localDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
-
-                    if (config.settings.rsyncInstalled) {
-                        await localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
-                    } else {
-                        await ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents: any) {
-                        }, function (error: any) {
-                            throw new Error(error)
-                        });
-                    }
-
-                    // Set final message with Magento DB location
-                    config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
-
-                    if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
+            this.downloadTasks.push(
+                {
+                    title: 'Downloading Wordpress database to localhost',
+                    task: async (): Promise<void> => {
                         let wordpresslocalDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.wordpressConfig.database + '.sql';
 
                         if (config.settings.rsyncInstalled) {
@@ -189,8 +208,8 @@ class DownloadTask {
                         config.finalMessages.wordpressDatabaseLocation = wordpresslocalDatabaseLocation;
                     }
                 }
-            }
-        );
+            );
+        }
 
         this.downloadTasks.push(
             {

@@ -7,7 +7,6 @@ const node_ssh_1 = require("node-ssh");
 const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
 const os = tslib_1.__importStar(require("os"));
 const path = tslib_1.__importStar(require("path"));
-const fs = tslib_1.__importStar(require("fs"));
 const console_1 = require("../utils/console");
 const listr2_1 = require("listr2");
 const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
@@ -41,7 +40,9 @@ class MainController {
                 'elasticSearchUsed': false,
                 'import': 'no',
                 'wordpressImport': 'no',
-                'currentFolderIsMagento': false
+                'wordpressDownload': 'no',
+                'currentFolderIsMagento': false,
+                'currentFolderhasWordpress': false
             },
             'finalMessages': {
                 'magentoDatabaseLocation': '',
@@ -79,10 +80,6 @@ class MainController {
             this.config.settings.currentFolder = process.cwd();
             // Set current folder name based on current folder
             this.config.settings.currentFolderName = path.basename(path.resolve(this.config.settings.currentFolder));
-            // Check if current folder is Magento
-            if (fs.existsSync(this.config.settings.currentFolder + '/vendor/magento') || fs.existsSync(this.config.settings.currentFolder + '/app/Mage.php')) {
-                this.config.settings.currentFolderIsMagento = true;
-            }
         });
         this.configureConfig().then();
     }

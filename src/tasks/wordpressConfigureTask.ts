@@ -58,7 +58,7 @@ class WordpressConfigureTask {
                 title: 'Cleaning up',
                 task: async (): Promise<void> => {
                     // Remove wordpress database from localhost
-                    await localhostMagentoRootExec(`cd wp; rm ${config.wordpressConfig.database}.sql`, config);
+                    //await localhostMagentoRootExec(`cd wp; rm ${config.wordpressConfig.database}.sql`, config);
                 }
             }
         );

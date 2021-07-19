@@ -32,7 +32,7 @@ class StartController extends mainController_1.default {
                 else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
                     console_1.success(`Downloaded Magento database to: ${this.config.finalMessages.magentoDatabaseLocation}`);
                     // Show wordpress download message if downloaded
-                    if (this.config.finalMessages.wordpressDatabaseLocation.length > 0) {
+                    if (this.config.finalMessages.wordpressDatabaseLocation.length > 0 && this.config.settings.wordpressImport && this.config.settings.wordpressImport == 'no') {
                         console_1.success(`Downloaded Wordpress database to: ${this.config.finalMessages.wordpressDatabaseLocation}`);
                     }
                 }
@@ -70,6 +70,7 @@ class StartController extends mainController_1.default {
             // Build up download list
             let downloadTask = yield new downloadTask_1.default();
             yield downloadTask.configure(this.list, this.config, this.ssh);
+            // Import Magento if possible
             if (this.config.settings.import && this.config.settings.import == "yes") {
                 // Build import list
                 let importTask = yield new importTask_1.default();
@@ -77,11 +78,12 @@ class StartController extends mainController_1.default {
                 // Build Magento configure list
                 let magentoConfigureTask = yield new magentoConfigureTask_1.default();
                 yield magentoConfigureTask.configure(this.list, this.config);
-                if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes") {
-                    // Build Wordpress configure list
-                    let wordpressConfigureTask = yield new wordpressConfigureTask_1.default();
-                    yield wordpressConfigureTask.configure(this.list, this.config);
-                }
+            }
+            // Import wordpress if possible
+            if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+                // Build Wordpress configure list
+                let wordpressConfigureTask = yield new wordpressConfigureTask_1.default();
+                yield wordpressConfigureTask.configure(this.list, this.config);
             }
         });
     }
