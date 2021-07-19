@@ -39,8 +39,18 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     let dbQuery = '';
                     let dbQueryUpdate = '';
+                    let jsonEngineCheck = '';
                     let engineCheck = yield console_1.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json', config);
-                    let jsonEngineCheck = JSON.parse(engineCheck)[0].Value;
+                    // @ts-ignore
+                    if (engineCheck.length > 0) {
+                        try {
+                            const obj = JSON.parse(engineCheck);
+                            if (obj && typeof obj === `object`) {
+                                jsonEngineCheck = JSON.parse(engineCheck)[0].Value;
+                            }
+                        }
+                        catch (err) { }
+                    }
                     // Configure Elastic to use version 7
                     if (jsonEngineCheck && jsonEngineCheck != 'mysql') {
                         // Update queries
