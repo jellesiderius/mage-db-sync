@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
+const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
 class WordpressConfigureTask {
     constructor() {
         this.configureTasks = [];
@@ -23,7 +24,7 @@ class WordpressConfigureTask {
                 })
             });
             this.configureTasks.push({
-                title: 'Configuring for development',
+                title: `Configuring URL's for development`,
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Retrieve current site URL from database
                     let wordpressUrl = yield console_1.localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
@@ -38,6 +39,13 @@ class WordpressConfigureTask {
                     // Replace site for localhost
                     yield console_1.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
                     yield console_1.localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'https://', 'http://');"`, config);
+                })
+            });
+            this.configureTasks.push({
+                title: `Creating admin user`,
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Retrieve current site URL from database
+                    yield console_1.localhostMagentoRootExec(`cd wp; wp user create mage-db-admin ${settings_json_1.default.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${settings_json_1.default.magentoBackend.adminPassword}"`, config);
                 })
             });
             this.configureTasks.push({

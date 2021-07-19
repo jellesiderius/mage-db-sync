@@ -34,7 +34,7 @@ class WordpressConfigureTask {
 
         this.configureTasks.push(
             {
-                title: 'Configuring for development',
+                title: `Configuring URL's for development`,
                 task: async (): Promise<void> => {
                     // Retrieve current site URL from database
                     let wordpressUrl = await localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
@@ -49,6 +49,16 @@ class WordpressConfigureTask {
                     // Replace site for localhost
                     await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
                     await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'https://', 'http://');"`, config);
+                }
+            }
+        );
+
+        this.configureTasks.push(
+            {
+                title: `Creating admin user`,
+                task: async (): Promise<void> => {
+                    // Retrieve current site URL from database
+                    await localhostMagentoRootExec(`cd wp; wp user create mage-db-admin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
                 }
             }
         );

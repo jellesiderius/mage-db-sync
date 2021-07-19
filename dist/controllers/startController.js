@@ -39,6 +39,7 @@ class StartController extends mainController_1.default {
                 // Show wordpress import message if imported
                 if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == 'yes') {
                     console_1.success(`Wordpress is successfully imported to localhost.`);
+                    console_1.info(`You can log in to the Wordpress backend with username: ${settings_json_1.default.magentoBackend.adminEmailAddress} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                 }
                 process.exit();
             }
