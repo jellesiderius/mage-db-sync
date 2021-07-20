@@ -1,4 +1,3 @@
-
 import {localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
 import { Listr } from 'listr2';
 // @ts-ignore
