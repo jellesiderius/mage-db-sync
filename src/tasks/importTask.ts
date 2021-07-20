@@ -27,35 +27,25 @@ class ImportTask {
                 title: 'Checking if config/settings.json is correctly filled',
                 task: async (): Promise<void> => {
                     // Lets make sure everything is filled in
-                    if (configFile.magentoBackend.adminUsername.length == 0) {
+                    if (!configFile.magentoBackend || configFile.magentoBackend && configFile.magentoBackend.adminUsername.length == 0) {
                         throw new Error('Admin username is missing config/settings.json');
                     }
 
-                    if (configFile.magentoBackend.adminPassword.length == 0) {
+                    if (!configFile.magentoBackend.adminPassword || configFile.magentoBackend.adminPassword && configFile.magentoBackend.adminPassword.length == 0) {
                         throw new Error('Admin password is missing in config/settings.json');
                     }
 
-                    if (configFile.magentoBackend.adminEmailAddress.length == 0) {
+                    if (!configFile.magentoBackend.adminEmailAddress || configFile.magentoBackend.adminEmailAddress && configFile.magentoBackend.adminEmailAddress.length == 0) {
                         throw new Error('Admin email address is missing in config/settings.json');
                     }
 
-                    if (configFile.general.localDomainExtension.length == 0) {
+                    if (!configFile.general.localDomainExtension || configFile.general.localDomainExtension && configFile.general.localDomainExtension.length == 0) {
                         throw new Error('Local domain extension is missing in config/settings.json');
                     }
 
-                    if (configFile.general.elasticsearchPort.length == 0) {
+                    if (!configFile.general.elasticsearchPort || configFile.general.elasticsearchPort && configFile.general.elasticsearchPort.length == 0) {
                         throw new Error('ElasticSearch port is missing in config/settings.json');
                     }
-                }
-            }
-        );
-        
-        this.importTasks.push(
-            {
-                title: 'Creating database',
-                task: async (): Promise<void> => {
-                    // Create a database
-                    await localhostMagentoRootExec('magerun2 db:create', config);
                 }
             }
         );
@@ -65,7 +55,9 @@ class ImportTask {
                 title: 'Importing database',
                 task: async (): Promise<void> => {
                     // Import SQL file to database
-                    await localhostMagentoRootExec('magerun2 db:import ' + config.serverVariables.databaseName + '.sql', config);
+                    await localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --drop`, config);
+                    // Add default admin authorization rules (Fix for missing auth roles)
+                    await localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries`, config);
                 }
             }
         );
@@ -79,7 +71,6 @@ class ImportTask {
                 }
             }
         );
-        
     }
 }
 
