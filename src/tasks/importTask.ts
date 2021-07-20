@@ -27,7 +27,7 @@ class ImportTask {
                 title: 'Checking if config/settings.json is correctly filled',
                 task: async (): Promise<void> => {
                     // Lets make sure everything is filled in
-                    if (!configFile.magentoBackend || configFile.magentoBackend && configFile.magentoBackend.adminUsername.length == 0) {
+                    if (!configFile.magentoBackend.adminUsername || configFile.magentoBackend.adminUsername && configFile.magentoBackend.adminUsername.length == 0) {
                         throw new Error('Admin username is missing config/settings.json');
                     }
 

@@ -20,7 +20,7 @@ class ImportTask {
                 title: 'Checking if config/settings.json is correctly filled',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Lets make sure everything is filled in
-                    if (!settings_json_1.default.magentoBackend || settings_json_1.default.magentoBackend && settings_json_1.default.magentoBackend.adminUsername.length == 0) {
+                    if (!settings_json_1.default.magentoBackend.adminUsername || settings_json_1.default.magentoBackend.adminUsername && settings_json_1.default.magentoBackend.adminUsername.length == 0) {
                         throw new Error('Admin username is missing config/settings.json');
                     }
                     if (!settings_json_1.default.magentoBackend.adminPassword || settings_json_1.default.magentoBackend.adminPassword && settings_json_1.default.magentoBackend.adminPassword.length == 0) {
