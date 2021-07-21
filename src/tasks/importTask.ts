@@ -1,6 +1,5 @@
 import { localhostMagentoRootExec } from '../utils/console';
 import { Listr } from 'listr2';
-import configFile from '../../config/settings.json'
 
 class ImportTask {
     private importTasks = [];
@@ -21,34 +20,6 @@ class ImportTask {
                 )
             }
         )
-        
-        this.importTasks.push(
-            {
-                title: 'Checking if config/settings.json is correctly filled',
-                task: async (): Promise<void> => {
-                    // Lets make sure everything is filled in
-                    if (!configFile.magentoBackend.adminUsername || configFile.magentoBackend.adminUsername && configFile.magentoBackend.adminUsername.length == 0) {
-                        throw new Error('Admin username is missing config/settings.json');
-                    }
-
-                    if (!configFile.magentoBackend.adminPassword || configFile.magentoBackend.adminPassword && configFile.magentoBackend.adminPassword.length == 0) {
-                        throw new Error('Admin password is missing in config/settings.json');
-                    }
-
-                    if (!configFile.magentoBackend.adminEmailAddress || configFile.magentoBackend.adminEmailAddress && configFile.magentoBackend.adminEmailAddress.length == 0) {
-                        throw new Error('Admin email address is missing in config/settings.json');
-                    }
-
-                    if (!configFile.general.localDomainExtension || configFile.general.localDomainExtension && configFile.general.localDomainExtension.length == 0) {
-                        throw new Error('Local domain extension is missing in config/settings.json');
-                    }
-
-                    if (!configFile.general.elasticsearchPort || configFile.general.elasticsearchPort && configFile.general.elasticsearchPort.length == 0) {
-                        throw new Error('ElasticSearch port is missing in config/settings.json');
-                    }
-                }
-            }
-        );
         
         this.importTasks.push(
             {

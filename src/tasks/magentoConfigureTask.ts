@@ -140,7 +140,7 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: "Configuring Fishpig's Wordpress module",
+                title: "Configuring Wordpress settings within Magento",
                 task: async (): Promise<void> => {
                     // If wordpress is imported, we do nothing
                     if (config.settings.wordpressImport && config.settings.wordpressImport == 'yes') {
