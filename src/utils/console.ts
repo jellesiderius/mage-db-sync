@@ -97,7 +97,10 @@ const localhostMagentoRootExec = (command: string, config: any) => {
 }
 
 const localhostRsyncDownloadCommand = (source: string, destination: string, config: any) => {
-    return consoleCommand(`rsync -avz -e "ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`)
+    let sshCommand: string;
+    config.databases.databaseData.port ? sshCommand = `ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+
+    return consoleCommand(`rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`)
 }
 
 const wordpressReplaces = (entry: string, text: string) => {

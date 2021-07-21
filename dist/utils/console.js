@@ -96,7 +96,9 @@ const localhostMagentoRootExec = (command, config) => {
 };
 exports.localhostMagentoRootExec = localhostMagentoRootExec;
 const localhostRsyncDownloadCommand = (source, destination, config) => {
-    return consoleCommand(`rsync -avz -e "ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`);
+    let sshCommand;
+    config.databases.databaseData.port ? sshCommand = `ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+    return consoleCommand(`rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`);
 };
 exports.localhostRsyncDownloadCommand = localhostRsyncDownloadCommand;
 const wordpressReplaces = (entry, text) => {
