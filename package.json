@@ -1,6 +1,6 @@
 {
   "name": "mage-db-sync",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Database synchronizer for Magento, based on Magerun",
   "author": {
     "name": "Jelle Siderius"
