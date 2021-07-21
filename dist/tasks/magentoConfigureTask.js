@@ -90,7 +90,7 @@ class MagentoConfigureTask {
                 })
             });
             this.configureTasks.push({
-                title: "Configuring Fishpig's Wordpress module",
+                title: "Configuring Wordpress settings within Magento",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // If wordpress is imported, we do nothing
                     if (config.settings.wordpressImport && config.settings.wordpressImport == 'yes') {

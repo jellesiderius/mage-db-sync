@@ -1,7 +1,11 @@
 import * as fs from 'fs'
+import { Listr } from 'listr2';
 import { consoleCommand } from '../utils/console';
+import configFile from '../../config/settings.json'
 
 class ChecksTask {
+    private checkTasks = [];
+
     configure = async (list: any, config: any) => {
         await this.addTasks(list, config);
         return list;
@@ -9,9 +13,48 @@ class ChecksTask {
 
     // Add tasks
     addTasks = async (list: any, config: any) => {
-        if (config.settings.import && config.settings.import == 'yes') {
+        list.add(
+            {
+                title: 'Running some checks',
+                task: (ctx: any, task: any): Listr => 
+                task.newListr(
+                    this.checkTasks
+                )
+            }
+        )
+
+        if (config.settings.import && config.settings.import == 'yes' || config.settings.wordpressImport && config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+            // Check if all settings are filled in, if we import
+            this.checkTasks.push(
+                {
+                    title: 'Checking if config/settings.json is correctly filled',
+                    task: async (): Promise<void> => {
+                        // Lets make sure everything is filled in
+                        if (!configFile.magentoBackend.adminUsername || configFile.magentoBackend.adminUsername && configFile.magentoBackend.adminUsername.length == 0) {
+                            throw new Error('Admin username is missing config/settings.json');
+                        }
+    
+                        if (!configFile.magentoBackend.adminPassword || configFile.magentoBackend.adminPassword && configFile.magentoBackend.adminPassword.length == 0) {
+                            throw new Error('Admin password is missing in config/settings.json');
+                        }
+    
+                        if (!configFile.magentoBackend.adminEmailAddress || configFile.magentoBackend.adminEmailAddress && configFile.magentoBackend.adminEmailAddress.length == 0) {
+                            throw new Error('Admin email address is missing in config/settings.json');
+                        }
+    
+                        if (!configFile.general.localDomainExtension || configFile.general.localDomainExtension && configFile.general.localDomainExtension.length == 0) {
+                            throw new Error('Local domain extension is missing in config/settings.json');
+                        }
+    
+                        if (!configFile.general.elasticsearchPort || configFile.general.elasticsearchPort && configFile.general.elasticsearchPort.length == 0) {
+                            throw new Error('ElasticSearch port is missing in config/settings.json');
+                        }
+                    }
+                }
+            );
+
             // Check Magerun 2 version
-            list.add(
+            this.checkTasks.push(
                 {
                     title: 'Checking Magerun2 version',
                     task: async (ctx: any, task: any): Promise<boolean> => {
@@ -19,8 +62,8 @@ class ChecksTask {
                          let installedMagerun2Version = await consoleCommand('magerun2 -V');
                          // @ts-ignore
                          installedMagerun2Version = installedMagerun2Version.split(' ')[1];
+                         
                          // @ts-ignore
-
                         if (installedMagerun2Version < config.requirements.magerun2Version) {
                             throw new Error(`Your current Magerun2 version is too low. Magerun version ${config.requirements.magerun2Version} is required`);
                         }
@@ -32,11 +75,10 @@ class ChecksTask {
         }
 
         // Check if target folder exists before downloading
-        list.add(
+        this.checkTasks.push(
             {
                 title: 'Checking if download folder exists',
                 task: async (): Promise<Boolean> => {
-                    // Check if download folder exists
                     if (fs.existsSync(config.customConfig.localDatabaseFolderLocation)) {
                         return true;
                     }
@@ -47,7 +89,7 @@ class ChecksTask {
         );
 
         // Check if SSH key exists
-        list.add(
+        this.checkTasks.push(
             {
                 title: 'Checking if SSH key exists',
                 task: async (): Promise<Boolean> => {
@@ -59,7 +101,6 @@ class ChecksTask {
                 }
             }
         );
-
     }
 }
 
