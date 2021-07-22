@@ -45,7 +45,7 @@ class WordpressConfigureTask {
                 title: `Creating admin user`,
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Retrieve current site URL from database
-                    yield console_1.localhostMagentoRootExec(`cd wp; wp user create mage-db-admin ${settings_json_1.default.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${settings_json_1.default.magentoBackend.adminPassword}"`, config);
+                    yield console_1.localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${settings_json_1.default.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${settings_json_1.default.magentoBackend.adminPassword}"`, config);
                 })
             });
             this.configureTasks.push({

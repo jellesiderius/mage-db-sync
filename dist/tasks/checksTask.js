@@ -17,7 +17,7 @@ class ChecksTask {
                 title: 'Running some checks',
                 task: (ctx, task) => task.newListr(this.checkTasks)
             });
-            if (config.settings.import && config.settings.import == 'yes' || config.settings.wordpressImport && config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+            if (config.settings.import && config.settings.import == 'yes' || config.settings.wordpressImport && config.settings.wordpressImport == "yes" && config.settings.currentFolderhasWordpress) {
                 // Check if all settings are filled in, if we import
                 this.checkTasks.push({
                     title: 'Checking if config/settings.json is correctly filled',

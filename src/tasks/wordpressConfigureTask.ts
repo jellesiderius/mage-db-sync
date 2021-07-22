@@ -58,7 +58,7 @@ class WordpressConfigureTask {
                 title: `Creating admin user`,
                 task: async (): Promise<void> => {
                     // Retrieve current site URL from database
-                    await localhostMagentoRootExec(`cd wp; wp user create mage-db-admin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
+                    await localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
                 }
             }
         );
