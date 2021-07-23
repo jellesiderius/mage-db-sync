@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
+const shelljs = tslib_1.__importStar(require("shelljs"));
 class ImportTask {
     constructor() {
         this.importTasks = [];
@@ -14,6 +15,26 @@ class ImportTask {
             list.add({
                 title: 'Import Magento database to localhost',
                 task: (ctx, task) => task.newListr(this.importTasks)
+            });
+            this.importTasks.push({
+                title: 'Preparing database file',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    let localDatabaseCheck = yield console_1.localhostMagentoRootExec('magerun2 db:info --format=json', config);
+                    // @ts-ignore
+                    if (localDatabaseCheck && localDatabaseCheck.length > 0) {
+                        try {
+                            const obj = JSON.parse(localDatabaseCheck);
+                            if (obj && typeof obj === `object`) {
+                                let localDatabaseName = JSON.parse(localDatabaseCheck)[1].Value;
+                                let from = 'ALTER DATABASE `' + config.serverVariables.databaseName + '`';
+                                let to = 'ALTER DATABASE `' + localDatabaseName + '`';
+                                // @ts-ignore
+                                yield shelljs.sed('-i', from, to, `${config.settings.currentFolder}/${config.serverVariables.databaseName}.sql`).a;
+                            }
+                        }
+                        catch (err) { }
+                    }
+                })
             });
             this.importTasks.push({
                 title: 'Importing database',

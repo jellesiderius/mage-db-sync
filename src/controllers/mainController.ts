@@ -32,6 +32,7 @@ class MainController {
         'settings': {
             'currentFolder': '',
             'currentFolderName': '',
+            'localMagentoDatabaseName': '',
             'strip': '',
             'syncImages': false,
             'magentoLocalhostDomainName': '',

@@ -1,5 +1,6 @@
 import { localhostMagentoRootExec } from '../utils/console';
 import { Listr } from 'listr2';
+import * as shelljs from "shelljs";
 
 class ImportTask {
     private importTasks = [];
@@ -18,6 +19,29 @@ class ImportTask {
                 task.newListr(
                     this.importTasks
                 )
+            }
+        )
+
+        this.importTasks.push(
+            {
+                title: 'Preparing database file',
+                task: async (): Promise<void> => {
+                    let localDatabaseCheck = await localhostMagentoRootExec('magerun2 db:info --format=json', config);
+                    // @ts-ignore
+                    if (localDatabaseCheck && localDatabaseCheck.length > 0) {
+                        try {
+                            const obj = JSON.parse(<string>localDatabaseCheck);
+                            if (obj && typeof obj === `object`) {
+                                let localDatabaseName = JSON.parse(localDatabaseCheck)[1].Value;
+                                let from = 'ALTER DATABASE `' + config.serverVariables.databaseName + '`'
+                                let to = 'ALTER DATABASE `' + localDatabaseName + '`'
+
+                                // @ts-ignore
+                                await shelljs.sed('-i', from, to, `${config.settings.currentFolder}/${config.serverVariables.databaseName}.sql`).a;
+                            }
+                        } catch (err) {}
+                    }
+                }
             }
         )
         
