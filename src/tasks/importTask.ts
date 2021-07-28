@@ -25,8 +25,12 @@ class ImportTask {
             {
                 title: 'Importing database',
                 task: async (): Promise<void> => {
+                    // Drop database
+                    await localhostMagentoRootExec(`magerun2 db:drop -f`, config);
+                    // Create database
+                    await localhostMagentoRootExec(`magerun2 db:create`, config);
                     // Import SQL file to database
-                    await localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --drop`, config);
+                    await localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --skip-authorization-entry-creation`, config);
                     // Add default admin authorization rules (Fix for missing auth roles)
                     await localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries`, config);
                 }
