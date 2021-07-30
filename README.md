@@ -1,7 +1,5 @@
 # Database synchronizer for Magento
-
-----
-![](https://i.imgur.com/UXfPxAU.png)
+![](https://i.imgur.com/BYi0blz.jpg)
 
 ## Main functionality
 This tool downloads clean/stripped Magento databases over SSH, imports and configures it for development purposes. Have a fully configurated production or staging environment on your local machine within minutes. Making life a little bit easier.
