@@ -85,7 +85,7 @@ class MagentoConfigureTask {
                     for (const [key, value] of Object.entries(allWebsites)) {
                         // @ts-ignore
                         let code = value.code;
-                        yield console_1.localhostMagentoRootExec(`magerun2 customer:create ${settings_json_1.default.magentoBackend.adminEmailAddress} ${settings_json_1.default.magentoBackend.adminPassword} Firstname Lastname ${code}`, config);
+                        yield console_1.localhostMagentoRootExec(`magerun2 customer:create ${settings_json_1.default.magentoBackend.adminEmailAddress} ${settings_json_1.default.magentoBackend.adminPassword} Firstname Lastname ${code} > /dev/null 2>&1`, config);
                     }
                 })
             });
