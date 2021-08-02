@@ -57,11 +57,12 @@ const clearConsole = () => {
     readline.clearScreenDown(process.stdout);
 };
 exports.clearConsole = clearConsole;
-const consoleCommand = (cmd) => {
+const consoleCommand = (cmd, skipErrors) => {
     const exec = require('child_process').exec;
     return new Promise((resolve, reject) => {
         exec(cmd, (error, stdout, stderr) => {
-            if (error) {
+            if (error && !skipErrors) {
+                // @ts-ignore
                 throw new Error(error);
                 process.exit();
             }
@@ -95,14 +96,15 @@ const sshMagentoRootFolderMagerunCommand = (command, config) => {
     return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config);
 };
 exports.sshMagentoRootFolderMagerunCommand = sshMagentoRootFolderMagerunCommand;
-const localhostMagentoRootExec = (command, config) => {
-    return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`);
+const localhostMagentoRootExec = (command, config, skipErrors = false) => {
+    console.log(skipErrors);
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
 };
 exports.localhostMagentoRootExec = localhostMagentoRootExec;
 const localhostRsyncDownloadCommand = (source, destination, config) => {
     let sshCommand;
     config.databases.databaseData.port ? sshCommand = `ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
-    return consoleCommand(`rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`);
+    return consoleCommand(`rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`, false);
 };
 exports.localhostRsyncDownloadCommand = localhostRsyncDownloadCommand;
 const wordpressReplaces = (entry, text) => {

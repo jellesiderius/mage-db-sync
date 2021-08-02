@@ -4,7 +4,6 @@ import {NodeSSH} from 'node-ssh'
 import DatabasesModel from "../models/databasesModel";
 import * as os from 'os'
 import * as path from 'path'
-import { consoleCommand } from '../utils/console';
 import { Listr } from 'listr2';
 import CommandExists from 'command-exists';
 import inquirer from 'inquirer'

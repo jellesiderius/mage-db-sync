@@ -132,7 +132,7 @@ class MagentoConfigureTask {
                     for (const [key, value] of Object.entries(allWebsites)) {
                         // @ts-ignore
                         let code = value.code;
-                        await localhostMagentoRootExec(`magerun2 customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config);
+                        await localhostMagentoRootExec(`magerun2 customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
                     }
                 }
             }

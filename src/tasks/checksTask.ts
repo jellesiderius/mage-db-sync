@@ -59,7 +59,7 @@ class ChecksTask {
                     title: 'Checking Magerun2 version',
                     task: async (ctx: any, task: any): Promise<boolean> => {
                          // Check the local installed Magerun2 version before we continue and import the database
-                         let installedMagerun2Version = await consoleCommand('magerun2 -V');
+                         let installedMagerun2Version = await consoleCommand('magerun2 -V', false);
                          // @ts-ignore
                          installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                          

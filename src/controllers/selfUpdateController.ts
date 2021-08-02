@@ -25,10 +25,10 @@ class SelfUpdateController {
         });
 
         if (config.currentVersion < config.latestVersion) {
-            await consoleCommand(`cd ${config.npmPath}; rm -rf dist`);
+            await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
 
             await download('jellesiderius/mage-db-sync#master', config.npmPath, async function (err: any) {
-                await consoleCommand(`cd ${config.npmPath}; npm install`);
+                await consoleCommand(`cd ${config.npmPath}; npm install`, false);
                 success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
             });
         } else {

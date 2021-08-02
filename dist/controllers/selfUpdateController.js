@@ -22,10 +22,10 @@ class SelfUpdateController {
                 config.npmPath = path;
             });
             if (config.currentVersion < config.latestVersion) {
-                yield console_1.consoleCommand(`cd ${config.npmPath}; rm -rf dist`);
+                yield console_1.consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
                 yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', config.npmPath, function (err) {
                     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-                        yield console_1.consoleCommand(`cd ${config.npmPath}; npm install`);
+                        yield console_1.consoleCommand(`cd ${config.npmPath}; npm install`, false);
                         console_1.success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
                     });
                 });
