@@ -72,13 +72,13 @@ class MainController {
     }
 
     configureConfig = async () => {
-        // Fetch SSH key location
+        // Fetch SSH key location, if non configured
         if (!this.config.customConfig.sshKeyLocation) {
             this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
         }
 
         // Check if rsync is installed locally
-        await CommandExists('npm')
+        await CommandExists('rsync')
         .then((command) =>{
             this.config.settings.rsyncInstalled = true;
         }).catch(function(){});

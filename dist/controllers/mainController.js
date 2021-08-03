@@ -66,12 +66,12 @@ class MainController {
         this.ssh = new node_ssh_1.NodeSSH();
         this.databases = new databasesModel_1.default();
         this.configureConfig = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            // Fetch SSH key location
+            // Fetch SSH key location, if non configured
             if (!this.config.customConfig.sshKeyLocation) {
                 this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
             }
             // Check if rsync is installed locally
-            yield command_exists_1.default('npm')
+            yield command_exists_1.default('rsync')
                 .then((command) => {
                 this.config.settings.rsyncInstalled = true;
             }).catch(function () { });
