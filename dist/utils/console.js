@@ -104,7 +104,12 @@ exports.localhostMagentoRootExec = localhostMagentoRootExec;
 const localhostRsyncDownloadCommand = (source, destination, config) => {
     let sshCommand;
     config.databases.databaseData.port ? sshCommand = `ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
-    return consoleCommand(`rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`, false);
+    let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`;
+    // If password is set, use sshpass
+    if (config.databases.databaseData.password) {
+        totalRsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + totalRsyncCommand;
+    }
+    return consoleCommand(totalRsyncCommand, false);
 };
 exports.localhostRsyncDownloadCommand = localhostRsyncDownloadCommand;
 const wordpressReplaces = (entry, text) => {
