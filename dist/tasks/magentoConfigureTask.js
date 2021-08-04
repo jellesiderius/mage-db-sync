@@ -112,7 +112,7 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Downgrade module data in database
-                    yield console_1.localhostMagentoRootExec("magerun2 sys:setup:downgrade-versions", config);
+                    yield console_1.localhostMagentoRootExec("magerun2 sys:setup:downgrade-versions; magerun2 setup:upgrade", config);
                 })
             });
             this.configureTasks.push({
