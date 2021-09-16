@@ -188,7 +188,7 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        await localhostMagentoRootExec(`magerun2 index:reindex`, config);
+                        await localhostMagentoRootExec(`magerun2 index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
                 }
             }

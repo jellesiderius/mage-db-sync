@@ -127,7 +127,7 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        yield console_1.localhostMagentoRootExec(`magerun2 index:reindex`, config);
+                        yield console_1.localhostMagentoRootExec(`magerun2 index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
                 })
             });
