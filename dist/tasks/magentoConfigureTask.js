@@ -51,8 +51,8 @@ class MagentoConfigureTask {
                         }
                         catch (err) { }
                     }
-                    // Configure Elastic to use version 7
-                    if (jsonEngineCheck && jsonEngineCheck != 'mysql') {
+                    // Configure Elastic to use version 7 if engine is not mysql
+                    if (jsonEngineCheck.indexOf("mysql") == -1) {
                         // Update queries
                         dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
                             dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${settings_json_1.default.general.elasticsearchPort}' WHERE path LIKE '%_server_port%';`,

@@ -80,7 +80,7 @@ class DownloadTask {
                         }
                     });
                     // Dump database and move database to root of server
-                    let stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '"';
+                    let stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '"';
                     if (config.settings.strip == 'keep customer data') {
                         stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"';
                     }
