@@ -23,7 +23,7 @@ class ImportTask {
                     // Create database
                     yield console_1.localhostMagentoRootExec(`magerun2 db:create`, config);
                     // Import SQL file to database
-                    yield console_1.localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --skip-authorization-entry-creation`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation`, config);
                     // Add default admin authorization rules (Fix for missing auth roles)
                     yield console_1.localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries`, config);
                 })
