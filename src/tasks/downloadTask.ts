@@ -101,12 +101,12 @@ class DownloadTask {
                     });
 
                     // Dump database and move database to root of server
-                    let stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripDevelopment + '"';
+                    let stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
 
                     if (config.settings.strip == 'keep customer data') {
-                        stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"';
+                        stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                     } else if (config.settings.strip == 'full') {
-                        stripCommand = 'db:dump'
+                        stripCommand = 'db:dump' + config.serverVariables.databaseName + '.sql';
                     }
 
                     // Dump database and move to user root on server
