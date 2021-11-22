@@ -55,6 +55,19 @@ class ChecksTask {
                         return true;
                     })
                 });
+                if (config.settings.import && config.settings.import == 'yes') {
+                    // Check if target folder exists before downloading
+                    this.checkTasks.push({
+                        title: 'Checking if env.php file exists',
+                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                            let envFileLocation = config.settings.currentFolder + '/app/etc/env.php';
+                            if (fs.existsSync(envFileLocation)) {
+                                return true;
+                            }
+                            throw new Error(`env.php is missing, make sure ${envFileLocation} exists.`);
+                        })
+                    });
+                }
             }
             // Check if target folder exists before downloading
             this.checkTasks.push({
