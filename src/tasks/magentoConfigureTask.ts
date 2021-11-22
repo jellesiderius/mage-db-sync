@@ -15,13 +15,13 @@ class MagentoConfigureTask {
         list.add(
             {
                 title: 'Configuring Magento for development usage',
-                task: (ctx: any, task: any): Listr => 
+                task: (ctx: any, task: any): Listr =>
                 task.newListr(
                     this.configureTasks
                 )
             }
         )
-        
+
         this.configureTasks.push(
             {
                 title: "Replacing URL's and doing some preperation for development",
@@ -113,6 +113,10 @@ class MagentoConfigureTask {
             {
                 title: 'Creating a admin user',
                 task: async (): Promise<void> => {
+                    // Remove all current admin users
+                    var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
+                    await localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+
                     // Create a new admin user
                     await localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
                 }

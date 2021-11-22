@@ -7,12 +7,12 @@ const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.j
 class ChecksTask {
     constructor() {
         this.checkTasks = [];
-        this.configure = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            yield this.addTasks(list, config);
+        this.configure = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            yield this.addTasks(list, config, ssh);
             return list;
         });
         // Add tasks
-        this.addTasks = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addTasks = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             list.add({
                 title: 'Running some checks',
                 task: (ctx, task) => task.newListr(this.checkTasks)

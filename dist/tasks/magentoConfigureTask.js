@@ -70,6 +70,9 @@ class MagentoConfigureTask {
             this.configureTasks.push({
                 title: 'Creating a admin user',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Remove all current admin users
+                    var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
+                    yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
                     // Create a new admin user
                     yield console_1.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
                 })
