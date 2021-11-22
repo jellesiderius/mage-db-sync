@@ -39,7 +39,7 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     let dbQuery = '';
                     let dbQueryUpdate = '';
-                    let jsonEngineCheck = '';
+                    let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
                     let engineCheck = yield console_1.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json', config);
                     // @ts-ignore
                     if (engineCheck.length > 0) {
@@ -56,10 +56,21 @@ class MagentoConfigureTask {
                         // Update queries
                         dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
                             dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${settings_json_1.default.general.elasticsearchPort}' WHERE path LIKE '%_server_port%';`,
+                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`;
+                        // Amasty elasticsearch check
+                        if (jsonEngineCheck.indexOf("amasty_elastic") !== -1) {
+                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%_index_prefix%';`,
+                                dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
+                                dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'amasty_elastic' WHERE path = 'catalog/search/engine';`,
+                                dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'amasty_elastic' WHERE path = 'amasty_elastic/connection/engine';`;
+                        }
+                        else {
+                            // Standard elasticsearch7 settings
                             dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development' WHERE path LIKE '%_index_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
+                                dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
+                                dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
+                        }
+                        // @TODO: Mirasvit
                         // Build up query
                         dbQuery = dbQueryUpdate;
                         yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
