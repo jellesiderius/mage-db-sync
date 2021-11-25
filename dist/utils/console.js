@@ -97,7 +97,6 @@ const sshMagentoRootFolderMagerunCommand = (command, config) => {
 };
 exports.sshMagentoRootFolderMagerunCommand = sshMagentoRootFolderMagerunCommand;
 const localhostMagentoRootExec = (command, config, skipErrors = false) => {
-    console.log(skipErrors);
     return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
 };
 exports.localhostMagentoRootExec = localhostMagentoRootExec;
