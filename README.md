@@ -1,4 +1,4 @@
-# Database synchronization tool for Magento 2
+# Database synchronization tool for Magento 2 (Mac/Linux)
 ![](https://i.imgur.com/2MNYHiK.png)
 
 ## Main functionality
