@@ -90,8 +90,8 @@ class ConfigurationQuestions {
                 {
                     type: 'list',
                     name: 'syncImages',
-                    default: 'yes',
-                    message: 'Synchronize media images?',
+                    default: 'no',
+                    message: 'Synchronize Magento media images?',
                     choices: ['yes', 'no'],
                     validate: (input: string) => {
                         return false;
