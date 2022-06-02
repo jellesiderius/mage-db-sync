@@ -32,7 +32,7 @@ class MainController {
             'currentFolder': '',
             'currentFolderName': '',
             'strip': '',
-            'syncImages': false,
+            'syncImages': 'no',
             'magentoLocalhostDomainName': '',
             'rsyncInstalled': false,
             'elasticSearchUsed': false,

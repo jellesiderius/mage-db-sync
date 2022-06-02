@@ -37,6 +37,18 @@ class ImportTask {
             }
         );
 
+        if (config.settings.syncImages == 'yes') {
+            this.importTasks.push(
+                {
+                    title: 'Synchronizing media images',
+                    task: async (): Promise<void> => {
+                        // Sync media
+                        await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                    }
+                }
+            );
+        }
+
         this.importTasks.push(
             {
                 title: 'Cleaning up',

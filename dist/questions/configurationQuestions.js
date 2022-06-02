@@ -17,6 +17,10 @@ class ConfigurationQuestions {
                 config.settings.strip = answers.strip;
                 // Set import setting for Magento
                 config.settings.import = answers.import;
+                if (config.settings.rsyncInstalled) {
+                    // Set image import setting for Shopware
+                    config.settings.syncImages = answers.syncImages;
+                }
                 // Set wordpress download value
                 config.settings.wordpressDownload = answers.wordpressDownload;
                 // Change location of database download depending on answer
@@ -63,6 +67,18 @@ class ConfigurationQuestions {
                     name: 'import',
                     default: 'yes',
                     message: 'Import Magento database?',
+                    choices: ['yes', 'no'],
+                    validate: (input) => {
+                        return false;
+                    },
+                });
+            }
+            if (config.settings.rsyncInstalled) {
+                this.questionsOne.push({
+                    type: 'list',
+                    name: 'syncImages',
+                    default: 'yes',
+                    message: 'Synchronize media images?',
                     choices: ['yes', 'no'],
                     validate: (input) => {
                         return false;
