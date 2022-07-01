@@ -21,7 +21,7 @@ class MainController {
                 'localDomainExtension': settings_json_1.default.general.localDomainExtension
             },
             'requirements': {
-                'magerun2Version': '4.7.0'
+                'magerun2Version': '5.1.0'
             },
             'serverVariables': {
                 'magentoVersion': 2,

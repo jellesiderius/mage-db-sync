@@ -50,7 +50,7 @@ class ChecksTask {
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
                         if (installedMagerun2Version < config.requirements.magerun2Version) {
-                            throw new Error(`Your current Magerun2 version is too low. Magerun version ${config.requirements.magerun2Version} is required`);
+                            throw new Error(`Your current Magerun2 version is too low. Magerun version ${config.requirements.magerun2Version} is required. Try updating Magerun using CLI command 'magerun2 self-update'`);
                         }
                         return true;
                     })
