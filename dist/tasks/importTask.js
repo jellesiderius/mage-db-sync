@@ -18,12 +18,10 @@ class ImportTask {
             this.importTasks.push({
                 title: 'Importing database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Drop database
-                    yield console_1.localhostMagentoRootExec(`magerun2 db:drop -f -q`, config);
                     // Create database
                     yield console_1.localhostMagentoRootExec(`magerun2 db:create -q`, config);
                     // Import SQL file to database
-                    yield console_1.localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
                     // Add default admin authorization rules (Fix for missing auth roles)
                     yield console_1.localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries -q`, config);
                 })

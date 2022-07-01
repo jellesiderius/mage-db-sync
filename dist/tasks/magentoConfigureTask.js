@@ -74,7 +74,6 @@ class MagentoConfigureTask {
                                 dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
                                 dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
                         }
-                        // @TODO: Mirasvit
                         // Build up query
                         dbQuery = dbQueryUpdate;
                         yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);

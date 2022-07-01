@@ -111,8 +111,6 @@ class MagentoConfigureTask {
                             dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
                         }
 
-                        // @TODO: Mirasvit
-
                         // Build up query
                         dbQuery = dbQueryUpdate;
 
