@@ -92,6 +92,18 @@ class MagentoConfigureTask {
                 })
             });
             this.configureTasks.push({
+                title: 'Disable reCAPTCHA',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set admin/captcha/enable 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set customer/captcha/enable 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set recaptcha/general/enabled 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                })
+            });
+            this.configureTasks.push({
                 title: 'Creating a dummy customer on every website',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create new dummy customers for all websites
