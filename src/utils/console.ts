@@ -97,8 +97,12 @@ const sshMagentoRootFolderMagerunCommand = (command: string, config: any) => {
     return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config);
 }
 
-const localhostMagentoRootExec = (command: string, config: any, skipErrors: boolean = false) => {
-    return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+const localhostMagentoRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {
+    if (!removeQuote) {
+        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+    }
+
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
 }
 
 const localhostRsyncDownloadCommand = (source: string, destination: string, config: any) => {

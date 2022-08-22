@@ -269,3 +269,4 @@ out
 config/databases/production.json
 config/databases/staging.json
 config/settings.json
+config/commands/*

@@ -18,7 +18,8 @@ class DatabasesModel {
             'externalProjectFolder': '',
             'wordpress': false,
             'externalPhpPath': '',
-            'localProjectUrl': ''
+            'localProjectUrl': '',
+            'commandsFolder': ''
         };
         // Collect databases | collect single database
         this.collectDatabaseData = (databaseKey, databaseType) => tslib_1.__awaiter(this, void 0, void 0, function* () {
@@ -46,6 +47,9 @@ class DatabasesModel {
                     this.databaseData.externalPhpPath = database.externalPhpPath;
                     // @ts-ignore
                     this.databaseData.localProjectUrl = database.localProjectUrl;
+                    if (database.commandsFolder) {
+                        this.databaseData.commandsFolder = database.commandsFolder;
+                    }
                 }
                 else {
                     // Collect all database

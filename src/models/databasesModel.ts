@@ -15,7 +15,8 @@ class DatabasesModel {
 		'externalProjectFolder': '',
 		'wordpress': false,
 		'externalPhpPath': '',
-		'localProjectUrl': ''
+		'localProjectUrl': '',
+		'commandsFolder': ''
 	};
 
 	// Collect databases | collect single database
@@ -43,9 +44,13 @@ class DatabasesModel {
 				// @ts-ignore
 				this.databaseData.wordpress = database.wordpress;
 				// @ts-ignore
-				this.databaseData.externalPhpPath = database.externalPhpPath
+				this.databaseData.externalPhpPath = database.externalPhpPath;
 				// @ts-ignore
-				this.databaseData.localProjectUrl = database.localProjectUrl
+				this.databaseData.localProjectUrl = database.localProjectUrl;
+
+				if (database.commandsFolder) {
+					this.databaseData.commandsFolder = database.commandsFolder;
+				}
 			} else {
 				// Collect all database
 				this.databasesList.push(`${database.domainFolder} / ${database.username} (${key})`);

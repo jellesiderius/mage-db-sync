@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { Listr } from 'listr2';
-import { consoleCommand } from '../utils/console';
+import {consoleCommand, localhostMagentoRootExec} from '../utils/console';
 import configFile from '../../config/settings.json'
 
 class ChecksTask {

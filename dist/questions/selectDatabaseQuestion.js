@@ -45,6 +45,30 @@ class SelectDatabaseQuestion {
                     || fs.existsSync(config.settings.currentFolder + '/wordpress/wp-config.php')) {
                     config.settings.currentFolderhasWordpress = true;
                 }
+                // Handle commands
+                if (config.databases.databaseData.commandsFolder) {
+                    let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
+                    let commandsPath = path.join(projectDatabasesRoot, config.databases.databaseData.commandsFolder);
+                    if (fs.existsSync(commandsPath)) {
+                        // @ts-ignore
+                        let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath + '/' + file).isFile());
+                        if (filesArray.length > 0) {
+                            for (const file of filesArray) {
+                                let filePath = commandsPath + '/' + file;
+                                if (file == 'database.txt') {
+                                    let data = fs.readFileSync(filePath, 'utf8');
+                                    let dataString = data.toString().split('\n').join('');
+                                    config.settings.databaseCommand = dataString;
+                                }
+                                if (file == 'magerun2.txt') {
+                                    let data = fs.readFileSync(filePath, 'utf8');
+                                    let dataString = data.toString().split('\n').join('');
+                                    config.settings.magerun2Command = dataString;
+                                }
+                            }
+                        }
+                    }
+                }
             })
                 .catch((err) => {
                 console_1.error(`Something went wrong: ${err.message}`);

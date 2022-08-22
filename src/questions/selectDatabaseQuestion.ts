@@ -3,6 +3,7 @@ import inquirer from 'inquirer'
 import DatabasesModel from "../models/databasesModel";
 import * as path from 'path'
 import * as fs from 'fs'
+import {command} from "commander";
 
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
@@ -21,7 +22,7 @@ class SelectDatabaseQuestion {
 
             // Collects database data based on key
             this.databasesModel.collectDatabaseData(databaseKey, config.databases.databaseType);
-            
+
             // Set database data in config
             config.databases.databaseData = this.databasesModel.databaseData;
 
@@ -52,6 +53,37 @@ class SelectDatabaseQuestion {
             ) {
                 config.settings.currentFolderhasWordpress = true;
             }
+
+            // Handle commands
+            if (config.databases.databaseData.commandsFolder) {
+                let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
+                let commandsPath = path.join(projectDatabasesRoot, config.databases.databaseData.commandsFolder);
+
+                if (fs.existsSync(commandsPath)) {
+                    // @ts-ignore
+                    let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath+'/'+file).isFile())
+                    if (filesArray.length > 0) {
+                        for (const file of filesArray) {
+                            let filePath = commandsPath + '/' + file;
+
+                            if (file == 'database.txt') {
+                                let data = fs.readFileSync(filePath, 'utf8');
+                                let dataString = data.toString().split('\n').join('');
+
+                                config.settings.databaseCommand = dataString;
+                            }
+
+                            if (file == 'magerun2.txt') {
+                                let data = fs.readFileSync(filePath, 'utf8');
+                                let dataString = data.toString().split('\n').join('');
+
+                                config.settings.magerun2Command = dataString;
+                            }
+                        }
+                    }
+                }
+            }
+
         })
         .catch((err: { message: any; }) => {
             error(`Something went wrong: ${err.message}`)

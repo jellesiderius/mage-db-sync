@@ -203,6 +203,27 @@ class MagentoConfigureTask {
             }
         );
 
+        if (config.settings.runCommands && config.settings.runCommands == 'yes') {
+            this.configureTasks.push(
+                {
+                    title: 'Running project commands',
+                    task: async (): Promise<void> => {
+
+                        // Magerun2 commands
+                        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
+                            await localhostMagentoRootExec(config.settings.magerun2Command, config, false, true);
+                        }
+
+                        // Database queries
+                        if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                            let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
+                            await localhostMagentoRootExec(`magerun2 db:query '` + dbQuery + `'`, config, false, true);
+                        }
+                    }
+                }
+            );
+        }
+
         this.configureTasks.push(
             {
                 title: 'Removing generated code',

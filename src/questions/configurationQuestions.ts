@@ -16,11 +16,15 @@ class ConfigurationQuestions {
                 config.settings.strip = answers.strip;
 
                 // Set import setting for Magento
-                config.settings.import = answers.import
+                config.settings.import = answers.import;
 
                 if (config.settings.rsyncInstalled) {
                     // Set image import setting for Shopware
-                    config.settings.syncImages = answers.syncImages
+                    config.settings.syncImages = answers.syncImages;
+                }
+
+                if (answers.runCommands && answers.runCommands == 'yes') {
+                    config.settings.runCommands = 'yes';
                 }
 
                 // Set wordpress download value
@@ -92,6 +96,21 @@ class ConfigurationQuestions {
                     name: 'syncImages',
                     default: 'no',
                     message: 'Synchronize Magento media images?',
+                    choices: ['yes', 'no'],
+                    validate: (input: string) => {
+                        return false;
+                    },
+                }
+            );
+        }
+
+        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+            this.questionsOne.push(
+                {
+                    type: 'list',
+                    name: 'runCommands',
+                    default: 'yes',
+                    message: 'Run project commands?',
                     choices: ['yes', 'no'],
                     validate: (input: string) => {
                         return false;

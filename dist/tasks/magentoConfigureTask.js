@@ -144,6 +144,22 @@ class MagentoConfigureTask {
                     yield console_1.localhostMagentoRootExec("magerun2 sys:setup:downgrade-versions; magerun2 setup:upgrade", config);
                 })
             });
+            if (config.settings.runCommands && config.settings.runCommands == 'yes') {
+                this.configureTasks.push({
+                    title: 'Running project commands',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Magerun2 commands
+                        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
+                            yield console_1.localhostMagentoRootExec(config.settings.magerun2Command, config, false, true);
+                        }
+                        // Database queries
+                        if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                            let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
+                            yield console_1.localhostMagentoRootExec(`magerun2 db:query '` + dbQuery + `'`, config, false, true);
+                        }
+                    })
+                });
+            }
             this.configureTasks.push({
                 title: 'Removing generated code',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {

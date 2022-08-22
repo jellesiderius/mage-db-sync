@@ -21,6 +21,9 @@ class ConfigurationQuestions {
                     // Set image import setting for Shopware
                     config.settings.syncImages = answers.syncImages;
                 }
+                if (answers.runCommands && answers.runCommands == 'yes') {
+                    config.settings.runCommands = 'yes';
+                }
                 // Set wordpress download value
                 config.settings.wordpressDownload = answers.wordpressDownload;
                 // Change location of database download depending on answer
@@ -79,6 +82,18 @@ class ConfigurationQuestions {
                     name: 'syncImages',
                     default: 'no',
                     message: 'Synchronize Magento media images?',
+                    choices: ['yes', 'no'],
+                    validate: (input) => {
+                        return false;
+                    },
+                });
+            }
+            if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                this.questionsOne.push({
+                    type: 'list',
+                    name: 'runCommands',
+                    default: 'yes',
+                    message: 'Run project commands?',
                     choices: ['yes', 'no'],
                     validate: (input) => {
                         return false;

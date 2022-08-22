@@ -40,7 +40,10 @@ class MainController {
             'wordpressImport': 'no',
             'wordpressDownload': 'no',
             'currentFolderIsMagento': false,
-            'currentFolderhasWordpress': false
+            'currentFolderhasWordpress': false,
+            'runCommands': false,
+            'magerun2Command': '',
+            'databaseCommand': '',
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
