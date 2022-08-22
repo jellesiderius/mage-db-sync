@@ -1,0 +1,2 @@
+magerun2 sys:cron:run sitemap_generate;
+magerun2 sys:cron:run consumers_runner;

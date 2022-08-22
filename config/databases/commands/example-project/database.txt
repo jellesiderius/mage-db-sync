@@ -1,0 +1,2 @@
+UPDATE core_config_data SET `value` = "http://github.com/jellesiderius/mage-db-sync" WHERE `path` = "web/unsecure/base_url";
+UPDATE core_config_data SET `value` = "https://github.com/jellesiderius/mage-db-sync" WHERE `path` = "web/secure/base_url";
