@@ -87,36 +87,36 @@ class ConfigurationQuestions {
                     },
                 }
             );
-        }
 
-        if (config.settings.rsyncInstalled) {
-            this.questionsOne.push(
-                {
-                    type: 'list',
-                    name: 'syncImages',
-                    default: 'no',
-                    message: 'Synchronize Magento media images?',
-                    choices: ['yes', 'no'],
-                    validate: (input: string) => {
-                        return false;
-                    },
-                }
-            );
-        }
+            if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                this.questionsOne.push(
+                    {
+                        type: 'list',
+                        name: 'runCommands',
+                        default: 'yes',
+                        message: 'Run project commands?',
+                        choices: ['yes', 'no'],
+                        validate: (input: string) => {
+                            return false;
+                        },
+                    }
+                );
+            }
 
-        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
-            this.questionsOne.push(
-                {
-                    type: 'list',
-                    name: 'runCommands',
-                    default: 'yes',
-                    message: 'Run project commands?',
-                    choices: ['yes', 'no'],
-                    validate: (input: string) => {
-                        return false;
-                    },
-                }
-            );
+            if (config.settings.rsyncInstalled) {
+                this.questionsOne.push(
+                    {
+                        type: 'list',
+                        name: 'syncImages',
+                        default: 'no',
+                        message: 'Synchronize Magento media images?',
+                        choices: ['yes', 'no'],
+                        validate: (input: string) => {
+                            return false;
+                        },
+                    }
+                );
+            }
         }
 
         if (config.databases.databaseData.wordpress) {
