@@ -271,3 +271,4 @@ config/databases/staging.json
 config/settings.json
 config/databases/commands/*
 !config/databases/commands/example-project
+config/databases/custom-commands
