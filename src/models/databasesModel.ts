@@ -16,13 +16,35 @@ class DatabasesModel {
 		'wordpress': false,
 		'externalPhpPath': '',
 		'localProjectUrl': '',
-		'commandsFolder': ''
+		'commandsFolder': '',
+		'stagingUsername': ''
+	};
+
+	public databaseDataSecond = {
+		'username': '',
+		'password': '',
+		'server': '',
+		'domainFolder': '',
+		'port': 22,
+		'localProjectFolder': '',
+		'externalProjectFolder': '',
+		'wordpress': false,
+		'externalPhpPath': '',
+		'localProjectUrl': '',
+		'commandsFolder': '',
+		'stagingUsername': ''
 	};
 
 	// Collect databases | collect single database
-	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void ) => {
+	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void) => {
 		// @ts-ignore
 		var databases = stagingDatabases.databases;
+		// @ts-ignore
+		var databaseDataType = this.databaseData;
+
+		if (collectStaging) {
+			databaseDataType = this.databaseDataSecond;
+		}
 
 		if (databaseType == 'production') {
 			// @ts-ignore
@@ -32,24 +54,29 @@ class DatabasesModel {
 		for (let [key, database] of Object.entries(databases)) {
 			if (databaseKey == key) {
 				// Collect single database info
-				this.databaseData.username = database.username;
+				databaseDataType.username = database.username;
 				// @ts-ignore
-				this.databaseData.password = database.password;
-				this.databaseData.server = database.server;
-				this.databaseData.domainFolder = database.domainFolder;
+				databaseDataType.password = database.password;
+				databaseDataType.server = database.server;
+				databaseDataType.domainFolder = database.domainFolder;
 				// @ts-ignore
-				this.databaseData.port = database.port;
-				this.databaseData.localProjectFolder = database.localProjectFolder;
-				this.databaseData.externalProjectFolder = database.externalProjectFolder;
+				databaseDataType.port = database.port;
+				databaseDataType.localProjectFolder = database.localProjectFolder;
+				databaseDataType.externalProjectFolder = database.externalProjectFolder;
 				// @ts-ignore
-				this.databaseData.wordpress = database.wordpress;
+				databaseDataType.wordpress = database.wordpress;
 				// @ts-ignore
-				this.databaseData.externalPhpPath = database.externalPhpPath;
+				databaseDataType.externalPhpPath = database.externalPhpPath;
 				// @ts-ignore
-				this.databaseData.localProjectUrl = database.localProjectUrl;
+				databaseDataType.localProjectUrl = database.localProjectUrl;
 
 				if (database.commandsFolder) {
-					this.databaseData.commandsFolder = database.commandsFolder;
+					databaseDataType.commandsFolder = database.commandsFolder;
+				}
+
+				if (database.stagingUsername) {
+					databaseDataType.stagingUsername = database.stagingUsername;
+					await this.collectDatabaseData(databaseDataType.stagingUsername, 'staging', true)
 				}
 			} else {
 				// Collect all database

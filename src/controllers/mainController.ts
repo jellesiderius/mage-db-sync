@@ -44,6 +44,7 @@ class MainController {
             'runCommands': false,
             'magerun2Command': '',
             'databaseCommand': '',
+            'syncDatabases': 'no'
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
@@ -53,7 +54,8 @@ class MainController {
         'databases': {
             'databasesList': null,
             'databaseType': null,
-            'databaseData': null
+            'databaseData': null,
+            'databaseDataSecond': null
         },
         'wordpressConfig': {
             'prefix': '',

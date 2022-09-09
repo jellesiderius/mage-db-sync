@@ -23,6 +23,7 @@ class SelectDatabaseQuestion {
                 this.databasesModel.collectDatabaseData(databaseKey, config.databases.databaseType);
                 // Set database data in config
                 config.databases.databaseData = this.databasesModel.databaseData;
+                config.databases.databaseDataSecond = this.databasesModel.databaseDataSecond;
                 // If local folder is set for project, use that as currentFolder
                 config.settings.currentFolder = process.cwd();
                 if (config.databases.databaseData.localProjectFolder && config.databases.databaseData.localProjectFolder.length > 0) {

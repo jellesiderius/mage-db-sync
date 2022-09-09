@@ -13,6 +13,7 @@ const downloadTask_1 = tslib_1.__importDefault(require("../tasks/downloadTask"))
 const importTask_1 = tslib_1.__importDefault(require("../tasks/importTask"));
 const magentoConfigureTask_1 = tslib_1.__importDefault(require("../tasks/magentoConfigureTask"));
 const wordpressConfigureTask_1 = tslib_1.__importDefault(require("../tasks/wordpressConfigureTask"));
+const syncDatabasesQuestions_1 = tslib_1.__importDefault(require("../questions/syncDatabasesQuestions"));
 class StartController extends mainController_1.default {
     constructor() {
         super(...arguments);
@@ -58,34 +59,49 @@ class StartController extends mainController_1.default {
             // Make user choose a database from the list
             let selectDatabaseQuestion = yield new selectDatabaseQuestion_1.default();
             yield selectDatabaseQuestion.configure(this.config);
-            // Adds multiple configuration questions
-            let configurationQuestions = yield new configurationQuestions_1.default();
-            yield configurationQuestions.configure(this.config);
+            // @ts-ignore
+            if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username) {
+                let syncDatabaseQuestion = yield new syncDatabasesQuestions_1.default();
+                yield syncDatabaseQuestion.configure(this.config);
+            }
+            // Check if database needs to be synced
+            if (this.config.settings.syncDatabases == 'yes') {
+            }
+            else {
+                // Adds multiple configuration questions
+                let configurationQuestions = yield new configurationQuestions_1.default();
+                yield configurationQuestions.configure(this.config);
+            }
             // Clear the console
             console_1.clearConsole();
         });
         // Configure task list
         this.prepareTasks = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            // Build up check list
-            let checkTask = yield new checksTask_1.default();
-            yield checkTask.configure(this.list, this.config);
-            // Build up download list
-            let downloadTask = yield new downloadTask_1.default();
-            yield downloadTask.configure(this.list, this.config, this.ssh);
-            // Import Magento if possible
-            if (this.config.settings.import && this.config.settings.import == "yes") {
-                // Build import list
-                let importTask = yield new importTask_1.default();
-                yield importTask.configure(this.list, this.config);
-                // Build Magento configure list
-                let magentoConfigureTask = yield new magentoConfigureTask_1.default();
-                yield magentoConfigureTask.configure(this.list, this.config);
+            if (this.config.settings.syncDatabases == 'yes') {
+                // Sync databases tasks
             }
-            // Import wordpress if possible
-            if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
-                // Build Wordpress configure list
-                let wordpressConfigureTask = yield new wordpressConfigureTask_1.default();
-                yield wordpressConfigureTask.configure(this.list, this.config);
+            else {
+                // Build up check list
+                let checkTask = yield new checksTask_1.default();
+                yield checkTask.configure(this.list, this.config);
+                // Build up download list
+                let downloadTask = yield new downloadTask_1.default();
+                yield downloadTask.configure(this.list, this.config, this.ssh);
+                // Import Magento if possible
+                if (this.config.settings.import && this.config.settings.import == "yes") {
+                    // Build import list
+                    let importTask = yield new importTask_1.default();
+                    yield importTask.configure(this.list, this.config);
+                    // Build Magento configure list
+                    let magentoConfigureTask = yield new magentoConfigureTask_1.default();
+                    yield magentoConfigureTask.configure(this.list, this.config);
+                }
+                // Import wordpress if possible
+                if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+                    // Build Wordpress configure list
+                    let wordpressConfigureTask = yield new wordpressConfigureTask_1.default();
+                    yield wordpressConfigureTask.configure(this.list, this.config);
+                }
             }
         });
     }

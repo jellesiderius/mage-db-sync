@@ -5,17 +5,19 @@ import MainController from "./mainController";
 import DatabaseTypeQuestion from "../questions/databaseTypeQuestion";
 import SelectDatabaseQuestion from "../questions/selectDatabaseQuestion";
 import ConfigurationQuestions from "../questions/configurationQuestions";
+import syncDatabasesQuestions from "../questions/syncDatabasesQuestions";
 import ChecksTask from "../tasks/checksTask";
 import DownloadTask from "../tasks/downloadTask";
 import ImportTask from "../tasks/importTask";
 import MagentoConfigureTask from "../tasks/magentoConfigureTask";
 import WordpressConfigureTask from "../tasks/wordpressConfigureTask";
+import SyncDatabasesQuestions from "../questions/syncDatabasesQuestions";
 
-class StartController extends MainController {    
+class StartController extends MainController {
     executeStart = async (): Promise<void> => {
         // Ask all the questions to the user
         await this.askQuestions();
-        
+
         // Configure task list
         await this.prepareTasks();
 
@@ -61,9 +63,20 @@ class StartController extends MainController {
         let selectDatabaseQuestion = await new SelectDatabaseQuestion();
         await selectDatabaseQuestion.configure(this.config);
 
-        // Adds multiple configuration questions
-        let configurationQuestions = await new ConfigurationQuestions();
-        await configurationQuestions.configure(this.config);
+        // @ts-ignore
+        if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username) {
+            let syncDatabaseQuestion = await new SyncDatabasesQuestions();
+            await syncDatabaseQuestion.configure(this.config);
+        }
+
+        // Check if database needs to be synced
+        if (this.config.settings.syncDatabases == 'yes') {
+
+        } else {
+            // Adds multiple configuration questions
+            let configurationQuestions = await new ConfigurationQuestions();
+            await configurationQuestions.configure(this.config);
+        }
 
         // Clear the console
         clearConsole();
@@ -71,30 +84,35 @@ class StartController extends MainController {
 
     // Configure task list
     prepareTasks = async () => {
-        // Build up check list
-        let checkTask = await new ChecksTask();
-        await checkTask.configure(this.list, this.config);
+        if (this.config.settings.syncDatabases == 'yes') {
+            // Sync databases tasks
 
-        // Build up download list
-        let downloadTask = await new DownloadTask();
-        await downloadTask.configure(this.list, this.config, this.ssh);
+        } else {
+            // Build up check list
+            let checkTask = await new ChecksTask();
+            await checkTask.configure(this.list, this.config);
 
-        // Import Magento if possible
-        if (this.config.settings.import && this.config.settings.import == "yes") {
-            // Build import list
-            let importTask = await new ImportTask();
-            await importTask.configure(this.list, this.config);
+            // Build up download list
+            let downloadTask = await new DownloadTask();
+            await downloadTask.configure(this.list, this.config, this.ssh);
 
-            // Build Magento configure list
-            let magentoConfigureTask = await new MagentoConfigureTask();
-            await magentoConfigureTask.configure(this.list, this.config);
-        }
+            // Import Magento if possible
+            if (this.config.settings.import && this.config.settings.import == "yes") {
+                // Build import list
+                let importTask = await new ImportTask();
+                await importTask.configure(this.list, this.config);
 
-        // Import wordpress if possible
-        if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
-            // Build Wordpress configure list
-            let wordpressConfigureTask = await new WordpressConfigureTask();
-            await wordpressConfigureTask.configure(this.list, this.config);
+                // Build Magento configure list
+                let magentoConfigureTask = await new MagentoConfigureTask();
+                await magentoConfigureTask.configure(this.list, this.config);
+            }
+
+            // Import wordpress if possible
+            if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == "yes" && this.config.settings.currentFolderhasWordpress) {
+                // Build Wordpress configure list
+                let wordpressConfigureTask = await new WordpressConfigureTask();
+                await wordpressConfigureTask.configure(this.list, this.config);
+            }
         }
     }
 }
