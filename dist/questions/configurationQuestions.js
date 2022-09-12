@@ -64,7 +64,7 @@ class ConfigurationQuestions {
                 }
             });
             // Only push questions if Magento project is found
-            if (config.settings.currentFolderIsMagento) {
+            if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
                 this.questionsOne.push({
                     type: 'list',
                     name: 'import',
@@ -75,18 +75,6 @@ class ConfigurationQuestions {
                         return false;
                     },
                 });
-                if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
-                    this.questionsOne.push({
-                        type: 'list',
-                        name: 'runCommands',
-                        default: 'yes',
-                        message: 'Run project commands?',
-                        choices: ['yes', 'no'],
-                        validate: (input) => {
-                            return false;
-                        },
-                    });
-                }
                 if (config.settings.rsyncInstalled) {
                     this.questionsOne.push({
                         type: 'list',
@@ -99,6 +87,18 @@ class ConfigurationQuestions {
                         },
                     });
                 }
+            }
+            if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                this.questionsOne.push({
+                    type: 'list',
+                    name: 'runCommands',
+                    default: 'yes',
+                    message: 'Run project commands?',
+                    choices: ['yes', 'no'],
+                    validate: (input) => {
+                        return false;
+                    },
+                });
             }
             if (config.databases.databaseData.wordpress) {
                 this.questionsOne.push({

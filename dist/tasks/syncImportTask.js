@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
 class SyncImportTask {
     constructor() {
         this.importTasks = [];
@@ -14,7 +13,7 @@ class SyncImportTask {
         // Add tasks
         this.addTasks = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             list.add({
-                title: `Import Magento database to (${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.databases.databaseDataSecond.port} | ${config.databases.databaseDataSecond.domainFolder})`,
+                title: `Import Magento database to: ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.databases.databaseDataSecond.port} | ${config.databases.databaseDataSecond.domainFolder}`,
                 task: (ctx, task) => task.newListr(this.importTasks)
             });
             list.add({
@@ -72,15 +71,15 @@ class SyncImportTask {
             this.importTasks.push({
                 title: 'Uploading database file to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Push file to server through rSync
-                    yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}`, config, true);
+                    // Push file to server through rSync\
+                    yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 })
             });
             this.importTasks.push({
                 title: 'Importing Magento database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create database
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true, true));
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
                 })
             });
             this.configureTasks.push({
@@ -92,12 +91,13 @@ class SyncImportTask {
                     dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';",
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';",
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';",
+                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';",
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
                     // Update queries
                     var dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';", dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';";
                     let baseUrl = 'https://' + config.databases.databaseDataSecond.domainFolder + '/';
                     // Insert queries
-                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');";
+                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
                     // Build up query
                     dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
                     // Set import domain for final message on completing all tasks
@@ -124,9 +124,9 @@ class SyncImportTask {
                     }
                     // Configure Elastic to use version 7 if engine is not mysql
                     if (jsonEngineCheck.indexOf("mysql") == -1) {
-                        let elasticPort = settings_json_1.default.general.elasticsearchPort;
-                        if (config.databases.databaseDataSecond.elasticsearchPort) {
-                            elasticPort = config.databases.databaseDataSecond.elasticsearchPort;
+                        let elasticPort = '9200';
+                        if (config.databases.databaseDataSecond.externalElasticsearchPort) {
+                            elasticPort = config.databases.databaseDataSecond.externalElasticsearchPort;
                         }
                         // Update queries
                         dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
@@ -154,11 +154,28 @@ class SyncImportTask {
                     }
                 })
             });
+            if (config.settings.runCommands && config.settings.runCommands == 'yes') {
+                this.configureTasks.push({
+                    title: 'Running project commands',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Magerun2 commands
+                        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
+                            let commands = config.settings.magerun2Command.replace('magerun2 ', '');
+                            yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(commands, config, true));
+                        }
+                        // Database queries
+                        if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
+                            let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
+                            yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:query '` + dbQuery + `'`, config, true));
+                        }
+                    })
+                });
+            }
             this.configureTasks.push({
                 title: "Synchronizing module versions on staging",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('sys:setup:downgrade-versions ', config, true));
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('setup:upgrade --keep-generated', config, true));
+                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('bin/magento setup:upgrade --keep-generated', config, true));
                 })
             });
             this.configureTasks.push({

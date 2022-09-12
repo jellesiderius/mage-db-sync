@@ -70,7 +70,7 @@ class MainController {
         {concurrent: false}
     );
     public ssh = new NodeSSH();
-    public databases = new DatabasesModel();
+    public databases = new DatabasesModel(this.config);
 
     constructor() {
         this.configureConfig().then();

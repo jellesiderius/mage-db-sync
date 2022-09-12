@@ -89,6 +89,10 @@ const sshNavigateToMagentoRootCommand = (command, config, checkSecondDatabase = 
             'cd public_html > /dev/null 2>&1;' +
             'cd current > /dev/null 2>&1;' + command;
     }
+    if (log) {
+        console.log(returnString);
+        process.exit();
+    }
     return returnString;
 };
 exports.sshNavigateToMagentoRootCommand = sshNavigateToMagentoRootCommand;

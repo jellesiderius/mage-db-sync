@@ -27,7 +27,7 @@ class syncDatabasesQuestions {
                 type: 'list',
                 name: 'syncDatabases',
                 default: 'no',
-                message: `Synchronize database to staging? (${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.databases.databaseDataSecond.port} | ${config.databases.databaseDataSecond.domainFolder})`,
+                message: `Synchronize database to staging: ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.databases.databaseDataSecond.port} | ${config.databases.databaseDataSecond.domainFolder}`,
                 choices: ['no', 'yes'],
                 validate: (input: string) => {}
             }

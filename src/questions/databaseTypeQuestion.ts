@@ -17,8 +17,8 @@ class DatabaseTypeQuestion {
             config.databases.databaseType = answers.databaseType;
 
             // Collect databases
-            this.databasesModel.collectDatabaseData('', answers.databaseType);
-            
+            this.databasesModel.collectDatabaseData('', answers.databaseType, false, config);
+
             // Set database list
             config.databases.databasesList = this.databasesModel.databasesList;
         })

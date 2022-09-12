@@ -94,6 +94,11 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, checkSeco
             'cd current > /dev/null 2>&1;' + command;
     }
 
+    if (log) {
+        console.log(returnString);
+        process.exit();
+    }
+
     return returnString;
 }
 

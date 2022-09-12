@@ -2,6 +2,8 @@
 import stagingDatabases from "../../config/databases/staging.json";
 // @ts-ignore
 import productionDatabases from "../../config/databases/production.json";
+import path from "path";
+import fs from "fs";
 
 class DatabasesModel {
 	public databasesList: { [k: string]: any } = [];
@@ -11,14 +13,14 @@ class DatabasesModel {
 		'server': '',
 		'domainFolder': '',
 		'port': 22,
-		'elasticsearchPort': '',
 		'localProjectFolder': '',
 		'externalProjectFolder': '',
 		'wordpress': false,
 		'externalPhpPath': '',
 		'localProjectUrl': '',
 		'commandsFolder': '',
-		'stagingUsername': ''
+		'stagingUsername': '',
+		'externalElasticsearchPort': ''
 	};
 
 	public databaseDataSecond = {
@@ -34,11 +36,11 @@ class DatabasesModel {
 		'externalPhpPath': '',
 		'localProjectUrl': '',
 		'commandsFolder': '',
-		'elasticsearchPort': '',
+		'externalElasticsearchPort': ''
 	};
 
 	// Collect databases | collect single database
-	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void) => {
+	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
 		// @ts-ignore
 		var databases = stagingDatabases.databases;
 		// @ts-ignore
@@ -71,18 +73,50 @@ class DatabasesModel {
 				databaseDataType.externalPhpPath = database.externalPhpPath;
 				// @ts-ignore
 				databaseDataType.localProjectUrl = database.localProjectUrl;
-				if (database.elasticsearchPort) {
+				// @ts-ignore
+				if (database.externalElasticsearchPort) {
 					// @ts-ignore
-					databaseDataType.elasticsearchPort = database.elasticsearchPort;
+					databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
 				}
 
+				// @ts-ignore
 				if (database.commandsFolder) {
+					// @ts-ignore
 					databaseDataType.commandsFolder = database.commandsFolder;
+
+					let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
+					let commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
+
+					if (fs.existsSync(commandsPath)) {
+						// @ts-ignore
+						let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath+'/'+file).isFile());
+						if (filesArray.length > 0) {
+							for (const file of filesArray) {
+								let filePath = commandsPath + '/' + file;
+
+								if (file == 'database.txt') {
+									let data = fs.readFileSync(filePath, 'utf8');
+									let dataString = data.toString().split('\n').join('');
+
+									config.settings.databaseCommand = dataString;
+								}
+
+								if (file == 'magerun2.txt') {
+									let data = fs.readFileSync(filePath, 'utf8');
+									let dataString = data.toString().split('\n').join('');
+
+									config.settings.magerun2Command = dataString;
+								}
+							}
+						}
+					}
 				}
 
+				// @ts-ignore
 				if (database.stagingUsername) {
+					// @ts-ignore
 					databaseDataType.stagingUsername = database.stagingUsername;
-					await this.collectDatabaseData(databaseDataType.stagingUsername, 'staging', true)
+					await this.collectDatabaseData(databaseDataType.stagingUsername, 'staging', true, config)
 				}
 			} else {
 				// Collect all database

@@ -69,7 +69,7 @@ class MainController {
         };
         this.list = new listr2_1.Listr([], { concurrent: false });
         this.ssh = new node_ssh_1.NodeSSH();
-        this.databases = new databasesModel_1.default();
+        this.databases = new databasesModel_1.default(this.config);
         this.configureConfig = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
             // Fetch SSH key location, if non configured
             if (!this.config.customConfig.sshKeyLocation) {
