@@ -11,6 +11,7 @@ class DatabasesModel {
 		'server': '',
 		'domainFolder': '',
 		'port': 22,
+		'elasticsearchPort': '',
 		'localProjectFolder': '',
 		'externalProjectFolder': '',
 		'wordpress': false,
@@ -26,13 +27,14 @@ class DatabasesModel {
 		'server': '',
 		'domainFolder': '',
 		'port': 22,
+		'stagingUsername': '',
 		'localProjectFolder': '',
 		'externalProjectFolder': '',
 		'wordpress': false,
 		'externalPhpPath': '',
 		'localProjectUrl': '',
 		'commandsFolder': '',
-		'stagingUsername': ''
+		'elasticsearchPort': '',
 	};
 
 	// Collect databases | collect single database
@@ -69,6 +71,10 @@ class DatabasesModel {
 				databaseDataType.externalPhpPath = database.externalPhpPath;
 				// @ts-ignore
 				databaseDataType.localProjectUrl = database.localProjectUrl;
+				if (database.elasticsearchPort) {
+					// @ts-ignore
+					databaseDataType.elasticsearchPort = database.elasticsearchPort;
+				}
 
 				if (database.commandsFolder) {
 					databaseDataType.commandsFolder = database.commandsFolder;

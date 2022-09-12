@@ -72,32 +72,34 @@ const consoleCommand = (cmd, skipErrors) => {
 };
 exports.consoleCommand = consoleCommand;
 // Navigate to Magento root folder
-const sshNavigateToMagentoRootCommand = (command, config, checkSecondDatabase = false) => {
+const sshNavigateToMagentoRootCommand = (command, config, checkSecondDatabase = false, log = false) => {
     let databaseData = config.databases.databaseData;
     if (checkSecondDatabase) {
         databaseData = config.databases.databaseDataSecond;
     }
+    let returnString = '';
     // See if external project folder is filled in, otherwise try default path
     if (databaseData.externalProjectFolder && databaseData.externalProjectFolder.length > 0) {
-        return `cd ${databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+        returnString = `cd ${databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
     }
     else {
-        return 'cd domains > /dev/null 2>&1;' +
+        returnString = 'cd domains > /dev/null 2>&1;' +
             'cd ' + databaseData.domainFolder + ' > /dev/null 2>&1;' +
             'cd application > /dev/null 2>&1;' +
             'cd public_html > /dev/null 2>&1;' +
             'cd current > /dev/null 2>&1;' + command;
     }
+    return returnString;
 };
 exports.sshNavigateToMagentoRootCommand = sshNavigateToMagentoRootCommand;
 // Execute a PHP script in the root of magento
-const sshMagentoRootFolderPhpCommand = (command, config) => {
-    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config);
+const sshMagentoRootFolderPhpCommand = (command, config, checkSecondDatabase = false, log = false) => {
+    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config, checkSecondDatabase, log);
 };
 exports.sshMagentoRootFolderPhpCommand = sshMagentoRootFolderPhpCommand;
 // Execute a PHP script in the root of magento
-const sshMagentoRootFolderMagerunCommand = (command, config) => {
-    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config);
+const sshMagentoRootFolderMagerunCommand = (command, config, checkSecondDatabase = false, log = false) => {
+    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config, checkSecondDatabase, log);
 };
 exports.sshMagentoRootFolderMagerunCommand = sshMagentoRootFolderMagerunCommand;
 const localhostMagentoRootExec = (command, config, skipErrors = false, removeQuote = false) => {
