@@ -57,7 +57,7 @@ class ConfigurationQuestions {
                 type: 'list',
                 name: 'strip',
                 default: 'stripped',
-                message: 'Does the Magento database need to be stripped for development?',
+                message: 'Does the Magento database need to be stripped, keep customer data or have a full database?',
                 choices: ['stripped', 'keep customer data', 'full'],
                 validate: (input) => {
                     return input !== '';

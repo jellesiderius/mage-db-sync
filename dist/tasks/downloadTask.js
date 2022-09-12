@@ -82,10 +82,10 @@ class DownloadTask {
                     // Dump database and move database to root of server
                     let stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
                     if (config.settings.strip == 'keep customer data') {
-                        stripCommand = 'db:dump --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
+                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                     }
                     else if (config.settings.strip == 'full') {
-                        stripCommand = 'db:dump' + config.serverVariables.databaseName + '.sql';
+                        stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
                     }
                     // Dump database and move to user root on server
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {

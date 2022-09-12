@@ -14,6 +14,7 @@ const importTask_1 = tslib_1.__importDefault(require("../tasks/importTask"));
 const magentoConfigureTask_1 = tslib_1.__importDefault(require("../tasks/magentoConfigureTask"));
 const wordpressConfigureTask_1 = tslib_1.__importDefault(require("../tasks/wordpressConfigureTask"));
 const syncDatabasesQuestions_1 = tslib_1.__importDefault(require("../questions/syncDatabasesQuestions"));
+const syncImportTask_1 = tslib_1.__importDefault(require("../tasks/syncImportTask"));
 class StartController extends mainController_1.default {
     constructor() {
         super(...arguments);
@@ -60,12 +61,15 @@ class StartController extends mainController_1.default {
             let selectDatabaseQuestion = yield new selectDatabaseQuestion_1.default();
             yield selectDatabaseQuestion.configure(this.config);
             // @ts-ignore
-            if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username) {
+            if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username && this.config.settings.rsyncInstalled) {
                 let syncDatabaseQuestion = yield new syncDatabasesQuestions_1.default();
                 yield syncDatabaseQuestion.configure(this.config);
             }
             // Check if database needs to be synced
             if (this.config.settings.syncDatabases == 'yes') {
+                // Adds multiple configuration questions
+                let configurationQuestions = yield new configurationQuestions_1.default();
+                yield configurationQuestions.configure(this.config);
             }
             else {
                 // Adds multiple configuration questions
@@ -79,11 +83,20 @@ class StartController extends mainController_1.default {
         this.prepareTasks = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
             if (this.config.settings.syncDatabases == 'yes') {
                 // Sync databases tasks
+                // Build up check list
+                let checkTask = yield new checksTask_1.default();
+                yield checkTask.configure(this.list, this.config, this.ssh);
+                // Build up download list
+                let downloadTask = yield new downloadTask_1.default();
+                yield downloadTask.configure(this.list, this.config, this.ssh);
+                // Build import list
+                let syncImportTask = yield new syncImportTask_1.default();
+                yield syncImportTask.configure(this.list, this.config, this.ssh);
             }
             else {
                 // Build up check list
                 let checkTask = yield new checksTask_1.default();
-                yield checkTask.configure(this.list, this.config);
+                yield checkTask.configure(this.list, this.config, this.ssh);
                 // Build up download list
                 let downloadTask = yield new downloadTask_1.default();
                 yield downloadTask.configure(this.list, this.config, this.ssh);

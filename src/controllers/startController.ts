@@ -5,13 +5,15 @@ import MainController from "./mainController";
 import DatabaseTypeQuestion from "../questions/databaseTypeQuestion";
 import SelectDatabaseQuestion from "../questions/selectDatabaseQuestion";
 import ConfigurationQuestions from "../questions/configurationQuestions";
-import syncDatabasesQuestions from "../questions/syncDatabasesQuestions";
 import ChecksTask from "../tasks/checksTask";
 import DownloadTask from "../tasks/downloadTask";
 import ImportTask from "../tasks/importTask";
 import MagentoConfigureTask from "../tasks/magentoConfigureTask";
 import WordpressConfigureTask from "../tasks/wordpressConfigureTask";
+
 import SyncDatabasesQuestions from "../questions/syncDatabasesQuestions";
+import SyncImport from "../tasks/syncImportTask";
+import SyncImportTask from "../tasks/syncImportTask";
 
 class StartController extends MainController {
     executeStart = async (): Promise<void> => {
@@ -64,14 +66,16 @@ class StartController extends MainController {
         await selectDatabaseQuestion.configure(this.config);
 
         // @ts-ignore
-        if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username) {
+        if (this.config.databases.databaseData.stagingUsername && this.config.databases.databaseDataSecond.username && this.config.settings.rsyncInstalled) {
             let syncDatabaseQuestion = await new SyncDatabasesQuestions();
             await syncDatabaseQuestion.configure(this.config);
         }
 
         // Check if database needs to be synced
         if (this.config.settings.syncDatabases == 'yes') {
-
+            // Adds multiple configuration questions
+            let configurationQuestions = await new ConfigurationQuestions();
+            await configurationQuestions.configure(this.config);
         } else {
             // Adds multiple configuration questions
             let configurationQuestions = await new ConfigurationQuestions();
@@ -86,11 +90,22 @@ class StartController extends MainController {
     prepareTasks = async () => {
         if (this.config.settings.syncDatabases == 'yes') {
             // Sync databases tasks
+            // Build up check list
+            let checkTask = await new ChecksTask();
+            await checkTask.configure(this.list, this.config, this.ssh);
+
+            // Build up download list
+            let downloadTask = await new DownloadTask();
+            await downloadTask.configure(this.list, this.config, this.ssh);
+
+            // Build import list
+            let syncImportTask = await new SyncImportTask();
+            await syncImportTask.configure(this.list, this.config, this.ssh);
 
         } else {
             // Build up check list
             let checkTask = await new ChecksTask();
-            await checkTask.configure(this.list, this.config);
+            await checkTask.configure(this.list, this.config, this.ssh);
 
             // Build up download list
             let downloadTask = await new DownloadTask();

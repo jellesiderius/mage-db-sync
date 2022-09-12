@@ -17,13 +17,13 @@ class DownloadTask {
         list.add(
             {
                 title: 'Download database from server ' + '(' + config.databases.databaseData.username + ')',
-                task: (ctx: any, task: any): Listr => 
+                task: (ctx: any, task: any): Listr =>
                 task.newListr(
                     this.downloadTasks
                 )
             }
         )
-        
+
         this.downloadTasks.push(
             {
                 title: 'Connecting to server through SSH',
@@ -104,9 +104,9 @@ class DownloadTask {
                     let stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
 
                     if (config.settings.strip == 'keep customer data') {
-                        stripCommand = 'db:dump --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
+                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                     } else if (config.settings.strip == 'full') {
-                        stripCommand = 'db:dump' + config.serverVariables.databaseName + '.sql';
+                        stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
                     }
 
                     // Dump database and move to user root on server

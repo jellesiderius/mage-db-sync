@@ -74,13 +74,19 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
 }
 
 // Navigate to Magento root folder
-const sshNavigateToMagentoRootCommand = (command: string, config: any) => {
+const sshNavigateToMagentoRootCommand = (command: string, config: any, checkSecondDatabase: boolean = false) => {
+    let databaseData = config.databases.databaseData;
+
+    if (checkSecondDatabase) {
+        databaseData = config.databases.databaseDataSecond;
+    }
+
     // See if external project folder is filled in, otherwise try default path
-    if (config.databases.databaseData.externalProjectFolder && config.databases.databaseData.externalProjectFolder.length > 0) {
-        return `cd ${config.databases.databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+    if (databaseData.externalProjectFolder && databaseData.externalProjectFolder.length > 0) {
+        return `cd ${databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
     } else {
         return 'cd domains > /dev/null 2>&1;' +
-            'cd ' + config.databases.databaseData.domainFolder + ' > /dev/null 2>&1;' +
+            'cd ' + databaseData.domainFolder + ' > /dev/null 2>&1;' +
             'cd application > /dev/null 2>&1;' +
             'cd public_html > /dev/null 2>&1;' +
             'cd current > /dev/null 2>&1;' + command;
