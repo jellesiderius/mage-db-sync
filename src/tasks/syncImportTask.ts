@@ -125,6 +125,9 @@ class SyncImportTask {
             {
                 title: "Replacing URL's and doing some preparation",
                 task: async (): Promise<void> => {
+
+                    // TODO: Automatically set URL's based on current core_config_data URL's
+
                     var dbQuery = '';
                     // Delete queries
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';",
