@@ -116,6 +116,7 @@ class SyncImportTask {
                 title: 'Importing Magento database',
                 task: async (): Promise<void> => {
                     // Create database
+                    // TODO: Keep admin users
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
                 }
             },
@@ -179,6 +180,8 @@ class SyncImportTask {
             {
                 title: "Configuring ElasticSearch 7/MySQL",
                 task: async (): Promise<void> => {
+                    // TODO: Keep Elastic settings
+
                     let dbQuery = '';
                     let dbQueryUpdate = ''
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
