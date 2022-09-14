@@ -11,10 +11,49 @@ import configFile from "../../config/settings.json";
 class SyncImportTask {
     private importTasks = [];
     private configureTasks = [];
+    private stagingValues = [];
 
     configure = async (list: any, config: any, ssh: any) => {
         await this.addTasks(list, config, ssh);
         return list;
+    }
+
+    collectStagingConfigValue = async (path: string, ssh: any, config: any) => {
+        let self = this;
+        let json = await ssh.execCommand(sshMagentoRootFolderMagerunCommand('config:store:get "'+path+'" --format=json', config, true));
+        json = json.stdout;
+
+        try {
+            // Check if string is JSON
+            JSON.parse(json);
+        } catch (e) {
+            return false;
+        }
+
+        if (json) {
+            const jsonObj = JSON.parse(<string>json);
+            if (jsonObj && typeof jsonObj === `object`) {
+                Object.keys(jsonObj).forEach(function (item) {
+                    var objectItem = jsonObj[item];
+                    var objectItemValue = objectItem['Value'];
+                    var objectItemScopeId = parseInt(objectItem['Scope-ID']);
+                    var objectItemScope = objectItem['Scope'];
+
+                    self.stagingValues.push(
+                        {
+                            // @ts-ignore
+                            'path': path,
+                            // @ts-ignore
+                            'scope': objectItemScope,
+                            // @ts-ignore
+                            'scope_id': objectItemScopeId,
+                            // @ts-ignore
+                            'value': objectItemValue
+                        }
+                    )
+                });
+            }
+        }
     }
 
     // Add tasks
@@ -103,6 +142,24 @@ class SyncImportTask {
 
         this.importTasks.push(
             {
+                title: 'Retrieving current staging needed settings',
+                task: async (): Promise<void> => {
+                    await this.collectStagingConfigValue('web/unsecure/base_url', ssh, config);
+                    await this.collectStagingConfigValue('web/secure/base_url', ssh, config);
+
+                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_port', ssh, config);
+                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_hostname', ssh, config);
+                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_hostname', ssh, config);
+
+                    await this.collectStagingConfigValue('search/engine/elastic_port', ssh, config);
+                    await this.collectStagingConfigValue('search/engine/elastic_host', ssh, config);
+
+                }
+            },
+        );
+
+        this.importTasks.push(
+            {
                 title: 'Uploading database file to server',
                 task: async (): Promise<void> => {
                     // Push file to server through rSync\
@@ -126,8 +183,7 @@ class SyncImportTask {
             {
                 title: "Replacing URL's and doing some preparation",
                 task: async (): Promise<void> => {
-
-                    // TODO: Automatically set URL's based on current core_config_data URL's
+                    let self = this;
 
                     var dbQuery = '';
                     // Delete queries
@@ -151,25 +207,26 @@ class SyncImportTask {
                     var dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
                         dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';";
 
-                    let baseUrl = 'https://' + config.databases.databaseDataSecond.domainFolder + '/';
-
                     // Insert queries
-                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
+                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
+                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
+
+                    Object.keys(this.stagingValues).forEach(function (itemKey) {
+                        // @ts-ignore
+                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
+                    });
 
                     // Build up query
                     dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
 
                     // Set import domain for final message on completing all tasks
-                    config.finalMessages.importDomain = baseUrl;
+                    config.finalMessages.importDomain = this.stagingValues[0].value;
 
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
                 }
@@ -200,19 +257,8 @@ class SyncImportTask {
 
                     // Configure Elastic to use version 7 if engine is not mysql
                     if (jsonEngineCheck.indexOf("mysql") == -1) {
-                        let elasticPort = '9200';
-
-                        if (config.databases.databaseDataSecond.externalElasticsearchPort) {
-                            elasticPort = config.databases.databaseDataSecond.externalElasticsearchPort;
-                        }
-
                         // Update queries
-                        dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${elasticPort}' WHERE path LIKE '%_server_port%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`;
-
-                        // Insert queries
-                        var dbQueryInsert = `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_port', '${elasticPort}');`,
+                        dbQueryUpdate = `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`;
 
                         // Amasty elasticsearch check
                         if (jsonEngineCheck.indexOf("amasty_elastic") !== -1) {
@@ -228,7 +274,7 @@ class SyncImportTask {
                         }
 
                         // Build up query
-                        dbQuery = dbQueryUpdate + dbQueryInsert;
+                        dbQuery = dbQueryUpdate;
 
                         await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
                         config.settings.elasticSearchUsed = true;
