@@ -35,14 +35,19 @@ class SyncImportTask {
             if (jsonObj && typeof jsonObj === `object`) {
                 Object.keys(jsonObj).forEach(function (item) {
                     var objectItem = jsonObj[item];
+                    var objectItemPath = objectItem['Path'];
                     var objectItemValue = objectItem['Value'];
                     var objectItemScopeId = parseInt(objectItem['Scope-ID']);
                     var objectItemScope = objectItem['Scope'];
 
+                    if (objectItemValue == '' || objectItemValue && objectItemValue.toLowerCase() == 'null') {
+                        objectItemValue = 'NULL';
+                    }
+
                     self.stagingValues.push(
                         {
                             // @ts-ignore
-                            'path': path,
+                            'path': objectItemPath,
                             // @ts-ignore
                             'scope': objectItemScope,
                             // @ts-ignore
@@ -142,17 +147,19 @@ class SyncImportTask {
 
         this.importTasks.push(
             {
-                title: 'Retrieving current staging needed settings',
+                title: 'Retrieving current staging core_config_data needed values',
                 task: async (): Promise<void> => {
-                    await this.collectStagingConfigValue('web/unsecure/base_url', ssh, config);
-                    await this.collectStagingConfigValue('web/secure/base_url', ssh, config);
+                    // TODO: Expand needed config core_config_data values
 
-                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_port', ssh, config);
-                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_hostname', ssh, config);
-                    await this.collectStagingConfigValue('catalog/search/elasticsearch7_server_hostname', ssh, config);
-
-                    await this.collectStagingConfigValue('search/engine/elastic_port', ssh, config);
-                    await this.collectStagingConfigValue('search/engine/elastic_host', ssh, config);
+                    await this.collectStagingConfigValue('web/*', ssh, config);
+                    await this.collectStagingConfigValue('admin/*', ssh, config);
+                    await this.collectStagingConfigValue('payment/*', ssh, config);
+                    await this.collectStagingConfigValue('smtp/*', ssh, config);
+                    await this.collectStagingConfigValue('gateways/*', ssh, config);
+                    await this.collectStagingConfigValue('mailchimp/*', ssh, config);
+                    await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    await this.collectStagingConfigValue('tig_/*', ssh, config);
+                    await this.collectStagingConfigValue('*elastic*', ssh, config);
 
                 }
             },
@@ -181,52 +188,35 @@ class SyncImportTask {
 
         this.configureTasks.push(
             {
-                title: "Replacing URL's and doing some preparation",
+                title: "Preparing the core_config_data table",
                 task: async (): Promise<void> => {
                     let self = this;
 
                     var dbQuery = '';
                     // Delete queries
-                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%smtp%';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';"
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';",
+                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';",
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
 
-                    // Update queries
-                    var dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
-                        dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';";
-
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
 
                     Object.keys(this.stagingValues).forEach(function (itemKey) {
                         // @ts-ignore
-                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
+                        let itemValue = `'${self.stagingValues[itemKey].value}'`;
+                        // @ts-ignore
+                        if (self.stagingValues[itemKey].value == 'NULL') {
+                            itemValue = 'NULL';
+                        }
+
+                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', ${itemValue});`;
+                        // @ts-ignore
+                        dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
                     });
 
                     // Build up query
-                    dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
-
-                    // Set import domain for final message on completing all tasks
-                    config.finalMessages.importDomain = this.stagingValues[0].value;
+                    dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
 
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
                 }
