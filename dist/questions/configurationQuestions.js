@@ -53,16 +53,18 @@ class ConfigurationQuestions {
         });
         // Add questions
         this.addQuestions = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-            this.questionsOne.push({
-                type: 'list',
-                name: 'strip',
-                default: 'stripped',
-                message: 'Does the Magento database need to be stripped, keep customer data or have a full database?',
-                choices: ['stripped', 'keep customer data', 'full'],
-                validate: (input) => {
-                    return input !== '';
-                }
-            });
+            if (config.settings.syncDatabases != 'yes') {
+                this.questionsOne.push({
+                    type: 'list',
+                    name: 'strip',
+                    default: 'stripped',
+                    message: 'Does the Magento database need to be stripped, keep customer data or have a full database?',
+                    choices: ['stripped', 'keep customer data', 'full'],
+                    validate: (input) => {
+                        return input !== '';
+                    }
+                });
+            }
             // Only push questions if Magento project is found
             if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
                 this.questionsOne.push({

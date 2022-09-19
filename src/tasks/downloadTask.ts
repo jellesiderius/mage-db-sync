@@ -115,6 +115,11 @@ class DownloadTask {
                         stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
                     }
 
+                    // Download stripped database for staging envs without customer data etc.
+                    if (config.settings.syncDatabases == 'yes') {
+                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
+                    }
+
                     // Dump database and move to user root on server
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents: any) {
                     }, function (error: any) {

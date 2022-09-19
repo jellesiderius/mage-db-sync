@@ -111,28 +111,11 @@ class SyncImportTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     yield this.collectStagingConfigValue('web/*', ssh, config);
                     yield this.collectStagingConfigValue('admin/*', ssh, config);
-                    yield this.collectStagingConfigValue('payment/*', ssh, config);
-                    yield this.collectStagingConfigValue('shipping/*', ssh, config);
                     yield this.collectStagingConfigValue('email/*', ssh, config);
-                    yield this.collectStagingConfigValue('carriers/*', ssh, config);
-                    yield this.collectStagingConfigValue('checkout/*', ssh, config);
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
-                    yield this.collectStagingConfigValue('gateways/*', ssh, config);
-                    yield this.collectStagingConfigValue('mailchimp/*', ssh, config);
-                    yield this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
                     yield this.collectStagingConfigValue('buckaroo/*', ssh, config);
-                    yield this.collectStagingConfigValue('*buckaroo*', ssh, config);
-                    yield this.collectStagingConfigValue('*multisafepay*', ssh, config);
-                    yield this.collectStagingConfigValue('*msp_*', ssh, config);
-                    yield this.collectStagingConfigValue('*sherpaconnect*', ssh, config);
-                    yield this.collectStagingConfigValue('*klevu_search*', ssh, config);
-                    yield this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
-                    yield this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
-                    yield this.collectStagingConfigValue('*sherpaan*', ssh, config);
-                    yield this.collectStagingConfigValue('*postcodenl*', ssh, config);
-                    yield this.collectStagingConfigValue('*wordpress*', ssh, config);
-                    yield this.collectStagingConfigValue('tig_*', ssh, config);
-                    yield this.collectStagingConfigValue('*elastic*', ssh, config);
+                    yield this.collectStagingConfigValue('search/*', ssh, config);
+                    yield this.collectStagingConfigValue('catalog/search/*', ssh, config);
                 })
             });
             this.importTasks.push({
@@ -166,21 +149,20 @@ class SyncImportTask {
                 title: "Preparing the core_config_data table",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     let self = this;
-                    var dbQuery = '';
                     // Delete queries
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';";
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
                     Object.keys(this.stagingValues).forEach(function (itemKey) {
                         // @ts-ignore
-                        let itemValue = `'${self.stagingValues[itemKey].value}'`;
-                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', ${itemValue});`;
-                        // @ts-ignore
                         dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
+                        // @ts-ignore
+                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
                     });
-                    // Build up query
-                    dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
+                    // DELETE QUERY
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
+                    // IMPORT QUERY
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
                 })
             });
             this.configureTasks.push({

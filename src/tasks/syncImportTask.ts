@@ -147,28 +147,14 @@ class SyncImportTask {
                 task: async (): Promise<void> => {
                     await this.collectStagingConfigValue('web/*', ssh, config);
                     await this.collectStagingConfigValue('admin/*', ssh, config);
-                    await this.collectStagingConfigValue('payment/*', ssh, config);
-                    await this.collectStagingConfigValue('shipping/*', ssh, config);
+
                     await this.collectStagingConfigValue('email/*', ssh, config);
-                    await this.collectStagingConfigValue('carriers/*', ssh, config);
-                    await this.collectStagingConfigValue('checkout/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
-                    await this.collectStagingConfigValue('gateways/*', ssh, config);
-                    await this.collectStagingConfigValue('mailchimp/*', ssh, config);
-                    await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+
                     await this.collectStagingConfigValue('buckaroo/*', ssh, config);
-                    await this.collectStagingConfigValue('*buckaroo*', ssh, config);
-                    await this.collectStagingConfigValue('*multisafepay*', ssh, config);
-                    await this.collectStagingConfigValue('*msp_*', ssh, config);
-                    await this.collectStagingConfigValue('*sherpaconnect*', ssh, config);
-                    await this.collectStagingConfigValue('*klevu_search*', ssh, config);
-                    await this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
-                    await this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
-                    await this.collectStagingConfigValue('*sherpaan*', ssh, config);
-                    await this.collectStagingConfigValue('*postcodenl*', ssh, config);
-                    await this.collectStagingConfigValue('*wordpress*', ssh, config);
-                    await this.collectStagingConfigValue('tig_*', ssh, config);
-                    await this.collectStagingConfigValue('*elastic*', ssh, config);
+
+                    await this.collectStagingConfigValue('search/*', ssh, config);
+                    await this.collectStagingConfigValue('catalog/search/*', ssh, config);
                 }
             },
         );
@@ -215,7 +201,6 @@ class SyncImportTask {
                 title: "Preparing the core_config_data table",
                 task: async (): Promise<void> => {
                     let self = this;
-                    var dbQuery = '';
 
                     // Delete queries
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
@@ -227,17 +212,17 @@ class SyncImportTask {
 
                     Object.keys(this.stagingValues).forEach(function (itemKey) {
                         // @ts-ignore
-                        let itemValue = `'${self.stagingValues[itemKey].value}'`;
-
-                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', ${itemValue});`;
-                        // @ts-ignore
                         dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
+
+                        // @ts-ignore
+                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
                     });
 
-                    // Build up query
-                    dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
+                    // DELETE QUERY
+                    await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
 
-                    await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
+                    // IMPORT QUERY
+                    await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
                 }
             }
         );

@@ -87,6 +87,10 @@ class DownloadTask {
                     else if (config.settings.strip == 'full') {
                         stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
                     }
+                    // Download stripped database for staging envs without customer data etc.
+                    if (config.settings.syncDatabases == 'yes') {
+                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
+                    }
                     // Dump database and move to user root on server
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
                     }, function (error) {
