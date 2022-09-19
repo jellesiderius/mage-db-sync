@@ -82,7 +82,7 @@ class MagentoConfigureTask {
                 })
             });
             this.configureTasks.push({
-                title: 'Creating a admin user',
+                title: 'Creating an admin user',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove all current admin users
                     var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
