@@ -9,7 +9,7 @@ import { Listr } from 'listr2';
 class SyncImportTask {
     private importTasks = [];
     private configureTasks = [];
-    private stagingValues = [];
+    private stagingValues = {};
 
     configure = async (list: any, config: any, ssh: any) => {
         await this.addTasks(list, config, ssh);
@@ -31,6 +31,9 @@ class SyncImportTask {
         if (json) {
             const jsonObj = JSON.parse(<string>json);
             if (jsonObj && typeof jsonObj === `object`) {
+                // @ts-ignore
+                self.stagingValues[path] = [];
+
                 Object.keys(jsonObj).forEach(function (item) {
                     var objectItem = jsonObj[item];
                     var objectItemPath = objectItem['Path'];
@@ -42,7 +45,8 @@ class SyncImportTask {
                         return;
                     }
 
-                    self.stagingValues.push(
+                    // @ts-ignore
+                    self.stagingValues[path].push(
                         {
                             // @ts-ignore
                             'path': objectItemPath,
@@ -208,19 +212,31 @@ class SyncImportTask {
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
 
-                    Object.keys(this.stagingValues).forEach(function (itemKey) {
-                        // @ts-ignore
-                        dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
-
-                        // @ts-ignore
-                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
-                    });
-
                     // DELETE QUERY
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
 
                     // IMPORT QUERY
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
+
+                    for (const itemKey of Object.keys(this.stagingValues)) {
+                        var itemDeleteQuery = '';
+                        var itemInsertQuery = '';
+
+                        // @ts-ignore
+                        for (const itemKeyChild of Object.keys(this.stagingValues[itemKey])) {
+                            // @ts-ignore
+                            var item = this.stagingValues[itemKey][itemKeyChild];
+
+                            itemDeleteQuery = itemDeleteQuery + `DELETE FROM core_config_data WHERE path LIKE '${item.path}';`;
+                            itemInsertQuery = itemInsertQuery + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${item.scope}', '${item.scope_id}', '${item.path}', '${item.value}');`;
+                        }
+
+                        // DELETE QUERY
+                        await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + itemDeleteQuery + '"', config, true));
+
+                        // IMPORT QUERY
+                        await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + itemInsertQuery + '"', config, true));
+                    }
                 }
             }
         );

@@ -6,7 +6,7 @@ class SyncImportTask {
     constructor() {
         this.importTasks = [];
         this.configureTasks = [];
-        this.stagingValues = [];
+        this.stagingValues = {};
         this.configure = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             yield this.addTasks(list, config, ssh);
             return list;
@@ -25,6 +25,8 @@ class SyncImportTask {
             if (json) {
                 const jsonObj = JSON.parse(json);
                 if (jsonObj && typeof jsonObj === `object`) {
+                    // @ts-ignore
+                    self.stagingValues[path] = [];
                     Object.keys(jsonObj).forEach(function (item) {
                         var objectItem = jsonObj[item];
                         var objectItemPath = objectItem['Path'];
@@ -34,7 +36,8 @@ class SyncImportTask {
                         if (objectItemValue == '' || objectItemValue == 'NULL' || objectItemValue == 'null') {
                             return;
                         }
-                        self.stagingValues.push({
+                        // @ts-ignore
+                        self.stagingValues[path].push({
                             // @ts-ignore
                             'path': objectItemPath,
                             // @ts-ignore
@@ -152,16 +155,25 @@ class SyncImportTask {
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';";
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
-                    Object.keys(this.stagingValues).forEach(function (itemKey) {
-                        // @ts-ignore
-                        dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
-                        // @ts-ignore
-                        dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', '${self.stagingValues[itemKey].value}');`;
-                    });
                     // DELETE QUERY
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
                     // IMPORT QUERY
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
+                    for (const itemKey of Object.keys(this.stagingValues)) {
+                        var itemDeleteQuery = '';
+                        var itemInsertQuery = '';
+                        // @ts-ignore
+                        for (const itemKeyChild of Object.keys(this.stagingValues[itemKey])) {
+                            // @ts-ignore
+                            var item = this.stagingValues[itemKey][itemKeyChild];
+                            itemDeleteQuery = itemDeleteQuery + `DELETE FROM core_config_data WHERE path LIKE '${item.path}';`;
+                            itemInsertQuery = itemInsertQuery + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${item.scope}', '${item.scope_id}', '${item.path}', '${item.value}');`;
+                        }
+                        // DELETE QUERY
+                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + itemDeleteQuery + '"', config, true));
+                        // IMPORT QUERY
+                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + itemInsertQuery + '"', config, true));
+                    }
                 })
             });
             this.configureTasks.push({
