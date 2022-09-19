@@ -115,6 +115,7 @@ class SyncImportTask {
                     yield this.collectStagingConfigValue('web/*', ssh, config);
                     yield this.collectStagingConfigValue('admin/*', ssh, config);
                     yield this.collectStagingConfigValue('email/*', ssh, config);
+                    yield this.collectStagingConfigValue('trans_email/*', ssh, config);
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
                     yield this.collectStagingConfigValue('search/*', ssh, config);
                     yield this.collectStagingConfigValue('catalog/search/*', ssh, config);
@@ -124,6 +125,7 @@ class SyncImportTask {
                     yield this.collectStagingConfigValue('checkout/*', ssh, config);
                     yield this.collectStagingConfigValue('gateways/*', ssh, config);
                     yield this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    yield this.collectStagingConfigValue('tig_postnl/*', ssh, config);
                     yield this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     yield this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
                     yield this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);

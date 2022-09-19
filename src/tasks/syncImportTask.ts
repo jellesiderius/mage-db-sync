@@ -153,6 +153,7 @@ class SyncImportTask {
                     await this.collectStagingConfigValue('admin/*', ssh, config);
 
                     await this.collectStagingConfigValue('email/*', ssh, config);
+                    await this.collectStagingConfigValue('trans_email/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
 
                     await this.collectStagingConfigValue('search/*', ssh, config);
@@ -164,6 +165,7 @@ class SyncImportTask {
                     await this.collectStagingConfigValue('checkout/*', ssh, config);
                     await this.collectStagingConfigValue('gateways/*', ssh, config);
                     await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    await this.collectStagingConfigValue('tig_postnl/*', ssh, config);
                     await this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     await this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
                     await this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
