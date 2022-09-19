@@ -151,8 +151,6 @@ class SyncImportTask {
                     await this.collectStagingConfigValue('email/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
 
-                    await this.collectStagingConfigValue('buckaroo/*', ssh, config);
-
                     await this.collectStagingConfigValue('search/*', ssh, config);
                     await this.collectStagingConfigValue('catalog/search/*', ssh, config);
                 }

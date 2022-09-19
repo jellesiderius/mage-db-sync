@@ -113,7 +113,6 @@ class SyncImportTask {
                     yield this.collectStagingConfigValue('admin/*', ssh, config);
                     yield this.collectStagingConfigValue('email/*', ssh, config);
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
-                    yield this.collectStagingConfigValue('buckaroo/*', ssh, config);
                     yield this.collectStagingConfigValue('search/*', ssh, config);
                     yield this.collectStagingConfigValue('catalog/search/*', ssh, config);
                 })
