@@ -1,4 +1,10 @@
-import {localhostRsyncDownloadCommand, sshMagentoRootFolderMagerunCommand, sshNavigateToMagentoRootCommand, wordpressReplaces } from '../utils/console';
+import {
+    localhostMagentoRootExec,
+    localhostRsyncDownloadCommand,
+    sshMagentoRootFolderMagerunCommand,
+    sshNavigateToMagentoRootCommand,
+    wordpressReplaces
+} from '../utils/console';
 import { Listr } from 'listr2';
 // @ts-ignore
 import staticConfigFile from '../../config/static-settings.json'
@@ -145,6 +151,24 @@ class DownloadTask {
                 }
             }
         );
+
+        if (config.settings.syncImages == 'yes') {
+            this.downloadTasks.push(
+                {
+                    title: 'Downloading media images & files',
+                    task: async (): Promise<void> => {
+                        // Sync media to project folder
+                        if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
+                            await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                        } else {
+                            // Sync to tmp folder
+                            var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`
+                            await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                        }
+                    }
+                }
+            );
+        }
 
         if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true && config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
             this.downloadTasks.push(

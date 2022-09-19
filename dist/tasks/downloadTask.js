@@ -116,6 +116,22 @@ class DownloadTask {
                     config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
                 })
             });
+            if (config.settings.syncImages == 'yes') {
+                this.downloadTasks.push({
+                    title: 'Downloading media images & files',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Sync media to project folder
+                        if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
+                            yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                        }
+                        else {
+                            // Sync to tmp folder
+                            var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
+                            yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                        }
+                    })
+                });
+            }
             if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true && config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
                 this.downloadTasks.push({
                     title: 'Dumping Wordpress database and moving it to server root',

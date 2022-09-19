@@ -1,12 +1,10 @@
 import {
     error,
     localhostMagentoRootExec,
-    sshMagentoRootFolderPhpCommand,
     sshNavigateToMagentoRootCommand,
-    sshMagentoRootFolderMagerunCommand
+    sshMagentoRootFolderMagerunCommand, consoleCommand
 } from '../utils/console';
 import { Listr } from 'listr2';
-import configFile from "../../config/settings.json";
 
 class SyncImportTask {
     private importTasks = [];
@@ -36,12 +34,12 @@ class SyncImportTask {
                 Object.keys(jsonObj).forEach(function (item) {
                     var objectItem = jsonObj[item];
                     var objectItemPath = objectItem['Path'];
-                    var objectItemValue = objectItem['Value'];
+                    var objectItemValue = String(objectItem['Value']);
                     var objectItemScopeId = parseInt(objectItem['Scope-ID']);
                     var objectItemScope = objectItem['Scope'];
 
-                    if (objectItemValue == '' || objectItemValue && objectItemValue.toLowerCase() == 'null') {
-                        objectItemValue = 'NULL';
+                    if (objectItemValue == '' || objectItemValue == 'NULL' || objectItemValue == 'null') {
+                        return;
                     }
 
                     self.stagingValues.push(
@@ -129,8 +127,6 @@ class SyncImportTask {
 
                     // Determine Magerun version based on magento version
                     config.serverVariables.magerunFile = `n98-magerun2-${config.requirements.magerun2Version}.phar`;
-
-
                 }
             }
         );
@@ -149,18 +145,30 @@ class SyncImportTask {
             {
                 title: 'Retrieving current staging core_config_data needed values',
                 task: async (): Promise<void> => {
-                    // TODO: Expand needed config core_config_data values
-
                     await this.collectStagingConfigValue('web/*', ssh, config);
                     await this.collectStagingConfigValue('admin/*', ssh, config);
                     await this.collectStagingConfigValue('payment/*', ssh, config);
+                    await this.collectStagingConfigValue('shipping/*', ssh, config);
+                    await this.collectStagingConfigValue('email/*', ssh, config);
+                    await this.collectStagingConfigValue('carriers/*', ssh, config);
+                    await this.collectStagingConfigValue('checkout/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
                     await this.collectStagingConfigValue('gateways/*', ssh, config);
                     await this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
-                    await this.collectStagingConfigValue('tig_/*', ssh, config);
+                    await this.collectStagingConfigValue('buckaroo/*', ssh, config);
+                    await this.collectStagingConfigValue('*buckaroo*', ssh, config);
+                    await this.collectStagingConfigValue('*multisafepay*', ssh, config);
+                    await this.collectStagingConfigValue('*msp_*', ssh, config);
+                    await this.collectStagingConfigValue('*sherpaconnect*', ssh, config);
+                    await this.collectStagingConfigValue('*klevu_search*', ssh, config);
+                    await this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
+                    await this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
+                    await this.collectStagingConfigValue('*sherpaan*', ssh, config);
+                    await this.collectStagingConfigValue('*postcodenl*', ssh, config);
+                    await this.collectStagingConfigValue('*wordpress*', ssh, config);
+                    await this.collectStagingConfigValue('tig_*', ssh, config);
                     await this.collectStagingConfigValue('*elastic*', ssh, config);
-
                 }
             },
         );
@@ -169,7 +177,7 @@ class SyncImportTask {
             {
                 title: 'Uploading database file to server',
                 task: async (): Promise<void> => {
-                    // Push file to server through rSync\
+                    // Push file to server through rSync
                     await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 }
             },
@@ -186,17 +194,32 @@ class SyncImportTask {
             },
         );
 
+        if (config.settings.syncImages == 'yes') {
+            this.importTasks.push(
+                {
+                    title: 'Synchronizing media images & files',
+                    task: async (): Promise<void> => {
+                        // Push media files to server
+                        var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
+                        await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${tmpLocalMediaPath}/* ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}/pub/media/`, config, true);
+
+                        // Remove files from local machine
+                        await consoleCommand(`rm -rf ${tmpLocalMediaPath}`, true);
+                    }
+                }
+            );
+        }
+
         this.configureTasks.push(
             {
                 title: "Preparing the core_config_data table",
                 task: async (): Promise<void> => {
                     let self = this;
-
                     var dbQuery = '';
+
                     // Delete queries
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
+                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';";
 
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
@@ -205,10 +228,6 @@ class SyncImportTask {
                     Object.keys(this.stagingValues).forEach(function (itemKey) {
                         // @ts-ignore
                         let itemValue = `'${self.stagingValues[itemKey].value}'`;
-                        // @ts-ignore
-                        if (self.stagingValues[itemKey].value == 'NULL') {
-                            itemValue = 'NULL';
-                        }
 
                         dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', ${itemValue});`;
                         // @ts-ignore
@@ -227,8 +246,6 @@ class SyncImportTask {
             {
                 title: "Configuring ElasticSearch 7/MySQL",
                 task: async (): Promise<void> => {
-                    // TODO: Keep Elastic settings
-
                     let dbQuery = '';
                     let dbQueryUpdate = ''
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';

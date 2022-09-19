@@ -28,11 +28,11 @@ class SyncImportTask {
                     Object.keys(jsonObj).forEach(function (item) {
                         var objectItem = jsonObj[item];
                         var objectItemPath = objectItem['Path'];
-                        var objectItemValue = objectItem['Value'];
+                        var objectItemValue = String(objectItem['Value']);
                         var objectItemScopeId = parseInt(objectItem['Scope-ID']);
                         var objectItemScope = objectItem['Scope'];
-                        if (objectItemValue == '' || objectItemValue && objectItemValue.toLowerCase() == 'null') {
-                            objectItemValue = 'NULL';
+                        if (objectItemValue == '' || objectItemValue == 'NULL' || objectItemValue == 'null') {
+                            return;
                         }
                         self.stagingValues.push({
                             // @ts-ignore
@@ -109,22 +109,36 @@ class SyncImportTask {
             this.importTasks.push({
                 title: 'Retrieving current staging core_config_data needed values',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // TODO: Expand needed config core_config_data values
                     yield this.collectStagingConfigValue('web/*', ssh, config);
                     yield this.collectStagingConfigValue('admin/*', ssh, config);
                     yield this.collectStagingConfigValue('payment/*', ssh, config);
+                    yield this.collectStagingConfigValue('shipping/*', ssh, config);
+                    yield this.collectStagingConfigValue('email/*', ssh, config);
+                    yield this.collectStagingConfigValue('carriers/*', ssh, config);
+                    yield this.collectStagingConfigValue('checkout/*', ssh, config);
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
                     yield this.collectStagingConfigValue('gateways/*', ssh, config);
                     yield this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     yield this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
-                    yield this.collectStagingConfigValue('tig_/*', ssh, config);
+                    yield this.collectStagingConfigValue('buckaroo/*', ssh, config);
+                    yield this.collectStagingConfigValue('*buckaroo*', ssh, config);
+                    yield this.collectStagingConfigValue('*multisafepay*', ssh, config);
+                    yield this.collectStagingConfigValue('*msp_*', ssh, config);
+                    yield this.collectStagingConfigValue('*sherpaconnect*', ssh, config);
+                    yield this.collectStagingConfigValue('*klevu_search*', ssh, config);
+                    yield this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
+                    yield this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
+                    yield this.collectStagingConfigValue('*sherpaan*', ssh, config);
+                    yield this.collectStagingConfigValue('*postcodenl*', ssh, config);
+                    yield this.collectStagingConfigValue('*wordpress*', ssh, config);
+                    yield this.collectStagingConfigValue('tig_*', ssh, config);
                     yield this.collectStagingConfigValue('*elastic*', ssh, config);
                 })
             });
             this.importTasks.push({
                 title: 'Uploading database file to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Push file to server through rSync\
+                    // Push file to server through rSync
                     yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 })
             });
@@ -136,22 +150,30 @@ class SyncImportTask {
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
                 })
             });
+            if (config.settings.syncImages == 'yes') {
+                this.importTasks.push({
+                    title: 'Synchronizing media images & files',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Push media files to server
+                        var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
+                        yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${tmpLocalMediaPath}/* ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}/pub/media/`, config, true);
+                        // Remove files from local machine
+                        yield console_1.consoleCommand(`rm -rf ${tmpLocalMediaPath}`, true);
+                    })
+                });
+            }
             this.configureTasks.push({
                 title: "Preparing the core_config_data table",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     let self = this;
                     var dbQuery = '';
                     // Delete queries
-                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
+                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'design/search_engine_robots/default_robots';";
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
                     Object.keys(this.stagingValues).forEach(function (itemKey) {
                         // @ts-ignore
                         let itemValue = `'${self.stagingValues[itemKey].value}'`;
-                        // @ts-ignore
-                        if (self.stagingValues[itemKey].value == 'NULL') {
-                            itemValue = 'NULL';
-                        }
                         dbQueryInsert = dbQueryInsert + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${self.stagingValues[itemKey].scope}', '${self.stagingValues[itemKey].scope_id}', '${self.stagingValues[itemKey].path}', ${itemValue});`;
                         // @ts-ignore
                         dbQueryRemove = dbQueryRemove + `DELETE FROM core_config_data WHERE path LIKE '${self.stagingValues[itemKey].path}';`;
@@ -164,7 +186,6 @@ class SyncImportTask {
             this.configureTasks.push({
                 title: "Configuring ElasticSearch 7/MySQL",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // TODO: Keep Elastic settings
                     let dbQuery = '';
                     let dbQueryUpdate = '';
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';

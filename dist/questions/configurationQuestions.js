@@ -75,6 +75,8 @@ class ConfigurationQuestions {
                         return false;
                     },
                 });
+            }
+            if (config.settings.currentFolderIsMagento || config.settings.syncDatabases == 'yes') {
                 if (config.settings.rsyncInstalled) {
                     this.questionsOne.push({
                         type: 'list',

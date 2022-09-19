@@ -26,15 +26,6 @@ class ImportTask {
                     yield console_1.localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries -q`, config);
                 })
             });
-            if (config.settings.syncImages == 'yes') {
-                this.importTasks.push({
-                    title: 'Synchronizing media images',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                        // Sync media
-                        yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
-                    })
-                });
-            }
             this.importTasks.push({
                 title: 'Cleaning up',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
