@@ -118,6 +118,16 @@ class SyncImportTask {
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
                     yield this.collectStagingConfigValue('search/*', ssh, config);
                     yield this.collectStagingConfigValue('catalog/search/*', ssh, config);
+                    yield this.collectStagingConfigValue('shipping/*', ssh, config);
+                    yield this.collectStagingConfigValue('payment/*', ssh, config);
+                    yield this.collectStagingConfigValue('carriers/*', ssh, config);
+                    yield this.collectStagingConfigValue('checkout/*', ssh, config);
+                    yield this.collectStagingConfigValue('gateways/*', ssh, config);
+                    yield this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    yield this.collectStagingConfigValue('mailchimp/*', ssh, config);
+                    yield this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
+                    yield this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
+                    yield this.collectStagingConfigValue('postcodenl/*', ssh, config);
                 })
             });
             this.importTasks.push({

@@ -157,6 +157,18 @@ class SyncImportTask {
 
                     await this.collectStagingConfigValue('search/*', ssh, config);
                     await this.collectStagingConfigValue('catalog/search/*', ssh, config);
+
+                    await this.collectStagingConfigValue('shipping/*', ssh, config);
+                    await this.collectStagingConfigValue('payment/*', ssh, config);
+                    await this.collectStagingConfigValue('carriers/*', ssh, config);
+                    await this.collectStagingConfigValue('checkout/*', ssh, config);
+                    await this.collectStagingConfigValue('gateways/*', ssh, config);
+                    await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    await this.collectStagingConfigValue('mailchimp/*', ssh, config);
+                    await this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
+                    await this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
+                    await this.collectStagingConfigValue('postcodenl/*', ssh, config);
+
                 }
             },
         );
