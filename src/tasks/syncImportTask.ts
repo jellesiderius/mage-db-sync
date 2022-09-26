@@ -149,28 +149,43 @@ class SyncImportTask {
             {
                 title: 'Retrieving current staging core_config_data needed values',
                 task: async (): Promise<void> => {
+                    // General
                     await this.collectStagingConfigValue('web/*', ssh, config);
                     await this.collectStagingConfigValue('admin/*', ssh, config);
-
+                    await this.collectStagingConfigValue('checkout/*', ssh, config);
+                    await this.collectStagingConfigValue('magmodules_richsnippets/*', ssh, config);
+                    await this.collectStagingConfigValue('sherpaan_*', ssh, config);
+                    await this.collectStagingConfigValue('sherpaconnect2/*', ssh, config);
+                    // Email
                     await this.collectStagingConfigValue('email/*', ssh, config);
                     await this.collectStagingConfigValue('trans_email/*', ssh, config);
+                    await this.collectStagingConfigValue('sales_email/*', ssh, config);
+                    await this.collectStagingConfigValue('sales_pdf/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
-
+                    await this.collectStagingConfigValue('mailchimp/*', ssh, config);
+                    await this.collectStagingConfigValue('smtppro/*', ssh, config);
+                    await this.collectStagingConfigValue('cart2quote_email/*', ssh, config);
+                    // Search
                     await this.collectStagingConfigValue('search/*', ssh, config);
                     await this.collectStagingConfigValue('catalog/search/*', ssh, config);
-
+                    await this.collectStagingConfigValue('elasticsearch/*', ssh, config);
+                    await this.collectStagingConfigValue('klevu_search/*', ssh, config);
+                    // Shipping
                     await this.collectStagingConfigValue('shipping/*', ssh, config);
-                    await this.collectStagingConfigValue('payment/*', ssh, config);
                     await this.collectStagingConfigValue('carriers/*', ssh, config);
-                    await this.collectStagingConfigValue('checkout/*', ssh, config);
-                    await this.collectStagingConfigValue('gateways/*', ssh, config);
-                    await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
                     await this.collectStagingConfigValue('tig_postnl/*', ssh, config);
-                    await this.collectStagingConfigValue('mailchimp/*', ssh, config);
+                    await this.collectStagingConfigValue('postcodenl/*', ssh, config);
+                    await this.collectStagingConfigValue('euvat/*', ssh, config);
+                    // Payment
+                    await this.collectStagingConfigValue('payment/*', ssh, config);
+                    await this.collectStagingConfigValue('buckaroo_magento2/*', ssh, config);
+                    await this.collectStagingConfigValue('tig_buckaroo/*', ssh, config);
+                    await this.collectStagingConfigValue('msp/*', ssh, config);
+                    await this.collectStagingConfigValue('msp_gateways/*', ssh, config);
+                    await this.collectStagingConfigValue('gateways/*', ssh, config);
+                    // Recaptcha
                     await this.collectStagingConfigValue('recaptcha_frontend/*', ssh, config);
                     await this.collectStagingConfigValue('recaptcha_backend/*', ssh, config);
-                    await this.collectStagingConfigValue('postcodenl/*', ssh, config);
-
                 }
             },
         );
@@ -226,10 +241,10 @@ class SyncImportTask {
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');",
                         dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
 
-                    // DELETE QUERY
+                    // INITIAL DELETE QUERY
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
 
-                    // IMPORT QUERY
+                    // INITIAL IMPORT QUERY
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
 
                     for (const itemKey of Object.keys(this.stagingValues)) {

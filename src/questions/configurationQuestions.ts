@@ -123,7 +123,7 @@ class ConfigurationQuestions {
             );
         }
 
-        if (config.databases.databaseData.wordpress) {
+        if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes') {
             this.questionsOne.push(
                 {
                     type: 'list',
