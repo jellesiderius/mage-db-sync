@@ -1,6 +1,6 @@
 {
     "databases": {
-        "username-1-placeholder": {
+        "staging-username-1-placeholder": {
             "username": "example1",
             "password": "",
             "server": "example1.io",
@@ -13,7 +13,7 @@
             "wordpress": false,
             "commandsFolder": "commands/example-project"
         },
-        "username-2-placeholder": {
+        "staging-username-2-placeholder": {
             "username": "example2",
             "password": "",
             "server": "example2.io",

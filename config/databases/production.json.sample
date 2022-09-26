@@ -1,6 +1,6 @@
 {
     "databases": {
-        "username-1-placeholder": {
+        "production-username-1-placeholder": {
             "username": "example1",
             "password": "",
             "server": "example1.io",
@@ -11,9 +11,10 @@
             "externalPhpPath": "",
             "localProjectUrl": "example1.development",
             "wordpress": false,
-            "commandsFolder": "commands/example-project"
+            "commandsFolder": "commands/example-project",
+            "stagingUsername": "staging-username-1-placeholder"
         },
-        "username-2-placeholder": {
+        "production-username-2-placeholder": {
             "username": "example2",
             "password": "",
             "server": "example2.io",
@@ -24,7 +25,8 @@
             "externalPhpPath": "",
             "localProjectUrl": "example2.development",
             "wordpress": false,
-            "commandsFolder": "commands/example-project"
+            "commandsFolder": "commands/example-project",
+            "stagingUsername": "staging-username-2-placeholder"
         }
     }
 }
