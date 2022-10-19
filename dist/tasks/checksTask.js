@@ -67,6 +67,26 @@ class ChecksTask {
                             throw new Error(`env.php is missing, make sure ${envFileLocation} exists.`);
                         })
                     });
+                    this.checkTasks.push({
+                        title: 'Checking if database host is set to localhost',
+                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                            let host = yield console_1.localhostMagentoRootExec(`magerun2 db:info --format=json`, config);
+                            host = JSON.parse(host);
+                            let envHost = null;
+                            for (const [key, value] of Object.entries(host)) {
+                                let hostName = value['Name'];
+                                let hostValue = value['Value'];
+                                if (hostName.toLowerCase() == 'host') {
+                                    envHost = hostValue;
+                                    break;
+                                }
+                            }
+                            if (envHost == 'localhost' || envHost == '127.0.0.1') {
+                                return true;
+                            }
+                            throw new Error(`In env.php, db > connection > host is not 127.0.0.1 or localhost. (${envHost} is set as hostname)`);
+                        })
+                    });
                 }
             }
             // Check if target folder exists before downloading
