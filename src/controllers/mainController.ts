@@ -48,6 +48,7 @@ class MainController {
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
+            'magentoDatabaseIncludeLocation': '',
             'wordpressDatabaseLocation': '',
             'importDomain': ''
         },

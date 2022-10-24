@@ -74,10 +74,10 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
 }
 
 // Navigate to Magento root folder
-const sshNavigateToMagentoRootCommand = (command: string, config: any, checkSecondDatabase: boolean = false, log: boolean = false) => {
+const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
     let databaseData = config.databases.databaseData;
 
-    if (checkSecondDatabase) {
+    if (useSecondDatabase) {
         databaseData = config.databases.databaseDataSecond;
     }
 
@@ -103,13 +103,13 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, checkSeco
 }
 
 // Execute a PHP script in the root of magento
-const sshMagentoRootFolderPhpCommand = (command: string, config: any, checkSecondDatabase: boolean = false, log: boolean = false) => {
-    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config, checkSecondDatabase, log);
+const sshMagentoRootFolderPhpCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
+    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config, useSecondDatabase, log);
 }
 
 // Execute a PHP script in the root of magento
-const sshMagentoRootFolderMagerunCommand = (command: string, config: any, checkSecondDatabase: boolean = false, log: boolean = false) => {
-    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config, checkSecondDatabase, log);
+const sshMagentoRootFolderMagerunCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
+    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config, useSecondDatabase, log);
 }
 
 const localhostMagentoRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {
@@ -120,11 +120,19 @@ const localhostMagentoRootExec = (command: string, config: any, skipErrors: bool
     return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
 }
 
-const localhostRsyncDownloadCommand = (source: string, destination: string, config: any) => {
-    let sshCommand: string;
-    config.databases.databaseData.port ? sshCommand = `ssh -p ${config.databases.databaseData.port} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+const localhostRsyncDownloadCommand = (source: string, destination: string, config: any, useSecondDatabase: boolean = false) => {
+    let sshCommand: string,
+        databaseUsername = config.databases.databaseData.username,
+        databaseServer = config.databases.databaseData.server,
+        databasePort = config.databases.databaseData.port;
 
-    let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${source} ${destination}`;
+    if (useSecondDatabase) {
+
+    }
+
+    config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+
+    let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
 
     // If password is set, use sshpass
     if (config.databases.databaseData.password) {

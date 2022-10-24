@@ -196,6 +196,8 @@ class SyncImportTask {
                 task: async (): Promise<void> => {
                     // Push file to server through rSync
                     await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
+                    // Add include tables file
+                    await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseIncludeLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 }
             },
         );
@@ -205,8 +207,17 @@ class SyncImportTask {
                 title: 'Importing Magento database',
                 task: async (): Promise<void> => {
                     // Create database
-                    // TODO: Keep admin users
                     await ssh.execCommand(sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
+                }
+            },
+        );
+
+        this.importTasks.push(
+            {
+                title: 'Importing tables to keep into database',
+                task: async (): Promise<void> => {
+                    // Create database
+                    await ssh.execCommand(sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}-include.sql --force --skip-authorization-entry-creation -q`, config, true));
                 }
             },
         );

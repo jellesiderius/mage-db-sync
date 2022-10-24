@@ -156,14 +156,22 @@ class SyncImportTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Push file to server through rSync
                     yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
+                    // Add include tables file
+                    yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseIncludeLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 })
             });
             this.importTasks.push({
                 title: 'Importing Magento database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create database
-                    // TODO: Keep admin users
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
+                })
+            });
+            this.importTasks.push({
+                title: 'Importing tables to keep into database',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    // Create database
+                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}-include.sql --force --skip-authorization-entry-creation -q`, config, true));
                 })
             });
             if (config.settings.syncImages == 'yes') {

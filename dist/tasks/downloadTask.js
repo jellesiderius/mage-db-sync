@@ -63,6 +63,8 @@ class DownloadTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Download Magerun to the server
                     yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                    // Download Magerun to the staging server
+                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
                 })
             });
             this.downloadTasks.push({
@@ -90,6 +92,12 @@ class DownloadTask {
                     // Download stripped database for staging envs without customer data etc.
                     if (config.settings.syncDatabases == 'yes') {
                         stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
+                        let includeCommand = 'db:dump -n --no-tablespaces --include="' + static_settings_json_1.default.settings.databaseIncludeStaging + '" ' + config.serverVariables.databaseName + '-include.sql';
+                        // Dump tables to include from database and move to user root on server
+                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents) {
+                        }, function (error) {
+                            throw new Error(error);
+                        });
                     }
                     // Dump database and move to user root on server
                     yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
@@ -108,7 +116,14 @@ class DownloadTask {
                     }
                     let localDatabaseLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
                     if (config.settings.rsyncInstalled) {
+                        // Get magento database from production
                         yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
+                        if (config.settings.syncDatabases == 'yes') {
+                            // Get tables to keep from staging
+                            yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}-include.sql`, `${localDatabaseFolderLocation}`, config, true);
+                            let localDatabaseIncludeLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '-include.sql';
+                            config.finalMessages.magentoDatabaseIncludeLocation = localDatabaseIncludeLocation;
+                        }
                     }
                     else {
                         yield ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents) {
@@ -196,6 +211,7 @@ class DownloadTask {
                     yield ssh.execCommand('rm ' + config.serverVariables.databaseName + '.sql');
                     // Remove Magerun and close connection to SSH
                     yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config));
+                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config, true));
                     // Remove the wordpress database file on the server
                     if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
                         yield ssh.execCommand(`rm ${config.wordpressConfig.database}.sql`);
