@@ -160,7 +160,6 @@ class SyncImportTask {
                     await this.collectStagingConfigValue('email/*', ssh, config);
                     await this.collectStagingConfigValue('trans_email/*', ssh, config);
                     await this.collectStagingConfigValue('sales_email/*', ssh, config);
-                    await this.collectStagingConfigValue('sales_pdf/*', ssh, config);
                     await this.collectStagingConfigValue('smtp/*', ssh, config);
                     await this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     await this.collectStagingConfigValue('smtppro/*', ssh, config);

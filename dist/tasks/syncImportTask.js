@@ -123,7 +123,6 @@ class SyncImportTask {
                     yield this.collectStagingConfigValue('email/*', ssh, config);
                     yield this.collectStagingConfigValue('trans_email/*', ssh, config);
                     yield this.collectStagingConfigValue('sales_email/*', ssh, config);
-                    yield this.collectStagingConfigValue('sales_pdf/*', ssh, config);
                     yield this.collectStagingConfigValue('smtp/*', ssh, config);
                     yield this.collectStagingConfigValue('mailchimp/*', ssh, config);
                     yield this.collectStagingConfigValue('smtppro/*', ssh, config);
