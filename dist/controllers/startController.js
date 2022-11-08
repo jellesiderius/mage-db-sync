@@ -88,7 +88,7 @@ class StartController extends mainController_1.default {
                 yield checkTask.configure(this.list, this.config, this.ssh);
                 // Build up download list
                 let downloadTask = yield new downloadTask_1.default();
-                yield downloadTask.configure(this.list, this.config, this.ssh);
+                yield downloadTask.configure(this.list, this.config, this.ssh, this.sshSecondDatabase);
                 // Build import list
                 let syncImportTask = yield new syncImportTask_1.default();
                 yield syncImportTask.configure(this.list, this.config, this.ssh);
@@ -99,7 +99,7 @@ class StartController extends mainController_1.default {
                 yield checkTask.configure(this.list, this.config, this.ssh);
                 // Build up download list
                 let downloadTask = yield new downloadTask_1.default();
-                yield downloadTask.configure(this.list, this.config, this.ssh);
+                yield downloadTask.configure(this.list, this.config, this.ssh, this.sshSecondDatabase);
                 // Import Magento if possible
                 if (this.config.settings.import && this.config.settings.import == "yes") {
                     // Build import list

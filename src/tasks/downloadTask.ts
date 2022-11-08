@@ -1,7 +1,7 @@
 import {
     localhostMagentoRootExec,
     localhostRsyncDownloadCommand,
-    sshMagentoRootFolderMagerunCommand,
+    sshMagentoRootFolderMagerunCommand, sshMagentoRootFolderPhpCommand,
     sshNavigateToMagentoRootCommand,
     wordpressReplaces
 } from '../utils/console';
@@ -13,13 +13,13 @@ import configFile from "../../config/settings.json";
 class DownloadTask {
     private downloadTasks = [];
 
-    configure = async (list: any, config: any, ssh: any) => {
-        await this.addTasks(list, config, ssh);
+    configure = async (list: any, config: any, ssh: any, sshSecondDatabase: any) => {
+        await this.addTasks(list, config, ssh, sshSecondDatabase);
         return list;
     }
 
     // Add tasks
-    addTasks = async (list: any, config: any, ssh: any) => {
+    addTasks = async (list: any, config: any, ssh: any, sshSecondDatabase: any) => {
         list.add(
             {
                 title: 'Download database from server ' + '(' + config.databases.databaseData.username + ')',
@@ -43,6 +43,17 @@ class DownloadTask {
                         privateKey: config.customConfig.sshKeyLocation,
                         passphrase: config.customConfig.sshPassphrase
                     });
+
+                    if (config.settings.syncDatabases == 'yes') {
+                        await sshSecondDatabase.connect({
+                            host: config.databases.databaseDataSecond.server,
+                            password: config.databases.databaseDataSecond.password,
+                            username: config.databases.databaseDataSecond.username,
+                            port: config.databases.databaseDataSecond.port,
+                            privateKey: config.customConfig.sshKeyLocation,
+                            passphrase: config.customConfig.sshPassphrase
+                        });
+                    }
                 }
             }
         );
@@ -85,8 +96,11 @@ class DownloadTask {
                 task: async (): Promise<void> => {
                     // Download Magerun to the server
                     await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
-                    // Download Magerun to the staging server
-                    await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+
+                    if (config.settings.syncDatabases == 'yes') {
+                        // Download Magerun to the staging server
+                        await sshSecondDatabase.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                    }
                 }
             },
         );
@@ -124,7 +138,7 @@ class DownloadTask {
                         let includeCommand = 'db:dump -n --no-tablespaces --include="' + staticConfigFile.settings.databaseIncludeStaging + '" ' + config.serverVariables.databaseName + '-include.sql';
 
                         // Dump tables to include from database and move to user root on server
-                        await ssh.execCommand(sshMagentoRootFolderMagerunCommand(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents: any) {
+                        await sshSecondDatabase.execCommand(sshMagentoRootFolderMagerunCommand(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents: any) {
                         }, function (error: any) {
                             throw new Error(error)
                         });
@@ -269,11 +283,20 @@ class DownloadTask {
 
                     // Remove Magerun and close connection to SSH
                     await ssh.execCommand(sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config));
-                    await ssh.execCommand(sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config, true));
 
                     // Remove the wordpress database file on the server
                     if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
                         await ssh.execCommand(`rm ${config.wordpressConfig.database}.sql`);
+                    }
+
+                    if (config.settings.syncDatabases == 'yes') {
+                        // Remove the magento database file on the server
+                        await sshSecondDatabase.execCommand('rm ' + config.serverVariables.databaseName + '-include.sql');
+
+                        // Remove Magerun and close connection to SSH
+                        await sshSecondDatabase.execCommand(sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config, true));
+
+                        await sshSecondDatabase.dispose();
                     }
 
                     // Close the SSH connection

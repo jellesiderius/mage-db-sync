@@ -116,6 +116,9 @@ exports.localhostMagentoRootExec = localhostMagentoRootExec;
 const localhostRsyncDownloadCommand = (source, destination, config, useSecondDatabase = false) => {
     let sshCommand, databaseUsername = config.databases.databaseData.username, databaseServer = config.databases.databaseData.server, databasePort = config.databases.databaseData.port;
     if (useSecondDatabase) {
+        databaseUsername = config.databases.databaseDataSecond.username,
+            databaseServer = config.databases.databaseDataSecond.server,
+            databasePort = config.databases.databaseDataSecond.port;
     }
     config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
     let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;

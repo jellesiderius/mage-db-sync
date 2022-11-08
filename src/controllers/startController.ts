@@ -96,7 +96,7 @@ class StartController extends MainController {
 
             // Build up download list
             let downloadTask = await new DownloadTask();
-            await downloadTask.configure(this.list, this.config, this.ssh);
+            await downloadTask.configure(this.list, this.config, this.ssh, this.sshSecondDatabase);
 
             // Build import list
             let syncImportTask = await new SyncImportTask();
@@ -109,7 +109,7 @@ class StartController extends MainController {
 
             // Build up download list
             let downloadTask = await new DownloadTask();
-            await downloadTask.configure(this.list, this.config, this.ssh);
+            await downloadTask.configure(this.list, this.config, this.ssh, this.sshSecondDatabase);
 
             // Import Magento if possible
             if (this.config.settings.import && this.config.settings.import == "yes") {

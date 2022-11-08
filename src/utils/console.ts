@@ -127,7 +127,9 @@ const localhostRsyncDownloadCommand = (source: string, destination: string, conf
         databasePort = config.databases.databaseData.port;
 
     if (useSecondDatabase) {
-
+        databaseUsername = config.databases.databaseDataSecond.username,
+        databaseServer = config.databases.databaseDataSecond.server,
+        databasePort = config.databases.databaseDataSecond.port;
     }
 
     config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
