@@ -13,7 +13,7 @@ class SyncImportTask {
         });
         this.collectStagingConfigValue = (path, ssh, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             let self = this;
-            let json = yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('config:store:get "' + path + '" --format=json', config, true));
+            let json = yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('config:store:get "' + path + '" --format=json', config, true));
             json = json.stdout;
             try {
                 // Check if string is JSON
@@ -79,7 +79,7 @@ class SyncImportTask {
                 title: 'Retrieving server settings',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Retrieve settings from server to use
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('test -e vendor/magento && test -e app/etc/env.php && echo 2 || echo 1; pwd; which php;', config, true)).then((result) => {
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('test -e vendor/magento && test -e app/etc/env.php && echo 2 || echo 1; pwd; which php;', config, true)).then((result) => {
                         if (result) {
                             let serverValues = result.stdout.split("\n");
                             // Check if Magento 1 or Magento 2
@@ -91,7 +91,7 @@ class SyncImportTask {
                         }
                     });
                     if (config.serverVariables.magentoVersion != 2) {
-                        console_1.error('Magento 2 not completely found staging server, are app/etc/env.php & vendor/magento present?');
+                        (0, console_1.error)('Magento 2 not completely found staging server, are app/etc/env.php & vendor/magento present?');
                         process.exit();
                     }
                     // Use custom PHP path instead if given
@@ -106,7 +106,7 @@ class SyncImportTask {
                 title: 'Downloading Magerun to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Download Magerun to the server
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
                 })
             });
             this.importTasks.push({
@@ -154,23 +154,23 @@ class SyncImportTask {
                 title: 'Uploading database file to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Push file to server through rSync
-                    yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
+                    yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                     // Add include tables file
-                    yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseIncludeLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
+                    yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${config.finalMessages.magentoDatabaseIncludeLocation} ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}`, config, true);
                 })
             });
             this.importTasks.push({
                 title: 'Importing Magento database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create database
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(`db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config, true));
                 })
             });
             this.importTasks.push({
                 title: 'Importing tables to keep into database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create database
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:import ${config.serverVariables.databaseName}-include.sql --force --skip-authorization-entry-creation -q`, config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(`db:import ${config.serverVariables.databaseName}-include.sql --force --skip-authorization-entry-creation -q`, config, true));
                 })
             });
             if (config.settings.syncImages == 'yes') {
@@ -179,9 +179,9 @@ class SyncImportTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Push media files to server
                         var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
-                        yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${tmpLocalMediaPath}/* ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}/pub/media/`, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseDataSecond.port}" ${tmpLocalMediaPath}/* ${config.databases.databaseDataSecond.username}@${config.databases.databaseDataSecond.server}:${config.serverVariables.magentoRoot}/pub/media/`, config, true);
                         // Remove files from local machine
-                        yield console_1.consoleCommand(`rm -rf ${tmpLocalMediaPath}`, true);
+                        yield (0, console_1.consoleCommand)(`rm -rf ${tmpLocalMediaPath}`, true);
                     })
                 });
             }
@@ -194,9 +194,9 @@ class SyncImportTask {
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '1');", dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'design/search_engine_robots/default_robots', 'NOINDEX,NOFOLLOW');";
                     // INITIAL DELETE QUERY
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryRemove + '"', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:query "' + dbQueryRemove + '"', config, true));
                     // INITIAL IMPORT QUERY
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQueryInsert + '"', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:query "' + dbQueryInsert + '"', config, true));
                     for (const itemKey of Object.keys(this.stagingValues)) {
                         var itemDeleteQuery = '';
                         var itemInsertQuery = '';
@@ -208,9 +208,9 @@ class SyncImportTask {
                             itemInsertQuery = itemInsertQuery + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${item.scope}', '${item.scope_id}', '${item.path}', '${item.value}');`;
                         }
                         // DELETE QUERY
-                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + itemDeleteQuery + '"', config, true));
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:query "' + itemDeleteQuery + '"', config, true));
                         // IMPORT QUERY
-                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + itemInsertQuery + '"', config, true));
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:query "' + itemInsertQuery + '"', config, true));
                     }
                 })
             });
@@ -220,7 +220,7 @@ class SyncImportTask {
                     let dbQuery = '';
                     let dbQueryUpdate = '';
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
-                    let engineCheck = yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('config:store:get "catalog/search/engine" --format=json', config, true));
+                    let engineCheck = yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('config:store:get "catalog/search/engine" --format=json', config, true));
                     // @ts-ignore
                     if (engineCheck.length > 0) {
                         try {
@@ -250,7 +250,7 @@ class SyncImportTask {
                         }
                         // Build up query
                         dbQuery = dbQueryUpdate;
-                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:query "' + dbQuery + '"', config, true));
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:query "' + dbQuery + '"', config, true));
                         config.settings.elasticSearchUsed = true;
                     }
                 })
@@ -262,12 +262,12 @@ class SyncImportTask {
                         // Magerun2 commands
                         if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
                             let commands = config.settings.magerun2Command.replace('magerun2 ', '');
-                            yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(commands, config, true));
+                            yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(commands, config, true));
                         }
                         // Database queries
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
-                            yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(`db:query '` + dbQuery + `'`, config, true));
+                            yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(`db:query '` + dbQuery + `'`, config, true));
                         }
                     })
                 });
@@ -275,8 +275,8 @@ class SyncImportTask {
             this.configureTasks.push({
                 title: "Synchronizing module versions on staging",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('sys:setup:downgrade-versions ', config, true));
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('bin/magento setup:upgrade --keep-generated', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('sys:setup:downgrade-versions ', config, true));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('bin/magento setup:upgrade --keep-generated', config, true));
                 })
             });
             this.configureTasks.push({
@@ -284,25 +284,25 @@ class SyncImportTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock', config, true));
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock', config, true));
                     }
                 })
             });
             this.configureTasks.push({
                 title: "Flushing Magento caches",
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('cache:enable', config, true));
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('cache:flush', config, true));
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('app:config:import', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('cache:enable', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('cache:flush', config, true));
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('app:config:import', config, true));
                 })
             });
             this.configureTasks.push({
                 title: 'Cleaning up',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove SQL file
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand(`rm  ${config.serverVariables.databaseName}.sql`, config, true));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)(`rm  ${config.serverVariables.databaseName}.sql`, config, true));
                     // Remove Magerun2 file
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand(`rm ${config.serverVariables.magerunFile}`, config, true));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)(`rm ${config.serverVariables.magerunFile}`, config, true));
                 })
             });
         });

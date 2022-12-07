@@ -45,7 +45,7 @@ class ChecksTask {
                     title: 'Checking Magerun2 version',
                     task: (ctx, task) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Check the local installed Magerun2 version before we continue and import the database
-                        let installedMagerun2Version = yield console_1.consoleCommand('magerun2 -V', false);
+                        let installedMagerun2Version = yield (0, console_1.consoleCommand)('magerun2 -V', false);
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
                         // @ts-ignore
@@ -70,7 +70,7 @@ class ChecksTask {
                     this.checkTasks.push({
                         title: 'Checking if database host is set to localhost',
                         task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                            let host = yield console_1.localhostMagentoRootExec(`magerun2 db:info --format=json`, config);
+                            let host = yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:info --format=json`, config);
                             host = JSON.parse(host);
                             let envHost = null;
                             for (const [key, value] of Object.entries(host)) {

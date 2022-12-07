@@ -22,7 +22,7 @@ class DatabaseTypeQuestion {
                 config.databases.databasesList = this.databasesModel.databasesList;
             })
                 .catch((err) => {
-                console_1.error(`Something went wrong: ${err.message}`);
+                (0, console_1.error)(`Something went wrong: ${err.message}`);
             });
         });
         // Add questions

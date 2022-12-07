@@ -46,7 +46,7 @@ class DownloadTask {
                 title: 'Retrieving server settings',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Retrieve settings from server to use
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('test -e vendor/magento && echo 2 || echo 1; pwd; which php;', config)).then((result) => {
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('test -e vendor/magento && echo 2 || echo 1; pwd; which php;', config)).then((result) => {
                         if (result) {
                             let serverValues = result.stdout.split("\n");
                             // Check if Magento 1 or Magento 2
@@ -72,10 +72,10 @@ class DownloadTask {
                 title: 'Downloading Magerun to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Download Magerun to the server
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
                     if (config.settings.syncDatabases == 'yes') {
                         // Download Magerun to the staging server
-                        yield sshSecondDatabase.execCommand(console_1.sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                        yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
                     }
                 })
             });
@@ -83,7 +83,7 @@ class DownloadTask {
                 title: 'Dumping Magento database and moving it to server root (' + config.settings.strip + ')',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Retrieve database name
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand('db:info --format=json', config)).then((result) => {
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:info --format=json', config)).then((result) => {
                         if (result) {
                             // Get json format string and extract database names from values
                             let jsonResult = JSON.parse(result.stdout);
@@ -106,13 +106,13 @@ class DownloadTask {
                         stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
                         let includeCommand = 'db:dump -n --no-tablespaces --include="' + static_settings_json_1.default.settings.databaseIncludeStaging + '" ' + config.serverVariables.databaseName + '-include.sql';
                         // Dump tables to include from database and move to user root on server
-                        yield sshSecondDatabase.execCommand(console_1.sshMagentoRootFolderMagerunCommand(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents) {
+                        yield sshSecondDatabase.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents) {
                         }, function (error) {
                             throw new Error(error);
                         });
                     }
                     // Dump database and move to user root on server
-                    yield ssh.execCommand(console_1.sshMagentoRootFolderMagerunCommand(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
+                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
                     }, function (error) {
                         throw new Error(error);
                     });
@@ -129,10 +129,10 @@ class DownloadTask {
                     let localDatabaseLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
                     if (config.settings.rsyncInstalled) {
                         // Get magento database from production
-                        yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
+                        yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
                         if (config.settings.syncDatabases == 'yes') {
                             // Get tables to keep from staging
-                            yield console_1.localhostRsyncDownloadCommand(`~/${config.serverVariables.databaseName}-include.sql`, `${localDatabaseFolderLocation}`, config, true);
+                            yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}-include.sql`, `${localDatabaseFolderLocation}`, config, true);
                             let localDatabaseIncludeLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '-include.sql';
                             config.finalMessages.magentoDatabaseIncludeLocation = localDatabaseIncludeLocation;
                         }
@@ -153,12 +153,12 @@ class DownloadTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Sync media to project folder
                         if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
-                            yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
                         }
                         else {
                             // Sync to tmp folder
                             var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
-                            yield console_1.localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
                         }
                     })
                 });
@@ -168,34 +168,34 @@ class DownloadTask {
                     title: 'Dumping Wordpress database and moving it to server root',
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Download Wordpress database
-                        yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('cd wp; cat wp-config.php', config)).then((result) => {
+                        yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('cd wp; cat wp-config.php', config)).then((result) => {
                             if (result) {
                                 let resultValues = result.stdout.split("\n");
                                 resultValues.forEach((entry) => {
                                     // Get DB name from config file
                                     if (entry.includes('DB_NAME')) {
-                                        config.wordpressConfig.database = console_1.wordpressReplaces(entry, `DB_NAME`);
+                                        config.wordpressConfig.database = (0, console_1.wordpressReplaces)(entry, `DB_NAME`);
                                     }
                                     // Get DB user from config file
                                     if (entry.includes('DB_USER')) {
-                                        config.wordpressConfig.username = console_1.wordpressReplaces(entry, `DB_USER`);
+                                        config.wordpressConfig.username = (0, console_1.wordpressReplaces)(entry, `DB_USER`);
                                     }
                                     // Get DB password from config file
                                     if (entry.includes('DB_PASSWORD')) {
-                                        config.wordpressConfig.password = console_1.wordpressReplaces(entry, `DB_PASSWORD`);
+                                        config.wordpressConfig.password = (0, console_1.wordpressReplaces)(entry, `DB_PASSWORD`);
                                     }
                                     // Get DB host from config file
                                     if (entry.includes('DB_HOST')) {
-                                        config.wordpressConfig.host = console_1.wordpressReplaces(entry, `DB_HOST`);
+                                        config.wordpressConfig.host = (0, console_1.wordpressReplaces)(entry, `DB_HOST`);
                                     }
                                     // Get table prefix from config file
                                     if (entry.includes('table_prefix')) {
-                                        config.wordpressConfig.prefix = console_1.wordpressReplaces(entry, `table_prefix`);
+                                        config.wordpressConfig.prefix = (0, console_1.wordpressReplaces)(entry, `table_prefix`);
                                     }
                                 });
                             }
                         });
-                        yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand(`mysqldump --user='${config.wordpressConfig.username}' --password='${config.wordpressConfig.password}' -h ${config.wordpressConfig.host} ${config.wordpressConfig.database} > ${config.wordpressConfig.database}.sql; mv ${config.wordpressConfig.database}.sql ~`, config));
+                        yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)(`mysqldump --user='${config.wordpressConfig.username}' --password='${config.wordpressConfig.password}' -h ${config.wordpressConfig.host} ${config.wordpressConfig.database} > ${config.wordpressConfig.database}.sql; mv ${config.wordpressConfig.database}.sql ~`, config));
                     })
                 });
                 this.downloadTasks.push({
@@ -203,7 +203,7 @@ class DownloadTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         let wordpresslocalDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.wordpressConfig.database + '.sql';
                         if (config.settings.rsyncInstalled) {
-                            yield console_1.localhostRsyncDownloadCommand(`~/${config.wordpressConfig.database}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
+                            yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.wordpressConfig.database}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
                         }
                         else {
                             yield ssh.getFile(wordpresslocalDatabaseLocation, `${config.wordpressConfig.database}.sql`).then(function (Contents) {
@@ -222,7 +222,7 @@ class DownloadTask {
                     // Remove the magento database file on the server
                     yield ssh.execCommand('rm ' + config.serverVariables.databaseName + '.sql');
                     // Remove Magerun and close connection to SSH
-                    yield ssh.execCommand(console_1.sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('rm ' + config.serverVariables.magerunFile, config));
                     // Remove the wordpress database file on the server
                     if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true) {
                         yield ssh.execCommand(`rm ${config.wordpressConfig.database}.sql`);
@@ -231,7 +231,7 @@ class DownloadTask {
                         // Remove the magento database file on the server
                         yield sshSecondDatabase.execCommand('rm ' + config.serverVariables.databaseName + '-include.sql');
                         // Remove Magerun and close connection to SSH
-                        yield sshSecondDatabase.execCommand(console_1.sshNavigateToMagentoRootCommand('rm ' + config.serverVariables.magerunFile, config, true));
+                        yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('rm ' + config.serverVariables.magerunFile, config, true));
                         yield sshSecondDatabase.dispose();
                     }
                     // Close the SSH connection

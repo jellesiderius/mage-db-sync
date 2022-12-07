@@ -7,6 +7,6 @@ exports.default = (program) => program
     .command('start')
     .description('Starts the database synchronizer')
     .action((service) => {
-    (new startController_1.default()).executeStart(service).catch(err => console_1.error(err.message));
+    (new startController_1.default()).executeStart(service).catch(err => (0, console_1.error)(err.message));
 });
 //# sourceMappingURL=startCommand.js.map

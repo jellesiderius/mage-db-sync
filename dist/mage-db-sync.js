@@ -8,7 +8,7 @@ const fs_1 = tslib_1.__importDefault(require("fs"));
 const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("./utils/console");
 const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
-get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+(0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     // Lets make sure all required files are in place before running the tool
     let npmPath = path;
     let missingFiles = false;
@@ -21,7 +21,7 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__a
     new Promise((resolve, reject) => {
         requiredFiles.forEach((path) => {
             if (!fs_1.default.existsSync(`${npmPath}/${path}`)) {
-                console_1.error(`${path} was not found. Make sure this file exists (${npmPath}/${path})`);
+                (0, console_1.error)(`${path} was not found. Make sure this file exists (${npmPath}/${path})`);
                 missingFiles = true;
             }
         });
@@ -30,7 +30,7 @@ get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => tslib_1.__a
     if (missingFiles) {
         return;
     }
-    index_1.default(commander_1.default);
+    (0, index_1.default)(commander_1.default);
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const packageJson = require('../package.json');
     let versionCheck = new versionCheck_1.default();

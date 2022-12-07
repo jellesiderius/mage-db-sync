@@ -17,7 +17,7 @@ class syncDatabasesQuestions {
                 config.settings.syncDatabases = answers.syncDatabases;
             })
                 .catch((err) => {
-                console_1.error(`Something went wrong: ${err.message}`);
+                (0, console_1.error)(`Something went wrong: ${err.message}`);
             });
         });
         // Add questions

@@ -18,20 +18,20 @@ class SelfUpdateController {
                 'currentVersion': this.versionCheck.config.currentVersion,
                 'latestVersion': this.versionCheck.config.latestVersion
             };
-            yield get_installed_path_1.getInstalledPath('mage-db-sync').then((path) => {
+            yield (0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => {
                 config.npmPath = path;
             });
             if (config.currentVersion < config.latestVersion) {
-                yield console_1.consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
-                yield download_git_repo_1.default('jellesiderius/mage-db-sync#master', config.npmPath, function (err) {
+                yield (0, console_1.consoleCommand)(`cd ${config.npmPath}; rm -rf dist`, false);
+                yield (0, download_git_repo_1.default)('jellesiderius/mage-db-sync#master', config.npmPath, function (err) {
                     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-                        yield console_1.consoleCommand(`cd ${config.npmPath}; npm install`, false);
-                        console_1.success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
+                        yield (0, console_1.consoleCommand)(`cd ${config.npmPath}; npm install`, false);
+                        (0, console_1.success)(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
                     });
                 });
             }
             else {
-                console_1.success(`mage-db-sync is already up to date`);
+                (0, console_1.success)(`mage-db-sync is already up to date`);
             }
             return true;
         });

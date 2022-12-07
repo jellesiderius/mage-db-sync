@@ -78,7 +78,7 @@ class MainController {
                 this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';
             }
             // Check if rsync is installed locally
-            yield command_exists_1.default('rsync')
+            yield (0, command_exists_1.default)('rsync')
                 .then((command) => {
                 this.config.settings.rsyncInstalled = true;
             }).catch(function () { });

@@ -28,21 +28,21 @@ class StartController extends mainController_1.default {
                 yield this.list.run();
                 // Show final message when done with all tasks
                 if (this.config.finalMessages.importDomain.length > 0) {
-                    console_1.success(`Magento is successfully imported to localhost. ${this.config.finalMessages.importDomain} is now available.`);
-                    console_1.info(`You can log in to the Magento backend with username: ${settings_json_1.default.magentoBackend.adminUsername} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
-                    console_1.info(`For each website there is a dummy customer account available. Email: ${settings_json_1.default.magentoBackend.adminEmailAddress}, Password: ${settings_json_1.default.magentoBackend.adminPassword}`);
+                    (0, console_1.success)(`Magento is successfully imported to localhost. ${this.config.finalMessages.importDomain} is now available.`);
+                    (0, console_1.info)(`You can log in to the Magento backend with username: ${settings_json_1.default.magentoBackend.adminUsername} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
+                    (0, console_1.info)(`For each website there is a dummy customer account available. Email: ${settings_json_1.default.magentoBackend.adminEmailAddress}, Password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                 }
                 else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
-                    console_1.success(`Downloaded Magento database to: ${this.config.finalMessages.magentoDatabaseLocation}`);
+                    (0, console_1.success)(`Downloaded Magento database to: ${this.config.finalMessages.magentoDatabaseLocation}`);
                     // Show wordpress download message if downloaded
                     if (this.config.finalMessages.wordpressDatabaseLocation.length > 0 && this.config.settings.wordpressDownload && this.config.settings.wordpressDownload == 'yes' && this.config.settings.wordpressImport != 'yes') {
-                        console_1.success(`Downloaded Wordpress database to: ${this.config.finalMessages.wordpressDatabaseLocation}`);
+                        (0, console_1.success)(`Downloaded Wordpress database to: ${this.config.finalMessages.wordpressDatabaseLocation}`);
                     }
                 }
                 // Show wordpress import message if imported
                 if (this.config.settings.wordpressImport && this.config.settings.wordpressImport == 'yes') {
-                    console_1.success(`Wordpress is successfully imported to localhost.`);
-                    console_1.info(`You can log in to the Wordpress backend with username: ${settings_json_1.default.magentoBackend.adminEmailAddress} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
+                    (0, console_1.success)(`Wordpress is successfully imported to localhost.`);
+                    (0, console_1.info)(`You can log in to the Wordpress backend with username: ${settings_json_1.default.magentoBackend.adminEmailAddress} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                 }
                 process.exit();
             }
@@ -53,7 +53,7 @@ class StartController extends mainController_1.default {
         // Ask questions to user
         this.askQuestions = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
             // Clear the console
-            console_1.clearConsole();
+            (0, console_1.clearConsole)();
             // Ask question about database type
             let databaseTypeQuestion = yield new databaseTypeQuestion_1.default();
             yield databaseTypeQuestion.configure(this.config);
@@ -77,7 +77,7 @@ class StartController extends mainController_1.default {
                 yield configurationQuestions.configure(this.config);
             }
             // Clear the console
-            console_1.clearConsole();
+            (0, console_1.clearConsole)();
         });
         // Configure task list
         this.prepareTasks = () => tslib_1.__awaiter(this, void 0, void 0, function* () {

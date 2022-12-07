@@ -152,6 +152,15 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
+                title: 'Configuring cache',
+                task: async (): Promise<void> => {
+                    await localhostMagentoRootExec(`magerun2 config:store:set system/full_page_cache/caching_application 1`, config);
+                }
+            }
+        );
+
+        this.configureTasks.push(
+            {
                 title: 'Creating a dummy customer on every website',
                 task: async (): Promise<void> => {
                     // Create new dummy customers for all websites

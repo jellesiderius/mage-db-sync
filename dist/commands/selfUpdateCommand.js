@@ -7,6 +7,6 @@ exports.default = (program) => program
     .command('self-update')
     .description('Updates the database synchronizer to the latest version')
     .action((service) => {
-    (new selfUpdateController_1.default()).executeStart(service).catch((err) => console_1.error(err.message));
+    (new selfUpdateController_1.default()).executeStart(service).catch((err) => (0, console_1.error)(err.message));
 });
 //# sourceMappingURL=selfUpdateCommand.js.map

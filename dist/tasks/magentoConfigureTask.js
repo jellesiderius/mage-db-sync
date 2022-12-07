@@ -35,7 +35,7 @@ class MagentoConfigureTask {
                     dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
                     // Set import domain for final message on completing all tasks
                     config.finalMessages.importDomain = baseUrl;
-                    yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                    yield (0, console_1.localhostMagentoRootExec)('magerun2 db:query "' + dbQuery + '"', config);
                 })
             });
             this.configureTasks.push({
@@ -44,7 +44,7 @@ class MagentoConfigureTask {
                     let dbQuery = '';
                     let dbQueryUpdate = '';
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
-                    let engineCheck = yield console_1.localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json', config);
+                    let engineCheck = yield (0, console_1.localhostMagentoRootExec)('magerun2 config:store:get "catalog/search/engine" --format=json', config);
                     // @ts-ignore
                     if (engineCheck.length > 0) {
                         try {
@@ -76,7 +76,7 @@ class MagentoConfigureTask {
                         }
                         // Build up query
                         dbQuery = dbQueryUpdate;
-                        yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                        yield (0, console_1.localhostMagentoRootExec)('magerun2 db:query "' + dbQuery + '"', config);
                         config.settings.elasticSearchUsed = true;
                     }
                 })
@@ -86,21 +86,27 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove all current admin users
                     var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
-                    yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                    yield (0, console_1.localhostMagentoRootExec)('magerun2 db:query "' + dbQuery + '"', config);
                     // Create a new admin user
-                    yield console_1.localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
                 })
             });
             this.configureTasks.push({
                 title: 'Disable reCAPTCHA',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set admin/captcha/enable 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set customer/captcha/enable 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set recaptcha/general/enabled 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    yield console_1.localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set admin/captcha/enable 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set customer/captcha/enable 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set recaptcha/general/enabled 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                })
+            });
+            this.configureTasks.push({
+                title: 'Configuring cache',
+                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 config:store:set system/full_page_cache/caching_application 1`, config);
                 })
             });
             this.configureTasks.push({
@@ -108,13 +114,13 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create new dummy customers for all websites
                     // Get all websites
-                    let allWebsites = yield console_1.localhostMagentoRootExec(`magerun2 sys:website:list --format=json`, config);
+                    let allWebsites = yield (0, console_1.localhostMagentoRootExec)(`magerun2 sys:website:list --format=json`, config);
                     allWebsites = JSON.parse(allWebsites);
                     // @ts-ignore
                     for (const [key, value] of Object.entries(allWebsites)) {
                         // @ts-ignore
                         let code = value.code;
-                        yield console_1.localhostMagentoRootExec(`magerun2 customer:create ${settings_json_1.default.magentoBackend.adminEmailAddress} ${settings_json_1.default.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(`magerun2 customer:create ${settings_json_1.default.magentoBackend.adminEmailAddress} ${settings_json_1.default.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
                     }
                 })
             });
@@ -133,7 +139,7 @@ class MagentoConfigureTask {
                         let dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
                         // Build up query
                         dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
-                        yield console_1.localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                        yield (0, console_1.localhostMagentoRootExec)('magerun2 db:query "' + dbQuery + '"', config);
                     }
                 })
             });
@@ -141,7 +147,7 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Downgrade module data in database
-                    yield console_1.localhostMagentoRootExec("magerun2 sys:setup:downgrade-versions; magerun2 setup:upgrade", config);
+                    yield (0, console_1.localhostMagentoRootExec)("magerun2 sys:setup:downgrade-versions; magerun2 setup:upgrade", config);
                 })
             });
             if (config.settings.runCommands && config.settings.runCommands == 'yes') {
@@ -150,12 +156,12 @@ class MagentoConfigureTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Magerun2 commands
                         if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
-                            yield console_1.localhostMagentoRootExec(config.settings.magerun2Command, config, false, true);
+                            yield (0, console_1.localhostMagentoRootExec)(config.settings.magerun2Command, config, false, true);
                         }
                         // Database queries
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
-                            yield console_1.localhostMagentoRootExec(`magerun2 db:query '` + dbQuery + `'`, config, false, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:query '` + dbQuery + `'`, config, false, true);
                         }
                     })
                 });
@@ -164,7 +170,7 @@ class MagentoConfigureTask {
                 title: 'Removing generated code',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove generated code
-                    yield console_1.localhostMagentoRootExec("rm -rf generated/code", config);
+                    yield (0, console_1.localhostMagentoRootExec)("rm -rf generated/code", config);
                 })
             });
             this.configureTasks.push({
@@ -172,7 +178,7 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        yield console_1.localhostMagentoRootExec(`magerun2 index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        yield (0, console_1.localhostMagentoRootExec)(`magerun2 index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
                 })
             });
@@ -180,7 +186,7 @@ class MagentoConfigureTask {
                 title: 'Flushing Magento caches',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Flush the magento caches and import config data
-                    yield console_1.localhostMagentoRootExec(`magerun2 cache:enable; magerun2 cache:flush; magerun2 app:config:import`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 cache:enable; magerun2 cache:flush; magerun2 app:config:import`, config);
                 })
             });
         });

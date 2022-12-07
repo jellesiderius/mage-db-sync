@@ -32,7 +32,7 @@ class ConfigurationQuestions {
                 }
             })
                 .catch((err) => {
-                console_1.error(`Something went wrong: ${err.message}`);
+                (0, console_1.error)(`Something went wrong: ${err.message}`);
             });
             if (config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
                 // Set import configs
@@ -47,7 +47,7 @@ class ConfigurationQuestions {
                     }
                 })
                     .catch((err) => {
-                    console_1.error(`Something went wrong: ${err.message}`);
+                    (0, console_1.error)(`Something went wrong: ${err.message}`);
                 });
             }
         });
