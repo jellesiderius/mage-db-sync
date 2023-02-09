@@ -38,6 +38,8 @@ class MainController {
                 'magentoLocalhostDomainName': '',
                 'rsyncInstalled': false,
                 'elasticSearchUsed': false,
+                'isDdevProject': false,
+                'isDdevActive': false,
                 'import': 'no',
                 'wordpressImport': 'no',
                 'wordpressDownload': 'no',
@@ -45,6 +47,7 @@ class MainController {
                 'currentFolderhasWordpress': false,
                 'runCommands': false,
                 'magerun2Command': '',
+                'magerun2CommandLocal': 'magerun2',
                 'databaseCommand': '',
                 'syncDatabases': 'no'
             },

@@ -6,6 +6,7 @@ const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
 const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
 const path = tslib_1.__importStar(require("path"));
 const fs = tslib_1.__importStar(require("fs"));
+const command_exists_1 = tslib_1.__importDefault(require("command-exists"));
 class SelectDatabaseQuestion {
     constructor() {
         this.databasesModel = new databasesModel_1.default();
@@ -14,7 +15,7 @@ class SelectDatabaseQuestion {
             yield this.addQuestions(config);
             yield inquirer_1.default
                 .prompt(this.questions)
-                .then((answers) => {
+                .then((answers) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                 // Get database key to get database settings
                 let keyRegex = /\((.*)\)/i;
                 let selectedDatabase = answers.database;
@@ -40,13 +41,22 @@ class SelectDatabaseQuestion {
                 if (fs.existsSync(config.settings.currentFolder + '/vendor/magento') || fs.existsSync(config.settings.currentFolder + '/app/Mage.php')) {
                     config.settings.currentFolderIsMagento = true;
                 }
+                if (config.settings.currentFolderIsMagento) {
+                    if (fs.existsSync(config.settings.currentFolder + '/.ddev/config.yaml')) {
+                        // Check if ddev is installed locally
+                        yield (0, command_exists_1.default)('ddev').then((command) => {
+                            config.settings.isDdevActive = true;
+                            config.settings.magerun2CommandLocal = "ddev magerun2";
+                        }).catch(function () { });
+                    }
+                }
                 // Check if current folder has Wordpress. This will be used to determine if we can import Wordpress
                 if (fs.existsSync(config.settings.currentFolder + '/wp/wp-config.php')
                     || fs.existsSync(config.settings.currentFolder + '/blog/wp-config.php')
                     || fs.existsSync(config.settings.currentFolder + '/wordpress/wp-config.php')) {
                     config.settings.currentFolderhasWordpress = true;
                 }
-            })
+            }))
                 .catch((err) => {
                 (0, console_1.error)(`Something went wrong: ${err.message}`);
             });

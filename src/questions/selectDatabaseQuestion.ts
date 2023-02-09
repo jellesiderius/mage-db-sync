@@ -4,6 +4,7 @@ import DatabasesModel from "../models/databasesModel";
 import * as path from 'path'
 import * as fs from 'fs'
 import {command} from "commander";
+import CommandExists from "command-exists";
 
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
@@ -14,7 +15,7 @@ class SelectDatabaseQuestion {
 
         await inquirer
         .prompt(this.questions)
-        .then((answers) => {
+        .then(async (answers) => {
             // Get database key to get database settings
             let keyRegex = /\((.*)\)/i;
             let selectedDatabase = answers.database;
@@ -45,6 +46,16 @@ class SelectDatabaseQuestion {
             // Check if current is magento. This will be used to determine if we can import Magento
             if (fs.existsSync(config.settings.currentFolder + '/vendor/magento') || fs.existsSync(config.settings.currentFolder + '/app/Mage.php')) {
                 config.settings.currentFolderIsMagento = true;
+            }
+
+            if (config.settings.currentFolderIsMagento) {
+                if (fs.existsSync(config.settings.currentFolder + '/.ddev/config.yaml')) {
+                    // Check if ddev is installed locally
+                    await CommandExists('ddev').then((command) => {
+                        config.settings.isDdevActive = true;
+                        config.settings.magerun2CommandLocal = "ddev magerun2";
+                    }).catch(function () {});
+                }
             }
 
             // Check if current folder has Wordpress. This will be used to determine if we can import Wordpress

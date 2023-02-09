@@ -21,16 +21,21 @@ class ImportTask {
             }
         )
 
+        let importTitle = "Importing database";
+        if (config.settings.isDdevActive) {
+            importTitle = "Importing database (DDEV)";
+        }
+
         this.importTasks.push(
             {
-                title: 'Importing database',
+                title: importTitle,
                 task: async (): Promise<void> => {
                     // Create database
-                    await localhostMagentoRootExec(`magerun2 db:create -q`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:create -q`, config);
                     // Import SQL file to database
-                    await localhostMagentoRootExec(`magerun2 db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
                     // Add default admin authorization rules (Fix for missing auth roles)
-                    await localhostMagentoRootExec(`magerun2 db:add-default-authorization-entries -q`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
                 }
             }
         );

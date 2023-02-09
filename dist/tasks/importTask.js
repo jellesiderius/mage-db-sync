@@ -15,15 +15,19 @@ class ImportTask {
                 title: 'Import Magento database to localhost',
                 task: (ctx, task) => task.newListr(this.importTasks)
             });
+            let importTitle = "Importing database";
+            if (config.settings.isDdevActive) {
+                importTitle = "Importing database (DDEV)";
+            }
             this.importTasks.push({
-                title: 'Importing database',
+                title: importTitle,
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Create database
-                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:create -q`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:create -q`, config);
                     // Import SQL file to database
-                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
                     // Add default admin authorization rules (Fix for missing auth roles)
-                    yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:add-default-authorization-entries -q`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
                 })
             });
             this.importTasks.push({

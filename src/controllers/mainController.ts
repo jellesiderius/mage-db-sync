@@ -36,6 +36,8 @@ class MainController {
             'magentoLocalhostDomainName': '',
             'rsyncInstalled': false,
             'elasticSearchUsed': false,
+            'isDdevProject': false,
+            'isDdevActive': false,
             'import': 'no',
             'wordpressImport': 'no',
             'wordpressDownload': 'no',
@@ -43,6 +45,7 @@ class MainController {
             'currentFolderhasWordpress': false,
             'runCommands': false,
             'magerun2Command': '',
+            'magerun2CommandLocal': 'magerun2',
             'databaseCommand': '',
             'syncDatabases': 'no'
         },
@@ -86,9 +89,9 @@ class MainController {
 
         // Check if rsync is installed locally
         await CommandExists('rsync')
-        .then((command) =>{
-            this.config.settings.rsyncInstalled = true;
-        }).catch(function(){});
+            .then((command) =>{
+                this.config.settings.rsyncInstalled = true;
+            }).catch(function(){});
 
         // Get current folder from cwd
         this.config.settings.currentFolder = process.cwd();

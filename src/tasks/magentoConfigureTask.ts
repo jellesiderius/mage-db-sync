@@ -66,7 +66,7 @@ class MagentoConfigureTask {
                     // Set import domain for final message on completing all tasks
                     config.finalMessages.importDomain = baseUrl;
 
-                    await localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
                 }
             }
         );
@@ -79,7 +79,7 @@ class MagentoConfigureTask {
                     let dbQueryUpdate = ''
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
 
-                    let engineCheck = await localhostMagentoRootExec('magerun2 config:store:get "catalog/search/engine" --format=json', config);
+                    let engineCheck = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:get "catalog/search/engine" --format=json`, config);
                     // @ts-ignore
                     if (engineCheck.length > 0) {
                         try {
@@ -114,7 +114,7 @@ class MagentoConfigureTask {
                         // Build up query
                         dbQuery = dbQueryUpdate;
 
-                        await localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
                         config.settings.elasticSearchUsed = true;
                     }
                 }
@@ -127,10 +127,10 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Remove all current admin users
                     var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
-                    await localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
 
                     // Create a new admin user
-                    await localhostMagentoRootExec(`magerun2 admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
                 }
             }
         );
@@ -139,13 +139,13 @@ class MagentoConfigureTask {
             {
                 title: 'Disable reCAPTCHA',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set admin/captcha/enable 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set customer/captcha/enable 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set recaptcha/general/enabled 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    await localhostMagentoRootExec(`magerun2 config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set admin/captcha/enable 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set customer/captcha/enable 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set recaptcha/general/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
                 }
             }
         );
@@ -154,7 +154,7 @@ class MagentoConfigureTask {
             {
                 title: 'Configuring cache',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`magerun2 config:store:set system/full_page_cache/caching_application 1`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
                 }
             }
         );
@@ -165,14 +165,17 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Create new dummy customers for all websites
                     // Get all websites
-                    let allWebsites = await localhostMagentoRootExec(`magerun2 sys:website:list --format=json`, config);
+                    let allWebsites = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:website:list --format=json`, config);
                     allWebsites = JSON.parse(<string>allWebsites);
 
                     // @ts-ignore
                     for (const [key, value] of Object.entries(allWebsites)) {
                         // @ts-ignore
                         let code = value.code;
-                        await localhostMagentoRootExec(`magerun2 customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
+                        let test = `${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`;
+                        console.log(test);
+                        process.exit;
+                        //await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
                     }
                 }
             }
@@ -196,7 +199,7 @@ class MagentoConfigureTask {
                         // Build up query
                         dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
 
-                        await localhostMagentoRootExec('magerun2 db:query "' + dbQuery + '"', config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
                     }
                 }
             }
@@ -207,7 +210,7 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: async (): Promise<void> => {
                     // Downgrade module data in database
-                    await localhostMagentoRootExec("magerun2 sys:setup:downgrade-versions; magerun2 setup:upgrade", config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions; ${config.settings.magerun2CommandLocal} setup:upgrade`, config);
                 }
             }
         );
@@ -226,7 +229,7 @@ class MagentoConfigureTask {
                         // Database queries
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
-                            await localhostMagentoRootExec(`magerun2 db:query '` + dbQuery + `'`, config, false, true);
+                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query '` + dbQuery + `'`, config, false, true);
                         }
                     }
                 }
@@ -249,7 +252,7 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        await localhostMagentoRootExec(`magerun2 index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
                 }
             }
@@ -260,7 +263,7 @@ class MagentoConfigureTask {
                 title: 'Flushing Magento caches',
                 task: async (): Promise<void> => {
                     // Flush the magento caches and import config data
-                    await localhostMagentoRootExec(`magerun2 cache:enable; magerun2 cache:flush; magerun2 app:config:import`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
                 }
             }
         );

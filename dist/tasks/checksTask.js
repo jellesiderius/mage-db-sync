@@ -81,7 +81,8 @@ class ChecksTask {
                                     break;
                                 }
                             }
-                            if (envHost == 'localhost' || envHost == '127.0.0.1') {
+                            // db = ddev
+                            if (envHost == 'localhost' || envHost == '127.0.0.1' || envHost == 'db') {
                                 return true;
                             }
                             throw new Error(`In env.php, db > connection > host is not 127.0.0.1 or localhost. (${envHost} is set as hostname)`);

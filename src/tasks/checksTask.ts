@@ -107,7 +107,8 @@ class ChecksTask {
                                 }
                             }
 
-                            if (envHost == 'localhost' || envHost == '127.0.0.1') {
+                            // db = ddev
+                            if (envHost == 'localhost' || envHost == '127.0.0.1' || envHost == 'db') {
                                 return true;
                             }
 
