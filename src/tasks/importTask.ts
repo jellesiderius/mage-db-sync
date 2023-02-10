@@ -30,12 +30,16 @@ class ImportTask {
             {
                 title: importTitle,
                 task: async (): Promise<void> => {
-                    // Create database
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:create -q`, config);
-                    // Import SQL file to database
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
-                    // Add default admin authorization rules (Fix for missing auth roles)
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
+                    if (config.settings.isDdevActive) {
+                        await localhostMagentoRootExec(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
+                    } else {
+                        // Create database
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:create -q`, config);
+                        // Import SQL file to database
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
+                        // Add default admin authorization rules (Fix for missing auth roles)
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
+                    }
                 }
             }
         );

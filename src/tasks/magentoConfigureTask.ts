@@ -114,6 +114,10 @@ class MagentoConfigureTask {
                         // Build up query
                         dbQuery = dbQueryUpdate;
 
+                        if (config.settings.isDdevActive) {
+                            dbQuery = dbQuery + "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_server_hostname';" + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'elasticsearch');";
+                        }
+
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
                         config.settings.elasticSearchUsed = true;
                     }
@@ -128,6 +132,9 @@ class MagentoConfigureTask {
                     // Remove all current admin users
                     var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+
+                    // Fix admin auth
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config);
 
                     // Create a new admin user
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
@@ -172,10 +179,7 @@ class MagentoConfigureTask {
                     for (const [key, value] of Object.entries(allWebsites)) {
                         // @ts-ignore
                         let code = value.code;
-                        let test = `${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`;
-                        console.log(test);
-                        process.exit;
-                        //await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
                     }
                 }
             }

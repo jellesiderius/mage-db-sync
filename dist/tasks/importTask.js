@@ -22,12 +22,17 @@ class ImportTask {
             this.importTasks.push({
                 title: importTitle,
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Create database
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:create -q`, config);
-                    // Import SQL file to database
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
-                    // Add default admin authorization rules (Fix for missing auth roles)
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
+                    if (config.settings.isDdevActive) {
+                        yield (0, console_1.localhostMagentoRootExec)(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
+                    }
+                    else {
+                        // Create database
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:create -q`, config);
+                        // Import SQL file to database
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
+                        // Add default admin authorization rules (Fix for missing auth roles)
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
+                    }
                 })
             });
             this.importTasks.push({
