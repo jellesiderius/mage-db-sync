@@ -15,19 +15,20 @@ class WordpressConfigureTask {
         list.add(
             {
                 title: 'Import Wordpress database to localhost',
-                task: (ctx: any, task: any): Listr => 
+                task: (ctx: any, task: any): Listr =>
                 task.newListr(
                     this.configureTasks
                 )
             }
         )
-        
+
         this.configureTasks.push(
             {
                 title: 'Importing database',
                 task: async (): Promise<void> => {
+                    let command = `mv ${config.wordpressConfig.database}.sql wp; ${config.settings.wpCommandLocal} db drop --yes;${config.settings.wpCommandLocal} db create; ${config.settings.wpCommandLocal} db import ${config.wordpressConfig.database}.sql`;
                     // Import SQL file to database
-                    await localhostMagentoRootExec(`mv ${config.wordpressConfig.database}.sql wp; cd wp; wp db import ${config.wordpressConfig.database}.sql`, config);
+                    await localhostMagentoRootExec(command, config, true);
                 }
             }
         );

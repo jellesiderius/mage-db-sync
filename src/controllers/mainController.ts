@@ -46,6 +46,7 @@ class MainController {
             'runCommands': false,
             'magerun2Command': '',
             'magerun2CommandLocal': 'magerun2',
+            'wpCommandLocal': 'wp',
             'databaseCommand': '',
             'syncDatabases': 'no'
         },

@@ -78,6 +78,7 @@ class MagentoConfigureTask {
                         dbQuery = dbQueryUpdate;
                         if (config.settings.isDdevActive) {
                             dbQuery = dbQuery + "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_server_hostname';" + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'elasticsearch');";
+                            dbQuery = dbQuery + `UPDATE core_config_data SET value = 'elasticsearch' WHERE path = 'amasty_elastic/connection/server_hostname';`;
                         }
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
                         config.settings.elasticSearchUsed = true;

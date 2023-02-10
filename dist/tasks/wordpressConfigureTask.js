@@ -19,8 +19,9 @@ class WordpressConfigureTask {
             this.configureTasks.push({
                 title: 'Importing database',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    let command = `mv ${config.wordpressConfig.database}.sql wp; ${config.settings.wpCommandLocal} db drop --yes;${config.settings.wpCommandLocal} db create; ${config.settings.wpCommandLocal} db import ${config.wordpressConfig.database}.sql`;
                     // Import SQL file to database
-                    yield (0, console_1.localhostMagentoRootExec)(`mv ${config.wordpressConfig.database}.sql wp; cd wp; wp db import ${config.wordpressConfig.database}.sql`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(command, config, true);
                 })
             });
             this.configureTasks.push({
