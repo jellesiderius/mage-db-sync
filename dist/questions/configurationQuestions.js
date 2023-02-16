@@ -108,7 +108,7 @@ class ConfigurationQuestions {
                 this.questionsOne.push({
                     type: 'list',
                     name: 'wordpressDownload',
-                    default: 'yes',
+                    default: 'no',
                     message: 'Download wordpress database?',
                     choices: ['yes', 'no'],
                     validate: (input) => {
@@ -119,7 +119,7 @@ class ConfigurationQuestions {
                     this.questionsTwo.push({
                         type: 'list',
                         name: 'wordpressImport',
-                        default: 'yes',
+                        default: 'no',
                         message: '[EXPERIMENTAL]: Import Wordpress database?',
                         choices: ['yes', 'no'],
                         validate: (input) => {

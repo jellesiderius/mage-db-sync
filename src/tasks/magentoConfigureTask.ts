@@ -44,10 +44,10 @@ class MagentoConfigureTask {
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
 
                     // Update queries
-                    var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';",
-                        dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
+                    var dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
+                        dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';"
 
-                    let baseUrl = 'http://' + config.settings.magentoLocalhostDomainName + '/';
+                    let baseUrl = 'https://' + config.settings.magentoLocalhostDomainName + '/';
 
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
@@ -73,55 +73,14 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: "Configuring ElasticSearch 7/MySQL",
+                title: "Configuring ElasticSearch 7",
                 task: async (): Promise<void> => {
-                    let dbQuery = '';
-                    let dbQueryUpdate = ''
-                    let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
-
-                    let engineCheck = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:get "catalog/search/engine" --format=json`, config);
-                    // @ts-ignore
-                    if (engineCheck.length > 0) {
-                        try {
-                            const obj = JSON.parse(<string>engineCheck);
-                            if (obj && typeof obj === `object`) {
-                                jsonEngineCheck = JSON.parse(engineCheck)[0].Value;
-                            }
-                        } catch (err) {}
-                    }
-
-
-                    // Configure Elastic to use version 7 if engine is not mysql
-                    if (jsonEngineCheck.indexOf("mysql") == -1) {
-                        // Update queries
-                        dbQueryUpdate = `UPDATE core_config_data SET value = 'localhost' WHERE path LIKE '%_server_hostname%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${configFile.general.elasticsearchPort}' WHERE path LIKE '%_server_port%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '0' WHERE path LIKE '%_enable_auth%';`;
-
-                        // Amasty elasticsearch check
-                        if (jsonEngineCheck.indexOf("amasty_elastic") !== -1) {
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%_index_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'amasty_elastic' WHERE path = 'catalog/search/engine';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'amasty_elastic' WHERE path = 'amasty_elastic/connection/engine';`;
-                        } else {
-                            // Standard elasticsearch7 settings
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development' WHERE path LIKE '%_index_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = '${config.settings.currentFolderName}_development_' WHERE path LIKE '%elastic_prefix%';`,
-                            dbQueryUpdate = dbQueryUpdate + `UPDATE core_config_data SET value = 'elasticsearch7' WHERE path = 'catalog/search/engine';`;
-                        }
-
-                        // Build up query
-                        dbQuery = dbQueryUpdate;
-
-                        if (config.settings.isDdevActive) {
-                            dbQuery = dbQuery + "DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch7_server_hostname';" + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'catalog/search/elasticsearch7_server_hostname', 'elasticsearch');";
-                            dbQuery = dbQuery + `UPDATE core_config_data SET value = 'elasticsearch' WHERE path = 'amasty_elastic/connection/server_hostname';`;
-                        }
-
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
-                        config.settings.elasticSearchUsed = true;
-                    }
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/engine elasticsearch7`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_port 9200`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}_development}`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_enable_auth 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_timeout 15`, config);
                 }
             }
         );
@@ -194,17 +153,8 @@ class MagentoConfigureTask {
                     if (config.settings.wordpressImport && config.settings.wordpressImport == 'yes') {
                         return;
                     } else {
-                        let dbQuery = '';
-                        // Remove queries
-                        let dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'wordpress/setup/enabled';";
-
-                        // Insert commands
-                        let dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'wordpress/setup/enabled', '0');";
-
-                        // Build up query
-                        dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
-
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete wordpress/* --all`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set wordpress/setup/mode NULL`, config);
                     }
                 }
             }

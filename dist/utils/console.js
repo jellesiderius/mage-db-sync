@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.wordpressReplaces = exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
+exports.localhostWpRootExec = exports.wordpressReplaces = exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
 const tslib_1 = require("tslib");
 const kleur_1 = tslib_1.__importDefault(require("kleur"));
 const readline = tslib_1.__importStar(require("readline"));
@@ -113,6 +113,17 @@ const localhostMagentoRootExec = (command, config, skipErrors = false, removeQuo
     return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
 };
 exports.localhostMagentoRootExec = localhostMagentoRootExec;
+const localhostWpRootExec = (command, config, skipErrors = false, removeQuote = false) => {
+    if (config.settings.isDdevActive) {
+        command = `cd wp; ddev wp ${command} --path=wp`;
+        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+    }
+    if (!removeQuote) {
+        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+    }
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
+};
+exports.localhostWpRootExec = localhostWpRootExec;
 const localhostRsyncDownloadCommand = (source, destination, config, useSecondDatabase = false) => {
     let sshCommand, databaseUsername = config.databases.databaseData.username, databaseServer = config.databases.databaseData.server, databasePort = config.databases.databaseData.port;
     if (useSecondDatabase) {

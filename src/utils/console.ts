@@ -120,6 +120,20 @@ const localhostMagentoRootExec = (command: string, config: any, skipErrors: bool
     return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
 }
 
+const localhostWpRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {
+
+    if (config.settings.isDdevActive) {
+        command = `cd wp; ddev wp ${command} --path=wp`;
+        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+    }
+
+    if (!removeQuote) {
+        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+    }
+
+    return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
+}
+
 const localhostRsyncDownloadCommand = (source: string, destination: string, config: any, useSecondDatabase: boolean = false) => {
     let sshCommand: string,
         databaseUsername = config.databases.databaseData.username,
@@ -175,5 +189,6 @@ export {
     sshMagentoRootFolderMagerunCommand,
     localhostMagentoRootExec,
     localhostRsyncDownloadCommand,
-    wordpressReplaces
+    wordpressReplaces,
+    localhostWpRootExec
 }

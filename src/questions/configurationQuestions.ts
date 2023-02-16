@@ -128,7 +128,7 @@ class ConfigurationQuestions {
                 {
                     type: 'list',
                     name: 'wordpressDownload',
-                    default: 'yes',
+                    default: 'no',
                     message: 'Download wordpress database?',
                     choices: ['yes', 'no'],
                     validate: (input: string) => {
@@ -142,7 +142,7 @@ class ConfigurationQuestions {
                     {
                         type: 'list',
                         name: 'wordpressImport',
-                        default: 'yes',
+                        default: 'no',
                         message: '[EXPERIMENTAL]: Import Wordpress database?',
                         choices: ['yes', 'no'],
                         validate: (input: string) => {

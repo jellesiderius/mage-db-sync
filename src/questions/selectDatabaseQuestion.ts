@@ -54,7 +54,6 @@ class SelectDatabaseQuestion {
                     await CommandExists('ddev').then((command) => {
                         config.settings.isDdevActive = true;
                         config.settings.magerun2CommandLocal = "ddev magerun2";
-                        config.settings.wpCommandLocal = "ddev exec cd wp; wp";
                     }).catch(function () {});
                 }
             }
