@@ -75,10 +75,18 @@ class MagentoConfigureTask {
             {
                 title: "Configuring ElasticSearch 7",
                 task: async (): Promise<void> => {
+                    // make sure amasty elastic is not working anymore
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete amasty_elastic* --all`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set amasty_elastic/connection/engine elasticsearch7`, config);
+
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/engine elasticsearch7`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
+                    if (config.settings.isDdevActive) {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname elasticsearch`, config);
+                    } else {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
+                    }
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_port 9200`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}_development}`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_enable_auth 0`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_timeout 15`, config);
                 }
@@ -155,6 +163,7 @@ class MagentoConfigureTask {
                     } else {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete wordpress/* --all`, config);
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set wordpress/setup/mode NULL`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set wordpress/multisite/enabled 0`, config);
                     }
                 }
             }
@@ -207,7 +216,7 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex`, config);
                     }
                 }
             }

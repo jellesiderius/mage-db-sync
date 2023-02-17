@@ -112,6 +112,7 @@ class MagentoConfigureTask {
                     else {
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete wordpress/* --all`, config);
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set wordpress/setup/mode NULL`, config);
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set wordpress/multisite/enabled 0`, config);
                     }
                 })
             });
