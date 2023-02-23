@@ -115,7 +115,7 @@ const localhostMagentoRootExec = (command, config, skipErrors = false, removeQuo
 exports.localhostMagentoRootExec = localhostMagentoRootExec;
 const localhostWpRootExec = (command, config, skipErrors = false, removeQuote = false) => {
     if (config.settings.isDdevActive) {
-        command = `cd wp; ddev wp ${command} --path=wp`;
+        command = `ddev exec "cd wp; wp ${command}"`;
         return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
     }
     if (!removeQuote) {

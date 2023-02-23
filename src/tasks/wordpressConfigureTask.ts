@@ -1,4 +1,4 @@
-import { localhostMagentoRootExec, wordpressReplaces } from '../utils/console';
+import {localhostMagentoRootExec, localhostWpRootExec, wordpressReplaces} from '../utils/console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 
@@ -26,9 +26,24 @@ class WordpressConfigureTask {
             {
                 title: 'Importing database',
                 task: async (): Promise<void> => {
-                    let command = `mv ${config.wordpressConfig.database}.sql wp; ${config.settings.wpCommandLocal} db drop --yes;${config.settings.wpCommandLocal} db create; ${config.settings.wpCommandLocal} db import ${config.wordpressConfig.database}.sql`;
-                    // Import SQL file to database
-                    await localhostMagentoRootExec(command, config, true);
+                    if (config.settings.isDdevActive) {
+                        await localhostMagentoRootExec(`mv ${config.wordpressConfig.database}.sql wp`, config, false);
+
+                        let dropCommand = `db drop --yes`;
+                        let grantCommand = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
+                        let createCommand = `db create`;
+                        let importCommand = `db import ${config.wordpressConfig.database}.sql`;
+
+                        // Import SQL file to database
+                        await localhostWpRootExec(dropCommand, config, true);
+                        await localhostMagentoRootExec(grantCommand, config, false);
+                        await localhostWpRootExec(createCommand, config, true);
+                        await localhostWpRootExec(importCommand, config, true);
+                    } else {
+                        let command = `mv ${config.wordpressConfig.database}.sql wp; ${config.settings.wpCommandLocal} db drop --yes;${config.settings.wpCommandLocal} db create; ${config.settings.wpCommandLocal} db import ${config.wordpressConfig.database}.sql`;
+                        // Import SQL file to database
+                        await localhostMagentoRootExec(command, config, true);
+                    }
                 }
             }
         );
@@ -37,19 +52,33 @@ class WordpressConfigureTask {
             {
                 title: `Configuring URL's for development`,
                 task: async (): Promise<void> => {
-                    // Retrieve current site URL from database
-                    let wordpressUrl = await localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
-                    // @ts-ignore
-                    wordpressUrl = wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
-                    // Replace options for localhost
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'https://', 'http://');"`, config);
-                    // Replace blogs for localhost
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'https://', 'http://');"`, config);
-                    // Replace site for localhost
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
-                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'https://', 'http://');"`, config);
+                    if (config.settings.isDdevActive) {
+                        // Retrieve current site URL from database
+                        let wordpressUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"""`;
+                        let wordpressUrl = await localhostMagentoRootExec(wordpressUrlCommand, config, false);
+                        // @ts-ignore
+                        wordpressUrl = wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
+
+                        let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"""`;
+                        await localhostMagentoRootExec(replaceCommandBlogs, config, false);
+
+                        let replaceCommandOptions = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value, '${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"""`;
+                        await localhostMagentoRootExec(replaceCommandOptions, config, false);
+                    } else {
+                        // Retrieve current site URL from database
+                        let wordpressUrl = await localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
+                        // @ts-ignore
+                        wordpressUrl = wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
+                        // Replace options for localhost
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'https://', 'http://');"`, config);
+                        // Replace blogs for localhost
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain,'https://', 'http://');"`, config);
+                        // Replace site for localhost
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
+                        await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = REPLACE(domain,'https://', 'http://');"`, config);
+                    }
                 }
             }
         );
@@ -58,8 +87,13 @@ class WordpressConfigureTask {
             {
                 title: `Creating admin user`,
                 task: async (): Promise<void> => {
-                    // Retrieve current site URL from database
-                    await localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
+                    if (config.settings.isDdevActive) {
+                        // Retrieve current site URL from database
+                        await localhostWpRootExec(`user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role=administrator --user_pass=${configFile.magentoBackend.adminPassword}`, config);
+                    } else {
+                        // Retrieve current site URL from database
+                        await localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
+                    }
                 }
             }
         );
