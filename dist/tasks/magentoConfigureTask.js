@@ -52,7 +52,7 @@ class MagentoConfigureTask {
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
                     }
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_port 9200`, config);
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}_development`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}`, config);
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_enable_auth 0`, config);
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_timeout 15`, config);
                 })
@@ -151,7 +151,7 @@ class MagentoConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
-                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reindex catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex`, config);
                     }
                 })
             });

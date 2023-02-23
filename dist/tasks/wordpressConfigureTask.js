@@ -27,7 +27,7 @@ class WordpressConfigureTask {
                         let importCommand = `db import ${config.wordpressConfig.database}.sql`;
                         // Import SQL file to database
                         yield (0, console_1.localhostWpRootExec)(dropCommand, config, true);
-                        yield (0, console_1.localhostMagentoRootExec)(grantCommand, config, false);
+                        yield (0, console_1.localhostMagentoRootExec)(grantCommand, config, true);
                         yield (0, console_1.localhostWpRootExec)(createCommand, config, true);
                         yield (0, console_1.localhostWpRootExec)(importCommand, config, true);
                     }
@@ -44,13 +44,13 @@ class WordpressConfigureTask {
                     if (config.settings.isDdevActive) {
                         // Retrieve current site URL from database
                         let wordpressUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"""`;
-                        let wordpressUrl = yield (0, console_1.localhostMagentoRootExec)(wordpressUrlCommand, config, false);
+                        let wordpressUrl = yield (0, console_1.localhostMagentoRootExec)(wordpressUrlCommand, config, true);
                         // @ts-ignore
                         wordpressUrl = (0, console_1.wordpressReplaces)(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
                         let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"""`;
-                        yield (0, console_1.localhostMagentoRootExec)(replaceCommandBlogs, config, false);
+                        yield (0, console_1.localhostMagentoRootExec)(replaceCommandBlogs, config, true);
                         let replaceCommandOptions = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value, '${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"""`;
-                        yield (0, console_1.localhostMagentoRootExec)(replaceCommandOptions, config, false);
+                        yield (0, console_1.localhostMagentoRootExec)(replaceCommandOptions, config, true);
                     }
                     else {
                         // Retrieve current site URL from database
@@ -74,7 +74,7 @@ class WordpressConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     if (config.settings.isDdevActive) {
                         // Retrieve current site URL from database
-                        yield (0, console_1.localhostWpRootExec)(`user create developmentadmin ${settings_json_1.default.magentoBackend.adminEmailAddress} --role=administrator --user_pass=${settings_json_1.default.magentoBackend.adminPassword}`, config);
+                        yield (0, console_1.localhostWpRootExec)(`user create developmentadmin ${settings_json_1.default.magentoBackend.adminEmailAddress} --role=administrator --user_pass=${settings_json_1.default.magentoBackend.adminPassword}`, config, true);
                     }
                     else {
                         // Retrieve current site URL from database
@@ -86,7 +86,7 @@ class WordpressConfigureTask {
                 title: 'Cleaning up',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Remove wordpress database from localhost
-                    yield (0, console_1.localhostMagentoRootExec)(`cd wp; rm ${config.wordpressConfig.database}.sql`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`cd wp; rm ${config.wordpressConfig.database}.sql`, config, true);
                 })
             });
         });
