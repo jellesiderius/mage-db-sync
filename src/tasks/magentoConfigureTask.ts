@@ -212,11 +212,15 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: 'Reindexing & Flushing Magento caches',
+                title: 'Reindexing & flushing Magento caches',
                 task: async (): Promise<void> => {
                     // Flush the magento caches and import config data
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
+                        if (config.settings.isDdevActive) {
+                            await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config);
+                        }
+
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
