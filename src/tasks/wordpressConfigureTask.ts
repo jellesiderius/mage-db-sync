@@ -29,14 +29,18 @@ class WordpressConfigureTask {
                     if (config.settings.isDdevActive) {
                         await localhostMagentoRootExec(`mv ${config.wordpressConfig.database}.sql wp`, config, false);
 
+                        let grantCommand1 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`
+                        let grantCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'%';"""`
                         let dropCommand = `db drop --yes`;
-                        let grantCommand = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
+                        let grantCommand3 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
                         let createCommand = `db create`;
                         let importCommand = `db import ${config.wordpressConfig.database}.sql`;
 
                         // Import SQL file to database
+                        await localhostMagentoRootExec(grantCommand1, config, true);
+                        await localhostMagentoRootExec(grantCommand2, config, true);
                         await localhostWpRootExec(dropCommand, config, true);
-                        await localhostMagentoRootExec(grantCommand, config, true);
+                        await localhostMagentoRootExec(grantCommand3, config, true);
                         await localhostWpRootExec(createCommand, config, true);
                         await localhostWpRootExec(importCommand, config, true);
                     } else {

@@ -21,13 +21,17 @@ class WordpressConfigureTask {
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     if (config.settings.isDdevActive) {
                         yield (0, console_1.localhostMagentoRootExec)(`mv ${config.wordpressConfig.database}.sql wp`, config, false);
+                        let grantCommand1 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`;
+                        let grantCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'%';"""`;
                         let dropCommand = `db drop --yes`;
-                        let grantCommand = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
+                        let grantCommand3 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
                         let createCommand = `db create`;
                         let importCommand = `db import ${config.wordpressConfig.database}.sql`;
                         // Import SQL file to database
+                        yield (0, console_1.localhostMagentoRootExec)(grantCommand1, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(grantCommand2, config, true);
                         yield (0, console_1.localhostWpRootExec)(dropCommand, config, true);
-                        yield (0, console_1.localhostMagentoRootExec)(grantCommand, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(grantCommand3, config, true);
                         yield (0, console_1.localhostWpRootExec)(createCommand, config, true);
                         yield (0, console_1.localhostWpRootExec)(importCommand, config, true);
                     }
