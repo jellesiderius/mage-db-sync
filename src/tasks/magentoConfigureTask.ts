@@ -212,21 +212,15 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: 'Reindexing Magento',
-                task: async (): Promise<void> => {
-                    // Reindex data, only when elastic is used
-                    if (config.settings.elasticSearchUsed) {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex`, config);
-                    }
-                }
-            }
-        );
-
-        this.configureTasks.push(
-            {
-                title: 'Flushing Magento caches',
+                title: 'Reindexing & Flushing Magento caches',
                 task: async (): Promise<void> => {
                     // Flush the magento caches and import config data
+                    // Reindex data, only when elastic is used
+                    if (config.settings.elasticSearchUsed) {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                    }
+
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
                 }
             }
