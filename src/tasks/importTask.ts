@@ -31,6 +31,13 @@ class ImportTask {
                 title: importTitle,
                 task: async (): Promise<void> => {
                     if (config.settings.isDdevActive) {
+                        // @TODO: Rewrite import to use Magerun2
+                        let mysqlCommand1 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS ${config.serverVariables.databaseName};"""`;
+                        let mysqlCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`
+                        let mysqlCommand3 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'%';"""`
+                        await localhostMagentoRootExec(mysqlCommand1, config, true);
+                        await localhostMagentoRootExec(mysqlCommand2, config, true);
+                        await localhostMagentoRootExec(mysqlCommand3, config, true);
                         await localhostMagentoRootExec(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
                     } else {
                         // Create database
