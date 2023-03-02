@@ -143,7 +143,7 @@ class ConfigurationQuestions {
                         type: 'list',
                         name: 'wordpressImport',
                         default: 'no',
-                        message: '[EXPERIMENTAL]: Import Wordpress database?',
+                        message: '[EXPERIMENTAL]: Import and configure WordPress database?',
                         choices: ['yes', 'no'],
                         validate: (input: string) => {
                             return false;

@@ -1,6 +1,7 @@
 import { localhostMagentoRootExec } from '../utils/console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
+import fs from "fs";
 
 class MagentoConfigureTask {
     private configureTasks = [];
@@ -194,6 +195,33 @@ class MagentoConfigureTask {
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
                             await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query '` + dbQuery + `'`, config, false, true);
+                        }
+                    }
+                }
+            );
+        }
+
+        if (fs.existsSync(config.settings.currentFolder + '/.mage-db-sync-config.json')) {
+            // Use custom config file for the project
+            this.configureTasks.push(
+                {
+                    title: 'Setting core_config_data configurations through .mage-db-sync-config.json',
+                    task: async (): Promise<void> => {
+                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                        let coreConfigData = jsonData.core_config_data;
+
+                        if (coreConfigData) {
+                            Object.keys(coreConfigData).forEach(key => {
+                                let storeId = key,
+                                    values = jsonData.core_config_data[key];
+
+                                values = Object.entries(values);
+
+                                // @ts-ignore
+                                values.map(async ([path, value] = entry) => {
+                                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=stores`, config);
+                                });
+                            })
                         }
                     }
                 }

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
 const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
+const fs_1 = tslib_1.__importDefault(require("fs"));
 class MagentoConfigureTask {
     constructor() {
         this.configureTasks = [];
@@ -135,6 +136,26 @@ class MagentoConfigureTask {
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
                             yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:query '` + dbQuery + `'`, config, false, true);
+                        }
+                    })
+                });
+            }
+            if (fs_1.default.existsSync(config.settings.currentFolder + '/.mage-db-sync-config.json')) {
+                // Use custom config file for the project
+                this.configureTasks.push({
+                    title: 'Setting core_config_data configurations through .mage-db-sync-config.json',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                        let coreConfigData = jsonData.core_config_data;
+                        if (coreConfigData) {
+                            Object.keys(coreConfigData).forEach(key => {
+                                let storeId = key, values = jsonData.core_config_data[key];
+                                values = Object.entries(values);
+                                // @ts-ignore
+                                values.map(([path, value] = entry) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=stores`, config);
+                                }));
+                            });
                         }
                     })
                 });
