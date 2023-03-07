@@ -59,6 +59,10 @@ class ChecksTask {
                     title: 'Checking Magerun2 version',
                     task: async (ctx: any, task: any): Promise<boolean> => {
                          // Check the local installed Magerun2 version before we continue and import the database
+                        if (config.settings.isDdevActive) {
+                            return true;
+                        }
+
                          let installedMagerun2Version = await consoleCommand('magerun2 -V', false);
                          // @ts-ignore
                          installedMagerun2Version = installedMagerun2Version.split(' ')[1];
@@ -93,9 +97,13 @@ class ChecksTask {
                     {
                         title: 'Checking if database host is set to localhost',
                         task: async (): Promise<Boolean> => {
+                            if (config.settings.isDdevActive) {
+                                return true;
+                            }
 
                             let host = await localhostMagentoRootExec(`magerun2 db:info --format=json`, config);
                             host = JSON.parse(<string>host);
+
                             let envHost = null;
 
                             for (const [key, value] of Object.entries(host)) {
@@ -112,7 +120,7 @@ class ChecksTask {
                                 return true;
                             }
 
-                            throw new Error(`In env.php, db > connection > host is not 127.0.0.1 or localhost. (${envHost} is set as hostname)`);
+                            throw new Error(`In env.php, db > connection > host is not 127.0.0.1, db or localhost. (${envHost} is set as hostname)`);
                         }
                     }
                 );

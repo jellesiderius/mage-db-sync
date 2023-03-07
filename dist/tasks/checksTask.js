@@ -45,6 +45,9 @@ class ChecksTask {
                     title: 'Checking Magerun2 version',
                     task: (ctx, task) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Check the local installed Magerun2 version before we continue and import the database
+                        if (config.settings.isDdevActive) {
+                            return true;
+                        }
                         let installedMagerun2Version = yield (0, console_1.consoleCommand)('magerun2 -V', false);
                         // @ts-ignore
                         installedMagerun2Version = installedMagerun2Version.split(' ')[1];
@@ -70,6 +73,9 @@ class ChecksTask {
                     this.checkTasks.push({
                         title: 'Checking if database host is set to localhost',
                         task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                            if (config.settings.isDdevActive) {
+                                return true;
+                            }
                             let host = yield (0, console_1.localhostMagentoRootExec)(`magerun2 db:info --format=json`, config);
                             host = JSON.parse(host);
                             let envHost = null;
@@ -85,7 +91,7 @@ class ChecksTask {
                             if (envHost == 'localhost' || envHost == '127.0.0.1' || envHost == 'db') {
                                 return true;
                             }
-                            throw new Error(`In env.php, db > connection > host is not 127.0.0.1 or localhost. (${envHost} is set as hostname)`);
+                            throw new Error(`In env.php, db > connection > host is not 127.0.0.1, db or localhost. (${envHost} is set as hostname)`);
                         })
                     });
                 }
