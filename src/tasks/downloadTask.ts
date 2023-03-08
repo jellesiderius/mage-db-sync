@@ -114,7 +114,13 @@ class DownloadTask {
                         if (result) {
                             // Get json format string and extract database names from values
                             let jsonResult = JSON.parse(result.stdout);
-                            config.serverVariables.databaseName = jsonResult[2].Value;
+                            // Retrieve dbname
+                            for (const key in jsonResult) {
+                                if (jsonResult[key].Name.toLowerCase() === 'dbname') {
+                                    config.serverVariables.databaseName = jsonResult[key].Value;
+                                    break;
+                                }
+                            }
 
                             if (config.serverVariables.magentoVersion == 1) {
                                 config.serverVariables.databaseName = jsonResult[3].Value;
