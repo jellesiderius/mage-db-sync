@@ -45,10 +45,17 @@ class MagentoConfigureTask {
                         dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
 
                     // Update queries
-                    var dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
-                        dbQueryUpdate = dbQueryRemove + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';"
+                    var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';",
+                        dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
 
-                    let baseUrl = 'https://' + config.settings.magentoLocalhostDomainName + '/';
+                    let baseUrl = 'http://' + config.settings.magentoLocalhostDomainName + '/';
+
+                    if (config.settings.isDdevActive) {
+                        dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
+                        dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';"
+
+                        baseUrl = 'https://' + config.settings.magentoLocalhostDomainName + '/';
+                    }
 
                     // Insert queries
                     var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
