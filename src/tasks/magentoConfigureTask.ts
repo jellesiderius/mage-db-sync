@@ -137,7 +137,7 @@ class MagentoConfigureTask {
             {
                 title: 'Configuring cache',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 2`, config);
                 }
             }
         );
