@@ -226,7 +226,14 @@ class MagentoConfigureTask {
 
                                 // @ts-ignore
                                 values.map(async ([path, value] = entry) => {
-                                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=stores`, config);
+                                    var scope = 'default';
+                                    // @ts-ignore
+                                    if (storeId != 0) {
+                                        scope = 'stores';
+                                    }
+
+                                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete ${path} --scope-id=${storeId}`, config);
+                                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=${scope}`, config);
                                 });
                             })
                         }

@@ -158,7 +158,13 @@ class MagentoConfigureTask {
                                 values = Object.entries(values);
                                 // @ts-ignore
                                 values.map(([path, value] = entry) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=stores`, config);
+                                    var scope = 'default';
+                                    // @ts-ignore
+                                    if (storeId != 0) {
+                                        scope = 'stores';
+                                    }
+                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete ${path} --scope-id=${storeId}`, config);
+                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=${scope}`, config);
                                 }));
                             });
                         }
