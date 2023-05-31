@@ -63,6 +63,12 @@ class DownloadTask {
                     }
                     // Determine Magerun version based on magento version
                     config.serverVariables.magerunFile = `n98-magerun2-${config.requirements.magerun2Version}.phar`;
+                    if (config.settings.syncDatabases == 'yes') {
+                        // Use custom PHP path instead if given
+                        if (config.databases.databaseDataSecond.externalPhpPath && config.databases.databaseDataSecond.externalPhpPath.length > 0) {
+                            config.serverVariables.secondDatabaseExternalPhpPath = config.databases.databaseDataSecond.externalPhpPath;
+                        }
+                    }
                     if (config.serverVariables.magentoVersion == 1) {
                         config.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
                     }
@@ -159,12 +165,12 @@ class DownloadTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Sync media to project folder
                         if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
-                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
                         }
                         else {
                             // Sync to tmp folder
                             var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`;
-                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics'`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* ${tmpLocalMediaPath}/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
                         }
                     })
                 });

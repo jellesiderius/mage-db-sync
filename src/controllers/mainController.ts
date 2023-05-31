@@ -26,7 +26,9 @@ class MainController {
             'externalPhpPath': '',
             'magentoRoot': '',
             'magerunFile': '',
-            'databaseName': ''
+            'databaseName': '',
+            'secondDatabaseMagerun2': 'magerun2',
+            'secondDatabaseExternalPhpPath': ''
         },
         'settings': {
             'currentFolder': '',

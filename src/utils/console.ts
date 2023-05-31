@@ -104,12 +104,20 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecond
 
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderPhpCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
-    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config, useSecondDatabase, log);
+    let phpPath = config.serverVariables.externalPhpPath;
+
+    if (config.settings.syncDatabases == 'yes' && useSecondDatabase) {
+        phpPath = config.serverVariables.secondDatabaseExternalPhpPath;
+    }
+
+    return sshNavigateToMagentoRootCommand(phpPath + ' ' + command, config, useSecondDatabase, log);
 }
 
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderMagerunCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
-    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config, useSecondDatabase, log);
+    let magerunFile = config.serverVariables.magerunFile;
+
+    return sshMagentoRootFolderPhpCommand(magerunFile + ' ' + command, config, useSecondDatabase, log);
 }
 
 const localhostMagentoRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {

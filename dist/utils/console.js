@@ -98,12 +98,17 @@ const sshNavigateToMagentoRootCommand = (command, config, useSecondDatabase = fa
 exports.sshNavigateToMagentoRootCommand = sshNavigateToMagentoRootCommand;
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderPhpCommand = (command, config, useSecondDatabase = false, log = false) => {
-    return sshNavigateToMagentoRootCommand(config.serverVariables.externalPhpPath + ' ' + command, config, useSecondDatabase, log);
+    let phpPath = config.serverVariables.externalPhpPath;
+    if (config.settings.syncDatabases == 'yes' && useSecondDatabase) {
+        phpPath = config.serverVariables.secondDatabaseExternalPhpPath;
+    }
+    return sshNavigateToMagentoRootCommand(phpPath + ' ' + command, config, useSecondDatabase, log);
 };
 exports.sshMagentoRootFolderPhpCommand = sshMagentoRootFolderPhpCommand;
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderMagerunCommand = (command, config, useSecondDatabase = false, log = false) => {
-    return sshMagentoRootFolderPhpCommand(config.serverVariables.magerunFile + ' ' + command, config, useSecondDatabase, log);
+    let magerunFile = config.serverVariables.magerunFile;
+    return sshMagentoRootFolderPhpCommand(magerunFile + ' ' + command, config, useSecondDatabase, log);
 };
 exports.sshMagentoRootFolderMagerunCommand = sshMagentoRootFolderMagerunCommand;
 const localhostMagentoRootExec = (command, config, skipErrors = false, removeQuote = false) => {
