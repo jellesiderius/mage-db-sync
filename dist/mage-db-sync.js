@@ -35,7 +35,7 @@ const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
     const packageJson = require('../package.json');
     let versionCheck = new versionCheck_1.default();
     yield versionCheck.getToolVersions();
-    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}`;
+    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\nDocs: https://github.com/jellesiderius/mage-db-sync/wiki\nReport an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
     if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
