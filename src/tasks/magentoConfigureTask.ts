@@ -192,7 +192,7 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: async (): Promise<void> => {
                     // Downgrade module data in database
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions; ${config.settings.magerun2CommandLocal} setup:upgrade`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions; ${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
                 }
             }
         );
