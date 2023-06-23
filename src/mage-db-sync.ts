@@ -37,7 +37,7 @@ getInstalledPath('mage-db-sync').then(async (path: any) => {
     const packageJson = require('../package.json')
     let versionCheck = new VersionCheck();
     await versionCheck.getToolVersions();
-    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\nDocs: https://github.com/jellesiderius/mage-db-sync/wiki\nReport an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
+    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\nGithub Page: https://github.com/jellesiderius/mage-db-sync\nDocs: https://github.com/jellesiderius/mage-db-sync/wiki\nReport an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
     if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
