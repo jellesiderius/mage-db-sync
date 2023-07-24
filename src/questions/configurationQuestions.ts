@@ -1,11 +1,14 @@
 import { error } from "console";
 import inquirer from 'inquirer'
+import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
 
 class ConfigurationQuestions {
     private questionsOne = [];
     private questionsTwo = [];
+    private questionsThree = [];
 
     configure = async (config: any) => {
+        inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);
         await this.addQuestions(config);
 
         // Set import configs
@@ -51,6 +54,19 @@ class ConfigurationQuestions {
                     if (config.settings.wordpressImport == 'yes') {
                         config.customConfig.localDatabaseFolderLocation = config.settings.currentFolder;
                     }
+                })
+                .catch((err: { message: any; }) => {
+                    error(`Something went wrong: ${err.message}`)
+                });
+        }
+
+
+        if (config.settings.syncImages == 'yes') {
+            // Set import configs
+            await inquirer
+                .prompt(this.questionsThree)
+                .then((answers) => {
+                    config.settings.syncImageTypes = answers.syncImageTypes;
                 })
                 .catch((err: { message: any; }) => {
                     error(`Something went wrong: ${err.message}`)
@@ -152,6 +168,16 @@ class ConfigurationQuestions {
                 );
             }
         }
+
+        this.questionsThree.push(
+            {
+                type: 'checkbox',
+                name: 'syncImageTypes',
+                message: 'Synchronize Magento media image folders',
+                choices: ['Category images', 'Product images', 'WYSIWYG images', 'Everything else'],
+                default: ['Category images', 'Product images', 'WYSIWYG images']
+            }
+        );
     }
 }
 

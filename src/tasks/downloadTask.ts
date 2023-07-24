@@ -210,7 +210,27 @@ class DownloadTask {
                     task: async (): Promise<void> => {
                         // Sync media to project folder
                         if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
-                            await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            await localhostMagentoRootExec(`mkdir pub/media/catalog && mkdir pub/media/wysiwyg`, config, true);
+                            await localhostMagentoRootExec(`mkdir pub/media/catalog/category && mkdir pub/media/catalog/product`, config, true);
+                            await localhostMagentoRootExec(`mkdir pub/media/logo`, config, true);
+
+                            await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/logo/* pub/media/logo --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+
+                            if (config.settings.syncImageTypes.includes('Product images')) {
+                                await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/catalog/product/* pub/media/catalog/product --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+
+                            if (config.settings.syncImageTypes.includes('Category images')) {
+                                await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/catalog/category/* pub/media/catalog/category --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+
+                            if (config.settings.syncImageTypes.includes('WYSIWYG images')) {
+                                await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/wysiwyg/* pub/media/wysiwyg --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+
+                            if (config.settings.syncImageTypes.includes('Everything else')) {
+                                await localhostMagentoRootExec(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
                         } else {
                             // Sync to tmp folder
                             var tmpLocalMediaPath = `${config.customConfig.localDatabaseFolderLocation}/tmpMediaImages`

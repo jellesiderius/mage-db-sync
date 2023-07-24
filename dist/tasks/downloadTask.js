@@ -165,7 +165,22 @@ class DownloadTask {
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Sync media to project folder
                         if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
-                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`mkdir pub/media/catalog && mkdir pub/media/wysiwyg`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`mkdir pub/media/catalog/category && mkdir pub/media/catalog/product`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`mkdir pub/media/logo`, config, true);
+                            yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/logo/* pub/media/logo --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            if (config.settings.syncImageTypes.includes('Product images')) {
+                                yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/catalog/product/* pub/media/catalog/product --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+                            if (config.settings.syncImageTypes.includes('Category images')) {
+                                yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/catalog/category/* pub/media/catalog/category --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+                            if (config.settings.syncImageTypes.includes('WYSIWYG images')) {
+                                yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/wysiwyg/* pub/media/wysiwyg --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
+                            if (config.settings.syncImageTypes.includes('Everything else')) {
+                                yield (0, console_1.localhostMagentoRootExec)(`rsync -avz -e "ssh -p ${config.databases.databaseData.port}" ${config.databases.databaseData.username}@${config.databases.databaseData.server}:${config.serverVariables.magentoRoot}/pub/media/* pub/media/ --exclude 'cache' --exclude 'catalog/product/cache' --exclude 'catalog/category/cache' --exclude 'custom_options' --exclude 'tmp' --exclude 'analytics' --exclude 'amfile'`, config, true);
+                            }
                         }
                         else {
                             // Sync to tmp folder

@@ -52,7 +52,8 @@ class MainController {
                 'magerun2CommandLocal': 'magerun2',
                 'wpCommandLocal': 'wp',
                 'databaseCommand': '',
-                'syncDatabases': 'no'
+                'syncDatabases': 'no',
+                'syncImageTypes': null
             },
             'finalMessages': {
                 'magentoDatabaseLocation': '',
