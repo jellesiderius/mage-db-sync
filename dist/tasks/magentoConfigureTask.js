@@ -68,7 +68,13 @@ class MagentoConfigureTask {
                     // Fix admin auth
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config);
                     // Create a new admin user
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    if (config.settings.isDdevActive) {
+                        // quick fix for
+                        yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    }
+                    else {
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${settings_json_1.default.magentoBackend.adminUsername} --admin-password=${settings_json_1.default.magentoBackend.adminPassword} --admin-email=${settings_json_1.default.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    }
                 })
             });
             this.configureTasks.push({
@@ -186,7 +192,14 @@ class MagentoConfigureTask {
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
+                    if (config.settings.isDdevActive) {
+                        // TTY fix
+                        yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento app:config:import`, config);
+                    }
+                    else {
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} app:config:import`, config);
+                    }
                 })
             });
         });

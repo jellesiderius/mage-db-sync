@@ -123,7 +123,12 @@ class MagentoConfigureTask {
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config);
 
                     // Create a new admin user
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    if (config.settings.isDdevActive) {
+                        // quick fix for
+                        await localhostMagentoRootExec(`ddev exec bin/magento admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    } else {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
+                    }
                 }
             }
         );
@@ -277,7 +282,14 @@ class MagentoConfigureTask {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
                     }
 
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
+
+                    if (config.settings.isDdevActive) {
+                        // TTY fix
+                        await localhostMagentoRootExec(`ddev exec bin/magento app:config:import`, config);
+                    } else {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} app:config:import`, config);
+                    }
                 }
             }
         );
