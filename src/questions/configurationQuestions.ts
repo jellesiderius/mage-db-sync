@@ -76,7 +76,7 @@ class ConfigurationQuestions {
 
     // Add questions
     addQuestions = async (config: any) => {
-        if (config.settings.syncDatabases != 'yes') {
+        if (config.settings.syncTypes.includes('Magento database') && config.settings.syncDatabases != 'yes') {
             this.questionsOne.push(
                 {
                     type: 'list',
@@ -92,7 +92,7 @@ class ConfigurationQuestions {
         }
 
         // Only push questions if Magento project is found
-        if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
+        if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes' && config.settings.syncTypes.includes('Magento database')) {
             this.questionsOne.push(
                 {
                     type: 'list',
@@ -107,7 +107,7 @@ class ConfigurationQuestions {
             );
         }
 
-        if (config.settings.currentFolderIsMagento || config.settings.syncDatabases == 'yes') {
+        if (config.settings.currentFolderIsMagento && config.settings.syncTypes.includes('Images') || config.settings.syncDatabases == 'yes') {
             if (config.settings.rsyncInstalled) {
                 this.questionsOne.push(
                     {
@@ -139,7 +139,7 @@ class ConfigurationQuestions {
             );
         }
 
-        if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes') {
+        if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes' && config.settings.syncTypes.includes('Wordpress database')) {
             this.questionsOne.push(
                 {
                     type: 'list',
@@ -169,15 +169,17 @@ class ConfigurationQuestions {
             }
         }
 
-        this.questionsThree.push(
-            {
-                type: 'checkbox',
-                name: 'syncImageTypes',
-                message: 'Synchronize Magento media image folders',
-                choices: ['Category images', 'Product images', 'WYSIWYG images', 'Everything else'],
-                default: ['Category images', 'Product images', 'WYSIWYG images']
-            }
-        );
+        if (config.settings.syncTypes.includes('Images')) {
+            this.questionsThree.push(
+                {
+                    type: 'checkbox',
+                    name: 'syncImageTypes',
+                    message: 'Synchronize Magento media image folders',
+                    choices: ['Category images', 'Product images', 'WYSIWYG images', 'Everything else'],
+                    default: ['Category images', 'Product images', 'WYSIWYG images']
+                }
+            );
+        }
     }
 }
 

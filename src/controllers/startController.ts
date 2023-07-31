@@ -12,8 +12,8 @@ import MagentoConfigureTask from "../tasks/magentoConfigureTask";
 import WordpressConfigureTask from "../tasks/wordpressConfigureTask";
 
 import SyncDatabasesQuestions from "../questions/syncDatabasesQuestions";
-import SyncImport from "../tasks/syncImportTask";
 import SyncImportTask from "../tasks/syncImportTask";
+import DownloadTypesQuestion from "../questions/downloadTypesQuestion";
 
 class StartController extends MainController {
     executeStart = async (): Promise<void> => {
@@ -70,6 +70,9 @@ class StartController extends MainController {
             let syncDatabaseQuestion = await new SyncDatabasesQuestions();
             await syncDatabaseQuestion.configure(this.config);
         }
+
+        let downloadTypesQuestion = await new DownloadTypesQuestion();
+        await downloadTypesQuestion.configure(this.config);
 
         // Check if database needs to be synced
         if (this.config.settings.syncDatabases == 'yes') {

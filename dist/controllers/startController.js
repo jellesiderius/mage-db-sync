@@ -15,6 +15,7 @@ const magentoConfigureTask_1 = tslib_1.__importDefault(require("../tasks/magento
 const wordpressConfigureTask_1 = tslib_1.__importDefault(require("../tasks/wordpressConfigureTask"));
 const syncDatabasesQuestions_1 = tslib_1.__importDefault(require("../questions/syncDatabasesQuestions"));
 const syncImportTask_1 = tslib_1.__importDefault(require("../tasks/syncImportTask"));
+const downloadTypesQuestion_1 = tslib_1.__importDefault(require("../questions/downloadTypesQuestion"));
 class StartController extends mainController_1.default {
     constructor() {
         super(...arguments);
@@ -65,6 +66,8 @@ class StartController extends mainController_1.default {
                 let syncDatabaseQuestion = yield new syncDatabasesQuestions_1.default();
                 yield syncDatabaseQuestion.configure(this.config);
             }
+            let downloadTypesQuestion = yield new downloadTypesQuestion_1.default();
+            yield downloadTypesQuestion.configure(this.config);
             // Check if database needs to be synced
             if (this.config.settings.syncDatabases == 'yes') {
                 // Adds multiple configuration questions

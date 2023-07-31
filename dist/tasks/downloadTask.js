@@ -74,92 +74,94 @@ class DownloadTask {
                     }
                 })
             });
-            this.downloadTasks.push({
-                title: 'Downloading Magerun to server',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Download Magerun to the server
-                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
-                    if (config.settings.syncDatabases == 'yes') {
-                        // Download Magerun to the staging server
-                        yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
-                    }
-                })
-            });
-            this.downloadTasks.push({
-                title: 'Dumping Magento database and moving it to server root (' + config.settings.strip + ')',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Retrieve database name
-                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:info --format=json', config)).then((result) => {
-                        if (result) {
-                            // Get json format string and extract database names from values
-                            let jsonResult = JSON.parse(result.stdout);
-                            // Retrieve dbname
-                            for (const key in jsonResult) {
-                                if (jsonResult[key].Name.toLowerCase() === 'dbname') {
-                                    config.serverVariables.databaseName = jsonResult[key].Value;
-                                    break;
+            if (config.settings.syncTypes.includes('Magento database')) {
+                this.downloadTasks.push({
+                    title: 'Downloading Magerun to server',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Download Magerun to the server
+                        yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                        if (config.settings.syncDatabases == 'yes') {
+                            // Download Magerun to the staging server
+                            yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                        }
+                    })
+                });
+                this.downloadTasks.push({
+                    title: 'Dumping Magento database and moving it to server root (' + config.settings.strip + ')',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Retrieve database name
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:info --format=json', config)).then((result) => {
+                            if (result) {
+                                // Get json format string and extract database names from values
+                                let jsonResult = JSON.parse(result.stdout);
+                                // Retrieve dbname
+                                for (const key in jsonResult) {
+                                    if (jsonResult[key].Name.toLowerCase() === 'dbname') {
+                                        config.serverVariables.databaseName = jsonResult[key].Value;
+                                        break;
+                                    }
+                                }
+                                if (config.serverVariables.magentoVersion == 1) {
+                                    config.serverVariables.databaseName = jsonResult[3].Value;
                                 }
                             }
-                            if (config.serverVariables.magentoVersion == 1) {
-                                config.serverVariables.databaseName = jsonResult[3].Value;
+                        });
+                        // Dump database and move database to root of server
+                        let stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
+                        if (config.settings.strip == 'keep customer data') {
+                            stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
+                        }
+                        else if (config.settings.strip == 'full') {
+                            stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
+                        }
+                        // Download stripped database for staging envs without customer data etc.
+                        if (config.settings.syncDatabases == 'yes') {
+                            stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
+                            let includeCommand = 'db:dump -n --no-tablespaces --include="' + static_settings_json_1.default.settings.databaseIncludeStaging + '" ' + config.serverVariables.databaseName + '-include.sql';
+                            // Dump tables to include from database and move to user root on server
+                            yield sshSecondDatabase.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents) {
+                            }, function (error) {
+                                throw new Error(error);
+                            });
+                        }
+                        // Dump database and move to user root on server
+                        yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
+                        }, function (error) {
+                            throw new Error(error);
+                        });
+                    })
+                });
+                this.downloadTasks.push({
+                    title: 'Downloading Magento database to localhost',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        // Download file and place it on localhost
+                        let localDatabaseFolderLocation = config.customConfig.localDatabaseFolderLocation;
+                        if (config.settings.import == 'no' && config.settings.wordpressImport == 'yes') {
+                            localDatabaseFolderLocation = settings_json_1.default.general.databaseLocation;
+                        }
+                        let localDatabaseLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
+                        if (config.settings.rsyncInstalled) {
+                            // Get magento database from production
+                            yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
+                            if (config.settings.syncDatabases == 'yes') {
+                                // Get tables to keep from staging
+                                yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}-include.sql`, `${localDatabaseFolderLocation}`, config, true);
+                                let localDatabaseIncludeLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '-include.sql';
+                                config.finalMessages.magentoDatabaseIncludeLocation = localDatabaseIncludeLocation;
                             }
                         }
-                    });
-                    // Dump database and move database to root of server
-                    let stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
-                    if (config.settings.strip == 'keep customer data') {
-                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
-                    }
-                    else if (config.settings.strip == 'full') {
-                        stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
-                    }
-                    // Download stripped database for staging envs without customer data etc.
-                    if (config.settings.syncDatabases == 'yes') {
-                        stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripStaging + '" ' + config.serverVariables.databaseName + '.sql';
-                        let includeCommand = 'db:dump -n --no-tablespaces --include="' + static_settings_json_1.default.settings.databaseIncludeStaging + '" ' + config.serverVariables.databaseName + '-include.sql';
-                        // Dump tables to include from database and move to user root on server
-                        yield sshSecondDatabase.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(includeCommand + '; mv ' + config.serverVariables.databaseName + '-include.sql ~', config, true)).then(function (Contents) {
-                        }, function (error) {
-                            throw new Error(error);
-                        });
-                    }
-                    // Dump database and move to user root on server
-                    yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)(stripCommand + '; mv ' + config.serverVariables.databaseName + '.sql ~', config)).then(function (Contents) {
-                    }, function (error) {
-                        throw new Error(error);
-                    });
-                })
-            });
-            this.downloadTasks.push({
-                title: 'Downloading Magento database to localhost',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    // Download file and place it on localhost
-                    let localDatabaseFolderLocation = config.customConfig.localDatabaseFolderLocation;
-                    if (config.settings.import == 'no' && config.settings.wordpressImport == 'yes') {
-                        localDatabaseFolderLocation = settings_json_1.default.general.databaseLocation;
-                    }
-                    let localDatabaseLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '.sql';
-                    if (config.settings.rsyncInstalled) {
-                        // Get magento database from production
-                        yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}.sql`, `${localDatabaseFolderLocation}`, config);
-                        if (config.settings.syncDatabases == 'yes') {
-                            // Get tables to keep from staging
-                            yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.serverVariables.databaseName}-include.sql`, `${localDatabaseFolderLocation}`, config, true);
-                            let localDatabaseIncludeLocation = localDatabaseFolderLocation + '/' + config.serverVariables.databaseName + '-include.sql';
-                            config.finalMessages.magentoDatabaseIncludeLocation = localDatabaseIncludeLocation;
+                        else {
+                            yield ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents) {
+                            }, function (error) {
+                                throw new Error(error);
+                            });
                         }
-                    }
-                    else {
-                        yield ssh.getFile(localDatabaseLocation, config.serverVariables.databaseName + '.sql').then(function (Contents) {
-                        }, function (error) {
-                            throw new Error(error);
-                        });
-                    }
-                    // Set final message with Magento DB location
-                    config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
-                })
-            });
-            if (config.settings.syncImages == 'yes') {
+                        // Set final message with Magento DB location
+                        config.finalMessages.magentoDatabaseLocation = localDatabaseLocation;
+                    })
+                });
+            }
+            if (config.settings.syncImages == 'yes' && config.settings.syncTypes.includes('Images')) {
                 this.downloadTasks.push({
                     title: 'Downloading media images & files',
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {

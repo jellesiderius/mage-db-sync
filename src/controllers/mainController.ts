@@ -51,7 +51,8 @@ class MainController {
             'wpCommandLocal': 'wp',
             'databaseCommand': '',
             'syncDatabases': 'no',
-            'syncImageTypes': null
+            'syncImageTypes': null,
+            'syncTypes': null
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
