@@ -84,6 +84,7 @@ class StartController extends mainController_1.default {
         });
         // Configure task list
         this.prepareTasks = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            (0, console_1.info)(' === Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee or tea === ✨ \n');
             if (this.config.settings.syncDatabases == 'yes') {
                 // Sync databases tasks
                 // Build up check list
