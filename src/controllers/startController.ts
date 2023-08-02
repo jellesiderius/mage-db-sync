@@ -26,6 +26,7 @@ class StartController extends MainController {
         // Run all tasks
         try {
             await this.list.run();
+            console.log('\n');
 
             // Show final message when done with all tasks
             if (this.config.finalMessages.importDomain.length > 0) {
@@ -91,7 +92,7 @@ class StartController extends MainController {
 
     // Configure task list
     prepareTasks = async () => {
-        info(' === Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee or tea === ✨ \n');
+        info('Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee or tea ✨\n');
         if (this.config.settings.syncDatabases == 'yes') {
             // Sync databases tasks
             // Build up check list
