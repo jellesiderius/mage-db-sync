@@ -128,7 +128,14 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Downgrade module data in database
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions; ${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
+                    if (config.settings.isDdevActive) {
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento setup:upgrade`, config, true);
+                    }
+                    else {
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
+                    }
                 })
             });
             if (config.settings.runCommands && config.settings.runCommands == 'yes') {
@@ -190,7 +197,15 @@ class MagentoConfigureTask {
                             yield (0, console_1.localhostMagentoRootExec)(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config);
                         }
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
-                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        // Reindex
+                        if (config.settings.isDdevActive) {
+                            yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento index:reset`, config);
+                            yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        }
+                        else {
+                            yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reset`, config);
+                            yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        }
                     }
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
                     if (config.settings.isDdevActive) {

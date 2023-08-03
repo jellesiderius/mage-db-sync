@@ -92,7 +92,7 @@ class StartController extends MainController {
 
     // Configure task list
     prepareTasks = async () => {
-        info('Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee or tea ✨\n');
+        info('Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee, tea or a bear! ✨\n');
         if (this.config.settings.syncDatabases == 'yes') {
             // Sync databases tasks
             // Build up check list

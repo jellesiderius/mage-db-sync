@@ -197,7 +197,13 @@ class MagentoConfigureTask {
                 title: 'Synchronizing module versions on localhost',
                 task: async (): Promise<void> => {
                     // Downgrade module data in database
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions; ${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
+                    if (config.settings.isDdevActive) {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
+                        await localhostMagentoRootExec(`ddev exec bin/magento setup:upgrade`, config, true);
+                    } else {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
+                    }
                 }
             }
         );
@@ -279,7 +285,15 @@ class MagentoConfigureTask {
                         }
 
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset; ${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+
+                        // Reindex
+                        if (config.settings.isDdevActive) {
+                            await localhostMagentoRootExec(`ddev exec bin/magento index:reset`, config);
+                            await localhostMagentoRootExec(`ddev exec bin/magento index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        } else {
+                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset`, config);
+                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                        }
                     }
 
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
