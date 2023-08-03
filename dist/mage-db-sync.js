@@ -8,6 +8,7 @@ const fs_1 = tslib_1.__importDefault(require("fs"));
 const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("./utils/console");
 const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
+const kleur_1 = tslib_1.__importDefault(require("kleur"));
 (0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     // Lets make sure all required files are in place before running the tool
     let npmPath = path;
@@ -35,10 +36,12 @@ const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
     const packageJson = require('../package.json');
     let versionCheck = new versionCheck_1.default();
     yield versionCheck.getToolVersions();
-    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\nGithub Page: https://github.com/jellesiderius/mage-db-sync\nDocs: https://github.com/jellesiderius/mage-db-sync/wiki\nReport an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
+    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\n• Github Page: https://github.com/jellesiderius/mage-db-sync\n• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n• Report an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
     if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
         description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
     }
+    description += `\n\n${kleur_1.default.bgYellow(kleur_1.default.bold('Sponsored by:'))}
+• HYPR (https://www.hypershop.nl)`;
     let deleteFiles = [
         `${npmPath}/dist/controllers/importController.js`,
         `${npmPath}/dist/commands/importCommand.js`
