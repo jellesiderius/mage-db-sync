@@ -1,4 +1,4 @@
-import { localhostMagentoRootExec } from '../utils/console';
+import {localhostMagentoRootExec, sshMagentoRootFolderMagerunCommand} from '../utils/console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 import fs from "fs";
@@ -85,6 +85,20 @@ class MagentoConfigureTask {
                     config.finalMessages.importDomain = baseUrl;
 
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+
+                    let allUrlsJson = sshMagentoRootFolderMagerunCommand('config:store:get "web/secure/base_url" --format=json', config, false);
+
+                    if (allUrlsJson.length > 0) {
+                        try {
+                            const obj = JSON.parse(<string>allUrlsJson);
+                            if (obj && typeof obj === `object`) {
+                                // @TODO: Add all URL's in overview:
+                                //console.log(obj);
+                                //process.exit();
+                                //objValue = JSON.parse(engineCheck)[0].Value;
+                            }
+                        } catch (err) {}
+                    }
                 }
             }
         );

@@ -38,6 +38,19 @@ class MagentoConfigureTask {
                     // Set import domain for final message on completing all tasks
                     config.finalMessages.importDomain = baseUrl;
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+                    let allUrlsJson = (0, console_1.sshMagentoRootFolderMagerunCommand)('config:store:get "web/secure/base_url" --format=json', config, false);
+                    if (allUrlsJson.length > 0) {
+                        try {
+                            const obj = JSON.parse(allUrlsJson);
+                            if (obj && typeof obj === `object`) {
+                                // @TODO: Add all URL's in overview:
+                                //console.log(obj);
+                                //process.exit();
+                                //objValue = JSON.parse(engineCheck)[0].Value;
+                            }
+                        }
+                        catch (err) { }
+                    }
                 })
             });
             this.configureTasks.push({
