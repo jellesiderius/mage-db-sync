@@ -199,10 +199,10 @@ class MagentoConfigureTask {
                     // Downgrade module data in database
                     if (config.settings.isDdevActive) {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
-                        await localhostMagentoRootExec(`ddev exec bin/magento setup:upgrade`, config, true);
+                        await localhostMagentoRootExec(`ddev exec bin/magento setup:upgrade --no-interaction`, config, true);
                     } else {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} setup:upgrade`, config, true);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} setup:upgrade --no-interaction`, config, true);
                     }
                 }
             }

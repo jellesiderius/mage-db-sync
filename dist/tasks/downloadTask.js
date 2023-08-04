@@ -15,7 +15,7 @@ class DownloadTask {
         // Add tasks
         this.addTasks = (list, config, ssh, sshSecondDatabase) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             list.add({
-                title: 'Download database from server ' + '(' + config.databases.databaseData.username + ')',
+                title: `Download database from server (${config.databases.databaseData.username} | ${config.databases.databaseType})`,
                 task: (ctx, task) => task.newListr(this.downloadTasks)
             });
             this.downloadTasks.push({

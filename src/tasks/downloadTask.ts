@@ -22,7 +22,7 @@ class DownloadTask {
     addTasks = async (list: any, config: any, ssh: any, sshSecondDatabase: any) => {
         list.add(
             {
-                title: 'Download database from server ' + '(' + config.databases.databaseData.username + ')',
+                title: `Download database from server (${config.databases.databaseData.username} | ${config.databases.databaseType})`,
                 task: (ctx: any, task: any): Listr =>
                 task.newListr(
                     this.downloadTasks
