@@ -105,7 +105,7 @@ class MagentoConfigureTask {
             this.configureTasks.push({
                 title: 'Configuring cache',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 2`, config);
+                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
                 })
             });
             this.configureTasks.push({
