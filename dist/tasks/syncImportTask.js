@@ -106,7 +106,7 @@ class SyncImportTask {
                 title: 'Downloading Magerun to server',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     // Download Magerun to the server
-                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                    yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config, true));
                 })
             });
             this.importTasks.push({

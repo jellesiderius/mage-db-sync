@@ -103,11 +103,11 @@ class DownloadTask {
                     title: 'Downloading Magerun to server',
                     task: async (): Promise<void> => {
                         // Download Magerun to the server
-                        await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                        await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config));
 
                         if (config.settings.syncDatabases == 'yes') {
                             // Download Magerun to the staging server
-                            await sshSecondDatabase.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                            await sshSecondDatabase.execCommand(sshNavigateToMagentoRootCommand('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config, true));
                         }
                     }
                 },

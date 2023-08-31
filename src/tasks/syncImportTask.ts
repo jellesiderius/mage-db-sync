@@ -140,7 +140,7 @@ class SyncImportTask {
                 title: 'Downloading Magerun to server',
                 task: async (): Promise<void> => {
                     // Download Magerun to the server
-                    await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                    await ssh.execCommand(sshNavigateToMagentoRootCommand('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config, true));
                 }
             },
         );

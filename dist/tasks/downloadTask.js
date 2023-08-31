@@ -79,10 +79,10 @@ class DownloadTask {
                     title: 'Downloading Magerun to server',
                     task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         // Download Magerun to the server
-                        yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config));
+                        yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config));
                         if (config.settings.syncDatabases == 'yes') {
                             // Download Magerun to the staging server
-                            yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://files.magerun.net/' + config.serverVariables.magerunFile, config, true));
+                            yield sshSecondDatabase.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config, true));
                         }
                     })
                 });

@@ -23,8 +23,7 @@
       "pretty": true,
       "sourceMap": true,
       "allowJs": true,
-      "noEmit": false,
-      "watch": true
+      "noEmit": false
     },
     "include": [
       "./src/**/*"
