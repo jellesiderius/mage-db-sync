@@ -175,6 +175,7 @@ class MagentoConfigureTask {
                         let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
                         let coreConfigData = jsonData.core_config_data;
                         if (coreConfigData) {
+                            var dbQuery = '';
                             Object.keys(coreConfigData).forEach(key => {
                                 let storeId = key, values = jsonData.core_config_data[key];
                                 values = Object.entries(values);
@@ -185,10 +186,15 @@ class MagentoConfigureTask {
                                     if (storeId != 0) {
                                         scope = 'stores';
                                     }
-                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete ${path} --scope-id=${storeId}`, config);
-                                    yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set ${path} ${value} --scope-id=${storeId} --scope=${scope}`, config);
+                                    var dbQueryRemove = `DELETE FROM core_config_data WHERE path = '${path}' AND scope_id = '${storeId}';`;
+                                    var dbQueryInsert = `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${scope}', '${storeId}', '${path}', '${value}');`;
+                                    // Build up query
+                                    dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
                                 }));
                             });
+                            if (dbQuery) {
+                                yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+                            }
                         }
                     })
                 });
