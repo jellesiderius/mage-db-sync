@@ -30,7 +30,18 @@ class StartController extends mainController_1.default {
                 console.log('\n');
                 // Show final message when done with all tasks
                 if (this.config.finalMessages.importDomain.length > 0) {
-                    (0, console_1.success)(`Magento is successfully imported to localhost. ${this.config.finalMessages.importDomain} is now available.`);
+                    (0, console_1.success)(`Magento is successfully imported to localhost.`);
+                    let urls = this.config.finalMessages.domains;
+                    // Define the base message
+                    let message = "The project can be reached at ";
+                    for (let i = 0; i < urls.length; i++) {
+                        message += urls[i];
+                        // Add a space if it's not the last URL
+                        if (i < urls.length - 1) {
+                            message += " ";
+                        }
+                    }
+                    (0, console_1.success)(message);
                     (0, console_1.info)(`You can log in to the Magento backend with username: ${settings_json_1.default.magentoBackend.adminUsername} and password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                     (0, console_1.info)(`For each website there is a dummy customer account available. Email: ${settings_json_1.default.magentoBackend.adminEmailAddress}, Password: ${settings_json_1.default.magentoBackend.adminPassword}`);
                 }

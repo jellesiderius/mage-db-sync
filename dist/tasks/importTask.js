@@ -23,7 +23,6 @@ class ImportTask {
                 title: importTitle,
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     if (config.settings.isDdevActive) {
-                        // @TODO: Rewrite import to use Magerun2
                         let mysqlCommand1 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS ${config.serverVariables.databaseName};"""`;
                         let mysqlCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`;
                         let mysqlCommand3 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'%';"""`;

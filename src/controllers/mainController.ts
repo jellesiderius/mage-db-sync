@@ -58,7 +58,8 @@ class MainController {
             'magentoDatabaseLocation': '',
             'magentoDatabaseIncludeLocation': '',
             'wordpressDatabaseLocation': '',
-            'importDomain': ''
+            'importDomain': '',
+            'domains': []
         },
         'databases': {
             'databasesList': null,
@@ -80,6 +81,7 @@ class MainController {
     );
     public ssh = new NodeSSH();
     public sshSecondDatabase = new NodeSSH();
+    // @ts-ignore
     public databases = new DatabasesModel(this.config);
 
     constructor() {

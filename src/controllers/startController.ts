@@ -1,4 +1,4 @@
-import {clearConsole, consoleCommand, info, success} from "../utils/console";
+import {clearConsole, consoleCommand, info, localhostMagentoRootExec, success} from "../utils/console";
 // @ts-ignore
 import configFile from '../../config/settings.json'
 import MainController from "./mainController";
@@ -30,7 +30,23 @@ class StartController extends MainController {
 
             // Show final message when done with all tasks
             if (this.config.finalMessages.importDomain.length > 0) {
-                success(`Magento is successfully imported to localhost. ${this.config.finalMessages.importDomain} is now available.`);
+                success(`Magento is successfully imported to localhost.`);
+
+                let urls = this.config.finalMessages.domains;
+
+                // Define the base message
+                let message = "The project can be reached at ";
+                for (let i = 0; i < urls.length; i++) {
+                    message += urls[i];
+
+                    // Add a space if it's not the last URL
+                    if (i < urls.length - 1) {
+                        message += " ";
+                    }
+                }
+
+                success(message);
+
                 info(`You can log in to the Magento backend with username: ${configFile.magentoBackend.adminUsername} and password: ${configFile.magentoBackend.adminPassword}`);
                 info(`For each website there is a dummy customer account available. Email: ${configFile.magentoBackend.adminEmailAddress}, Password: ${configFile.magentoBackend.adminPassword}`);
             } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {

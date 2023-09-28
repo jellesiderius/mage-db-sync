@@ -227,6 +227,18 @@ class MagentoConfigureTask {
                         }
                     }
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
+                    // Gather all urls
+                    let urls = yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:store:config:base-url:list --format=json`, config);
+                    urls = JSON.parse(urls);
+                    // @ts-ignore
+                    for (const [key, value] of Object.entries(urls)) {
+                        // @ts-ignore
+                        let url = value.secure_baseurl;
+                        // @ts-ignore
+                        if (!config.finalMessages.domains.includes(url)) {
+                            config.finalMessages.domains.push(url);
+                        }
+                    }
                     if (config.settings.isDdevActive) {
                         // TTY fix
                         yield (0, console_1.localhostMagentoRootExec)(`ddev exec bin/magento app:config:import`, config);
