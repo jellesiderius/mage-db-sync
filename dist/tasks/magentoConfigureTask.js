@@ -108,6 +108,14 @@ class MagentoConfigureTask {
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
                 })
             });
+            if (config.settings.syncImageTypes && !config.settings.syncImageTypes.includes('Product images') || !config.settings.syncImageTypes) {
+                this.configureTasks.push({
+                    title: 'Removing placeholder configuration',
+                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete catalog/placeholder/* --all`, config);
+                    })
+                });
+            }
             this.configureTasks.push({
                 title: 'Creating a dummy customer on every website',
                 task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {

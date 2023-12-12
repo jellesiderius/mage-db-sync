@@ -171,6 +171,17 @@ class MagentoConfigureTask {
             }
         );
 
+        if (config.settings.syncImageTypes && !config.settings.syncImageTypes.includes('Product images') || !config.settings.syncImageTypes) {
+            this.configureTasks.push(
+                {
+                    title: 'Removing placeholder configuration',
+                    task: async (): Promise<void> => {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete catalog/placeholder/* --all`, config);
+                    }
+                }
+            );
+        }
+
         this.configureTasks.push(
             {
                 title: 'Creating a dummy customer on every website',
