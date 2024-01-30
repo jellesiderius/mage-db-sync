@@ -70,6 +70,17 @@ class ChecksTask {
                             throw new Error(`env.php is missing, make sure ${envFileLocation} exists.`);
                         })
                     });
+                    // Check if vendor folder exists before downloading
+                    this.checkTasks.push({
+                        title: 'Checking if vendor/autoload.php file exists',
+                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                            let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
+                            if (fs.existsSync(vendorFileLocation)) {
+                                return true;
+                            }
+                            throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
+                        })
+                    });
                     this.checkTasks.push({
                         title: 'Checking if database host is set to localhost',
                         task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {

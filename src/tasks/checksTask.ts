@@ -93,6 +93,21 @@ class ChecksTask {
                     }
                 );
 
+                // Check if vendor folder exists before downloading
+                this.checkTasks.push(
+                    {
+                        title: 'Checking if vendor/autoload.php file exists',
+                        task: async (): Promise<Boolean> => {
+                            let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
+                            if (fs.existsSync(vendorFileLocation)) {
+                                return true;
+                            }
+
+                            throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
+                        }
+                    }
+                );
+
                 this.checkTasks.push(
                     {
                         title: 'Checking if database host is set to localhost',
