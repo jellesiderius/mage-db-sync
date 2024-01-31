@@ -114,8 +114,10 @@ class MagentoConfigureTask {
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/engine elasticsearch7`, config);
                     if (config.settings.isDdevActive) {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname elasticsearch`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set smile_elasticsuite_core_base_settings/es_client/servers elasticsearch:9200`, config);
                     } else {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set smile_elasticsuite_core_base_settings/es_client/servers localhost:9200`, config);
                     }
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_port 9200`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}`, config);

@@ -106,8 +106,14 @@ class DownloadTask {
                                 }
                             }
                         });
+                        var developmentStripCommand = static_settings_json_1.default.settings.databaseStripDevelopment;
+                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                        let databaseStripDevelopment = jsonData.databaseStripDevelopment;
+                        if (databaseStripDevelopment) {
+                            developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                        }
                         // Dump database and move database to root of server
-                        let stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripDevelopment + '" ' + config.serverVariables.databaseName + '.sql';
+                        let stripCommand = 'db:dump -n --no-tablespaces --strip="' + developmentStripCommand + '" ' + config.serverVariables.databaseName + '.sql';
                         if (config.settings.strip == 'keep customer data') {
                             stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                         }
