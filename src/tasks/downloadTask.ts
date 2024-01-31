@@ -9,6 +9,7 @@ import { Listr } from 'listr2';
 // @ts-ignore
 import staticConfigFile from '../../config/static-settings.json'
 import configFile from "../../config/settings.json";
+import fs from "fs";
 
 class DownloadTask {
     private downloadTasks = [];
@@ -138,11 +139,13 @@ class DownloadTask {
 
                         var developmentStripCommand = staticConfigFile.settings.databaseStripDevelopment;
 
-                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
-                        let databaseStripDevelopment = jsonData.databaseStripDevelopment;
+                        if (fs.existsSync(config.settings.currentFolder + '/.mage-db-sync-config.json')) {
+                            let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                            let databaseStripDevelopment = jsonData.databaseStripDevelopment;
 
-                        if (databaseStripDevelopment) {
-                            developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                            if (databaseStripDevelopment) {
+                                developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                            }
                         }
 
                         // Dump database and move database to root of server

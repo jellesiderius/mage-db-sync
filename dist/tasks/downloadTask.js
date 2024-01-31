@@ -5,6 +5,7 @@ const console_1 = require("../utils/console");
 // @ts-ignore
 const static_settings_json_1 = tslib_1.__importDefault(require("../../config/static-settings.json"));
 const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
+const fs_1 = tslib_1.__importDefault(require("fs"));
 class DownloadTask {
     constructor() {
         this.downloadTasks = [];
@@ -107,10 +108,12 @@ class DownloadTask {
                             }
                         });
                         var developmentStripCommand = static_settings_json_1.default.settings.databaseStripDevelopment;
-                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
-                        let databaseStripDevelopment = jsonData.databaseStripDevelopment;
-                        if (databaseStripDevelopment) {
-                            developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                        if (fs_1.default.existsSync(config.settings.currentFolder + '/.mage-db-sync-config.json')) {
+                            let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                            let databaseStripDevelopment = jsonData.databaseStripDevelopment;
+                            if (databaseStripDevelopment) {
+                                developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                            }
                         }
                         // Dump database and move database to root of server
                         let stripCommand = 'db:dump -n --no-tablespaces --strip="' + developmentStripCommand + '" ' + config.serverVariables.databaseName + '.sql';
