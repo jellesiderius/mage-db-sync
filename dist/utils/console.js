@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.localhostWpRootExec = exports.wordpressReplaces = exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
+exports.stripOutputString = exports.localhostWpRootExec = exports.wordpressReplaces = exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
 const tslib_1 = require("tslib");
 const kleur_1 = tslib_1.__importDefault(require("kleur"));
 const readline = tslib_1.__importStar(require("readline"));
@@ -150,4 +150,9 @@ const wordpressReplaces = (entry, text) => {
     return replacedText.trim();
 };
 exports.wordpressReplaces = wordpressReplaces;
+const stripOutputString = (string) => {
+    let magerunRootWarning = "It's not recommended to run n98-magerun as root user";
+    return string.replace(magerunRootWarning, '');
+};
+exports.stripOutputString = stripOutputString;
 //# sourceMappingURL=console.js.map

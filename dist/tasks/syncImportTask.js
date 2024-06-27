@@ -81,7 +81,8 @@ class SyncImportTask {
                     // Retrieve settings from server to use
                     yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('test -e vendor/magento && test -e app/etc/env.php && echo 2 || echo 1; pwd; which php;', config, true)).then((result) => {
                         if (result) {
-                            let serverValues = result.stdout.split("\n");
+                            let string = (0, console_1.stripOutputString)(result.stdout);
+                            let serverValues = string.split("\n");
                             // Check if Magento 1 or Magento 2
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             // Get Magento root

@@ -2,7 +2,7 @@ import {
     error,
     localhostMagentoRootExec,
     sshNavigateToMagentoRootCommand,
-    sshMagentoRootFolderMagerunCommand, consoleCommand
+    sshMagentoRootFolderMagerunCommand, consoleCommand, stripOutputString
 } from '../utils/console';
 import { Listr } from 'listr2';
 
@@ -109,7 +109,8 @@ class SyncImportTask {
                     // Retrieve settings from server to use
                     await ssh.execCommand(sshNavigateToMagentoRootCommand('test -e vendor/magento && test -e app/etc/env.php && echo 2 || echo 1; pwd; which php;', config, true)).then((result: any) => {
                         if (result) {
-                            let serverValues = result.stdout.split("\n");
+                            let string = stripOutputString(result.stdout);
+                            let serverValues = string.split("\n");
                             // Check if Magento 1 or Magento 2
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             // Get Magento root

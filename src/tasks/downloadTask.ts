@@ -3,7 +3,8 @@ import {
     localhostRsyncDownloadCommand,
     sshMagentoRootFolderMagerunCommand, sshMagentoRootFolderPhpCommand,
     sshNavigateToMagentoRootCommand,
-    wordpressReplaces
+    wordpressReplaces,
+    stripOutputString
 } from '../utils/console';
 import { Listr } from 'listr2';
 // @ts-ignore
@@ -66,7 +67,8 @@ class DownloadTask {
                     // Retrieve settings from server to use
                     await ssh.execCommand(sshNavigateToMagentoRootCommand('test -e vendor/magento && echo 2 || echo 1; pwd; which php;', config)).then((result: any) => {
                         if (result) {
-                            let serverValues = result.stdout.split("\n");
+                            let string = stripOutputString(result.stdout);
+                            let serverValues = string.split("\n");
                             // Check if Magento 1 or Magento 2
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             // Get Magento root
@@ -122,7 +124,7 @@ class DownloadTask {
                         await ssh.execCommand(sshMagentoRootFolderMagerunCommand('db:info --format=json', config)).then((result: any) => {
                             if (result) {
                                 // Get json format string and extract database names from values
-                                let jsonResult = JSON.parse(result.stdout);
+                                let jsonResult = JSON.parse(stripOutputString(result.stdout));
                                 // Retrieve dbname
                                 for (const key in jsonResult) {
                                     if (jsonResult[key].Name.toLowerCase() === 'dbname') {
@@ -263,7 +265,8 @@ class DownloadTask {
                         // Download Wordpress database
                         await ssh.execCommand(sshNavigateToMagentoRootCommand('cd wp; cat wp-config.php', config)).then((result: any) => {
                             if (result) {
-                                let resultValues = result.stdout.split("\n");
+                                let string = stripOutputString(result.stdout);
+                                let resultValues = string.split("\n");
 
                                 resultValues.forEach((entry: any) => {
                                     // Get DB name from config file

@@ -181,6 +181,11 @@ const wordpressReplaces = (entry: string, text: string) => {
     return replacedText.trim();
 }
 
+const stripOutputString = (string: string) => {
+    let magerunRootWarning = "It's not recommended to run n98-magerun as root user";
+    return string.replace(magerunRootWarning, '');
+}
+
 export {
     verbose,
     info,
@@ -197,5 +202,6 @@ export {
     localhostMagentoRootExec,
     localhostRsyncDownloadCommand,
     wordpressReplaces,
-    localhostWpRootExec
+    localhostWpRootExec,
+    stripOutputString
 }

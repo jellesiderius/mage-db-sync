@@ -49,7 +49,8 @@ class DownloadTask {
                     // Retrieve settings from server to use
                     yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('test -e vendor/magento && echo 2 || echo 1; pwd; which php;', config)).then((result) => {
                         if (result) {
-                            let serverValues = result.stdout.split("\n");
+                            let string = (0, console_1.stripOutputString)(result.stdout);
+                            let serverValues = string.split("\n");
                             // Check if Magento 1 or Magento 2
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             // Get Magento root
@@ -94,7 +95,7 @@ class DownloadTask {
                         yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:info --format=json', config)).then((result) => {
                             if (result) {
                                 // Get json format string and extract database names from values
-                                let jsonResult = JSON.parse(result.stdout);
+                                let jsonResult = JSON.parse((0, console_1.stripOutputString)(result.stdout));
                                 // Retrieve dbname
                                 for (const key in jsonResult) {
                                     if (jsonResult[key].Name.toLowerCase() === 'dbname') {
@@ -208,7 +209,8 @@ class DownloadTask {
                         // Download Wordpress database
                         yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('cd wp; cat wp-config.php', config)).then((result) => {
                             if (result) {
-                                let resultValues = result.stdout.split("\n");
+                                let string = (0, console_1.stripOutputString)(result.stdout);
+                                let resultValues = string.split("\n");
                                 resultValues.forEach((entry) => {
                                     // Get DB name from config file
                                     if (entry.includes('DB_NAME')) {
