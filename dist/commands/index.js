@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = default_1;
 const tslib_1 = require("tslib");
 const fs_1 = tslib_1.__importDefault(require("fs"));
 const path_1 = tslib_1.__importDefault(require("path"));
@@ -20,5 +21,4 @@ function default_1(program) {
     });
     return commands;
 }
-exports.default = default_1;
 //# sourceMappingURL=index.js.map
