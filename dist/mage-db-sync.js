@@ -9,6 +9,8 @@ const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("./utils/console");
 const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
 const kleur_1 = tslib_1.__importDefault(require("kleur"));
+const process_1 = tslib_1.__importDefault(require("process"));
+process_1.default.removeAllListeners('warning');
 (0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     // Lets make sure all required files are in place before running the tool
     let npmPath = path;
@@ -64,10 +66,10 @@ const kleur_1 = tslib_1.__importDefault(require("kleur"));
     commander_1.default.on('command:*', () => {
         commander_1.default.help();
     });
-    commander_1.default.parse(process.argv);
-    if (!process.argv.slice(2).length) {
+    commander_1.default.parse(process_1.default.argv);
+    if (!process_1.default.argv.slice(2).length) {
         commander_1.default.outputHelp();
-        process.exit();
+        process_1.default.exit();
     }
 }));
 //# sourceMappingURL=mage-db-sync.js.map

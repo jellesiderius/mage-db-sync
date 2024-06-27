@@ -6,6 +6,9 @@ import {getInstalledPath} from 'get-installed-path'
 import {error} from "./utils/console";
 import VersionCheck from "./utils/versionCheck";
 import kleur from "kleur";
+import process from 'process';
+
+process.removeAllListeners('warning');
 
 getInstalledPath('mage-db-sync').then(async (path: any) => {
     // Lets make sure all required files are in place before running the tool
