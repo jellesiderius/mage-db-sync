@@ -4,6 +4,7 @@ import stagingDatabases from "../../config/databases/staging.json";
 import productionDatabases from "../../config/databases/production.json";
 import path from "path";
 import fs from "fs";
+import os from "os";
 
 class DatabasesModel {
 	public databasesList: { [k: string]: any } = [];
@@ -20,7 +21,8 @@ class DatabasesModel {
 		'localProjectUrl': '',
 		'commandsFolder': '',
 		'stagingUsername': '',
-		'externalElasticsearchPort': ''
+		'externalElasticsearchPort': '',
+		'sshKeyLocation': ''
 	};
 
 	public databaseDataSecond = {
@@ -77,6 +79,11 @@ class DatabasesModel {
 				if (database.externalElasticsearchPort) {
 					// @ts-ignore
 					databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
+				}
+				// @ts-ignore
+				if (database.sshKeyName) {
+					// @ts-ignore
+					config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/' + database.sshKeyName;
 				}
 
 				// @ts-ignore

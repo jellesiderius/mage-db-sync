@@ -11,7 +11,8 @@
             "externalPhpPath": "",
             "localProjectUrl": "example1.development",
             "wordpress": false,
-            "commandsFolder": "commands/example-project"
+            "commandsFolder": "commands/example-project",
+            "sshKeyName": "id_ed25519, will search in ~/ssh/"
         },
         "staging-username-2-placeholder": {
             "username": "example2",
@@ -24,7 +25,8 @@
             "externalPhpPath": "",
             "localProjectUrl": "example2.development",
             "wordpress": false,
-            "commandsFolder": "commands/example-project"
+            "commandsFolder": "commands/example-project",
+            "sshKeyName": "id_ed25519, will search in ~/ssh/"
         }
     }
 }

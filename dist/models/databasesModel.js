@@ -7,6 +7,7 @@ const staging_json_1 = tslib_1.__importDefault(require("../../config/databases/s
 const production_json_1 = tslib_1.__importDefault(require("../../config/databases/production.json"));
 const path_1 = tslib_1.__importDefault(require("path"));
 const fs_1 = tslib_1.__importDefault(require("fs"));
+const os_1 = tslib_1.__importDefault(require("os"));
 class DatabasesModel {
     constructor() {
         this.databasesList = [];
@@ -23,7 +24,8 @@ class DatabasesModel {
             'localProjectUrl': '',
             'commandsFolder': '',
             'stagingUsername': '',
-            'externalElasticsearchPort': ''
+            'externalElasticsearchPort': '',
+            'sshKeyLocation': ''
         };
         this.databaseDataSecond = {
             'username': '',
@@ -75,6 +77,11 @@ class DatabasesModel {
                     if (database.externalElasticsearchPort) {
                         // @ts-ignore
                         databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
+                    }
+                    // @ts-ignore
+                    if (database.sshKeyName) {
+                        // @ts-ignore
+                        config.customConfig.sshKeyLocation = os_1.default.userInfo().homedir + '/.ssh/' + database.sshKeyName;
                     }
                     // @ts-ignore
                     if (database.commandsFolder) {

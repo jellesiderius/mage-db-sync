@@ -12,7 +12,8 @@
             "localProjectUrl": "example1.development",
             "wordpress": false,
             "commandsFolder": "commands/example-project",
-            "stagingUsername": "staging-username-1-placeholder"
+            "stagingUsername": "staging-username-1-placeholder",
+            "sshKeyName": "id_ed25519, will search in ~/ssh/"
         },
         "production-username-2-placeholder": {
             "username": "example2",
@@ -26,7 +27,8 @@
             "localProjectUrl": "example2.development",
             "wordpress": false,
             "commandsFolder": "commands/example-project",
-            "stagingUsername": "staging-username-2-placeholder"
+            "stagingUsername": "staging-username-2-placeholder",
+            "sshKeyName": "id_ed25519, will search in ~/ssh/"
         }
     }
 }
