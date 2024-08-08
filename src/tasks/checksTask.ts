@@ -165,7 +165,7 @@ class ChecksTask {
                         return true;
                     }
 
-                    throw new Error(`SSH key ${config.customConfig.sshKeyLocation} does not exist. This can be configured in config/settings.json`);
+                    throw new Error(`SSH key ${config.customConfig.sshKeyLocation} does not exist. This can be configured in config/settings.json or per user in config/databases/production.json or staging.json`);
                 }
             }
         );
