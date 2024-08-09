@@ -121,6 +121,9 @@ class DownloadTask {
                         if (config.settings.strip == 'keep customer data') {
                             stripCommand = 'db:dump -n --no-tablespaces --strip="' + static_settings_json_1.default.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                         }
+                        else if (config.settings.strip == 'full and human readable') {
+                            stripCommand = 'db:dump -n --no-tablespaces --human-readable ' + config.serverVariables.databaseName + '.sql';
+                        }
                         else if (config.settings.strip == 'full') {
                             stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
                         }
