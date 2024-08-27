@@ -140,13 +140,20 @@ class DownloadTask {
                         });
 
                         var developmentStripCommand = staticConfigFile.settings.databaseStripDevelopment;
+                        var fullStripCommand = null;
 
                         if (fs.existsSync(config.settings.currentFolder + '/.mage-db-sync-config.json')) {
                             let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
                             let databaseStripDevelopment = jsonData.databaseStripDevelopment;
 
+
                             if (databaseStripDevelopment) {
                                 developmentStripCommand = `${developmentStripCommand} ${databaseStripDevelopment}`;
+                            }
+
+                            let databaseStripFull = jsonData.databaseStripFull;
+                            if (databaseStripFull) {
+                                fullStripCommand = databaseStripFull;
                             }
                         }
 
@@ -156,9 +163,17 @@ class DownloadTask {
                         if (config.settings.strip == 'keep customer data') {
                             stripCommand = 'db:dump -n --no-tablespaces --strip="' + staticConfigFile.settings.databaseStripKeepCustomerData + '"' + config.serverVariables.databaseName + '.sql';
                         } else if (config.settings.strip == 'full and human readable') {
-                            stripCommand = 'db:dump -n --no-tablespaces --human-readable ' + config.serverVariables.databaseName + '.sql';
+                            if (fullStripCommand) {
+                                stripCommand = 'db:dump -n --no-tablespaces --human-readable --strip="' + fullStripCommand + '" ' + config.serverVariables.databaseName + '.sql';
+                            } else {
+                                stripCommand = 'db:dump -n --no-tablespaces --human-readable ' + config.serverVariables.databaseName + '.sql';
+                            }
                         } else if (config.settings.strip == 'full') {
-                            stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
+                            if (fullStripCommand) {
+                                stripCommand = 'db:dump -n --no-tablespaces --strip="' + fullStripCommand + '" ' + config.serverVariables.databaseName + '.sql';
+                            } else {
+                                stripCommand = 'db:dump -n --no-tablespaces ' + config.serverVariables.databaseName + '.sql';
+                            }
                         }
 
                         // Download stripped database for staging envs without customer data etc.
