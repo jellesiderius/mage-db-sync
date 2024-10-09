@@ -155,13 +155,12 @@ class MagentoConfigureTask {
             {
                 title: 'Disable reCAPTCHA',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/backend/enabled 0`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_frontend* --all`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_backend* --all`, config);
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete msp_securitysuite_recaptcha* --all`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set admin/captcha/enable 0`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set customer/captcha/enable 0`, config);
                     await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set recaptcha/general/enabled 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set msp_securitysuite_recaptcha/frontend/enabled 0`, config);
                 }
             }
         );
