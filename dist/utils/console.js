@@ -137,6 +137,9 @@ const localhostRsyncDownloadCommand = (source, destination, config, useSecondDat
             databasePort = config.databases.databaseDataSecond.port;
     }
     config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+    if (config.customConfig.sshKeyLocation) {
+        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+    }
     let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
     // If password is set, use sshpass
     if (config.databases.databaseData.password) {
