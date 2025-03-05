@@ -29,7 +29,7 @@ class ImportTask {
                         yield (0, console_1.localhostMagentoRootExec)(mysqlCommand1, config, true);
                         yield (0, console_1.localhostMagentoRootExec)(mysqlCommand2, config, true);
                         yield (0, console_1.localhostMagentoRootExec)(mysqlCommand3, config, true);
-                        yield (0, console_1.localhostMagentoRootExec)(`ddev exec /usr/bin/php8.1 /usr/local/bin/magerun2 self-update 7.5.0`, config);
+                        yield (0, console_1.localhostMagentoRootExec)(`ddev exec /usr/bin/php8.1 /usr/local/bin/magerun2 self-update 7.5.0 > /dev/null 2>&1`, config, true);
                         yield (0, console_1.localhostMagentoRootExec)(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
                     }
                     else {

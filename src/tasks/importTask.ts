@@ -37,7 +37,7 @@ class ImportTask {
                         await localhostMagentoRootExec(mysqlCommand1, config, true);
                         await localhostMagentoRootExec(mysqlCommand2, config, true);
                         await localhostMagentoRootExec(mysqlCommand3, config, true);
-                        await localhostMagentoRootExec(`ddev exec /usr/bin/php8.1 /usr/local/bin/magerun2 self-update 7.5.0`, config);
+                        await localhostMagentoRootExec(`ddev exec /usr/bin/php8.1 /usr/local/bin/magerun2 self-update 7.5.0 > /dev/null 2>&1`, config, true);
                         await localhostMagentoRootExec(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
                     } else {
                         // Create database
