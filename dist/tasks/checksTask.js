@@ -1,18 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const fs = tslib_1.__importStar(require("fs"));
+const fs = (0, tslib_1.__importStar)(require("fs"));
 const console_1 = require("../utils/console");
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
+const settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/settings.json"));
 class ChecksTask {
     constructor() {
         this.checkTasks = [];
-        this.configure = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (list, config, ssh) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addTasks(list, config, ssh);
             return list;
         });
         // Add tasks
-        this.addTasks = (list, config, ssh) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addTasks = (list, config, ssh) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             list.add({
                 title: 'Running some checks',
                 task: (ctx, task) => task.newListr(this.checkTasks)
@@ -21,7 +21,7 @@ class ChecksTask {
                 // Check if all settings are filled in, if we import
                 this.checkTasks.push({
                     title: 'Checking if config/settings.json is correctly filled',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Lets make sure everything is filled in
                         if (!settings_json_1.default.magentoBackend.adminUsername || settings_json_1.default.magentoBackend.adminUsername && settings_json_1.default.magentoBackend.adminUsername.length == 0) {
                             throw new Error('Admin username is missing config/settings.json');
@@ -40,10 +40,21 @@ class ChecksTask {
                         }
                     })
                 });
+                // Check if vendor folder exists before downloading
+                this.checkTasks.push({
+                    title: 'Checking if vendor/autoload.php file exists',
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+                        let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
+                        if (fs.existsSync(vendorFileLocation)) {
+                            return true;
+                        }
+                        throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
+                    })
+                });
                 // Check Magerun 2 version
                 this.checkTasks.push({
                     title: 'Checking Magerun2 version',
-                    task: (ctx, task) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: (ctx, task) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Check the local installed Magerun2 version before we continue and import the database
                         if (config.settings.isDdevActive) {
                             return true;
@@ -62,7 +73,7 @@ class ChecksTask {
                     // Check if target folder exists before downloading
                     this.checkTasks.push({
                         title: 'Checking if env.php file exists',
-                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                             let envFileLocation = config.settings.currentFolder + '/app/etc/env.php';
                             if (fs.existsSync(envFileLocation)) {
                                 return true;
@@ -70,20 +81,9 @@ class ChecksTask {
                             throw new Error(`env.php is missing, make sure ${envFileLocation} exists.`);
                         })
                     });
-                    // Check if vendor folder exists before downloading
-                    this.checkTasks.push({
-                        title: 'Checking if vendor/autoload.php file exists',
-                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                            let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
-                            if (fs.existsSync(vendorFileLocation)) {
-                                return true;
-                            }
-                            throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
-                        })
-                    });
                     this.checkTasks.push({
                         title: 'Checking if database host is set to localhost',
-                        task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                             if (config.settings.isDdevActive) {
                                 return true;
                             }
@@ -110,7 +110,7 @@ class ChecksTask {
             // Check if target folder exists before downloading
             this.checkTasks.push({
                 title: 'Checking if download folder exists',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     if (fs.existsSync(config.customConfig.localDatabaseFolderLocation)) {
                         return true;
                     }
@@ -120,7 +120,7 @@ class ChecksTask {
             // Check if SSH key exists
             this.checkTasks.push({
                 title: 'Checking if SSH key exists',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     if (fs.existsSync(config.customConfig.sshKeyLocation)) {
                         return true;
                     }

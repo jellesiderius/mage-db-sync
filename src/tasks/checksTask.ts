@@ -53,6 +53,21 @@ class ChecksTask {
                 }
             );
 
+            // Check if vendor folder exists before downloading
+            this.checkTasks.push(
+                {
+                    title: 'Checking if vendor/autoload.php file exists',
+                    task: async (): Promise<Boolean> => {
+                        let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
+                        if (fs.existsSync(vendorFileLocation)) {
+                            return true;
+                        }
+
+                        throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
+                    }
+                }
+            );
+
             // Check Magerun 2 version
             this.checkTasks.push(
                 {
@@ -89,21 +104,6 @@ class ChecksTask {
                             }
 
                             throw new Error(`env.php is missing, make sure ${envFileLocation} exists.`);
-                        }
-                    }
-                );
-
-                // Check if vendor folder exists before downloading
-                this.checkTasks.push(
-                    {
-                        title: 'Checking if vendor/autoload.php file exists',
-                        task: async (): Promise<Boolean> => {
-                            let vendorFileLocation = config.settings.currentFolder + '/vendor/autoload.php';
-                            if (fs.existsSync(vendorFileLocation)) {
-                                return true;
-                            }
-
-                            throw new Error(`vendor/autoload.php is missing, make sure ${vendorFileLocation} exists.`);
                         }
                     }
                 );

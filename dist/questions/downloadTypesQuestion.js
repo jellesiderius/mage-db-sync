@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("console");
-const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
+const inquirer_1 = (0, tslib_1.__importDefault)(require("inquirer"));
 const inquirer_ts_checkbox_plus_prompt_1 = require("inquirer-ts-checkbox-plus-prompt");
 class DownloadTypesQuestion {
     constructor() {
         this.questionsOne = [];
-        this.configure = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             inquirer_1.default.registerPrompt('checkbox-plus', inquirer_ts_checkbox_plus_prompt_1.CheckboxPlusPrompt);
             yield this.addQuestions(config);
             // Set import configs
@@ -21,7 +21,7 @@ class DownloadTypesQuestion {
             });
         });
         // Add questions
-        this.addQuestions = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addQuestions = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             let choices = ['Magento database'];
             let defaultChoices = ['Magento database'];
             if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes') {

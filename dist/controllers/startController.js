@@ -3,23 +3,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
 // @ts-ignore
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
-const mainController_1 = tslib_1.__importDefault(require("./mainController"));
-const databaseTypeQuestion_1 = tslib_1.__importDefault(require("../questions/databaseTypeQuestion"));
-const selectDatabaseQuestion_1 = tslib_1.__importDefault(require("../questions/selectDatabaseQuestion"));
-const configurationQuestions_1 = tslib_1.__importDefault(require("../questions/configurationQuestions"));
-const checksTask_1 = tslib_1.__importDefault(require("../tasks/checksTask"));
-const downloadTask_1 = tslib_1.__importDefault(require("../tasks/downloadTask"));
-const importTask_1 = tslib_1.__importDefault(require("../tasks/importTask"));
-const magentoConfigureTask_1 = tslib_1.__importDefault(require("../tasks/magentoConfigureTask"));
-const wordpressConfigureTask_1 = tslib_1.__importDefault(require("../tasks/wordpressConfigureTask"));
-const syncDatabasesQuestions_1 = tslib_1.__importDefault(require("../questions/syncDatabasesQuestions"));
-const syncImportTask_1 = tslib_1.__importDefault(require("../tasks/syncImportTask"));
-const downloadTypesQuestion_1 = tslib_1.__importDefault(require("../questions/downloadTypesQuestion"));
+const settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/settings.json"));
+const mainController_1 = (0, tslib_1.__importDefault)(require("./mainController"));
+const databaseTypeQuestion_1 = (0, tslib_1.__importDefault)(require("../questions/databaseTypeQuestion"));
+const selectDatabaseQuestion_1 = (0, tslib_1.__importDefault)(require("../questions/selectDatabaseQuestion"));
+const configurationQuestions_1 = (0, tslib_1.__importDefault)(require("../questions/configurationQuestions"));
+const checksTask_1 = (0, tslib_1.__importDefault)(require("../tasks/checksTask"));
+const downloadTask_1 = (0, tslib_1.__importDefault)(require("../tasks/downloadTask"));
+const importTask_1 = (0, tslib_1.__importDefault)(require("../tasks/importTask"));
+const magentoConfigureTask_1 = (0, tslib_1.__importDefault)(require("../tasks/magentoConfigureTask"));
+const wordpressConfigureTask_1 = (0, tslib_1.__importDefault)(require("../tasks/wordpressConfigureTask"));
+const syncDatabasesQuestions_1 = (0, tslib_1.__importDefault)(require("../questions/syncDatabasesQuestions"));
+const syncImportTask_1 = (0, tslib_1.__importDefault)(require("../tasks/syncImportTask"));
+const downloadTypesQuestion_1 = (0, tslib_1.__importDefault)(require("../questions/downloadTypesQuestion"));
 class StartController extends mainController_1.default {
     constructor() {
         super(...arguments);
-        this.executeStart = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.executeStart = () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             // Ask all the questions to the user
             yield this.askQuestions();
             // Configure task list
@@ -64,7 +64,7 @@ class StartController extends mainController_1.default {
             }
         });
         // Ask questions to user
-        this.askQuestions = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.askQuestions = () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             // Clear the console
             (0, console_1.clearConsole)();
             // Ask question about database type
@@ -95,7 +95,7 @@ class StartController extends mainController_1.default {
             (0, console_1.clearConsole)();
         });
         // Configure task list
-        this.prepareTasks = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.prepareTasks = () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             (0, console_1.info)('Running all download & configuration tasks, this can take a couple of minutes, get yourself some coffee, tea or a beer! ✨\n');
             if (this.config.settings.syncDatabases == 'yes') {
                 // Sync databases tasks

@@ -1,17 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const commander_1 = tslib_1.__importDefault(require("commander"));
-const index_1 = tslib_1.__importDefault(require("./commands/index"));
-const fs_1 = tslib_1.__importDefault(require("fs"));
+const commander_1 = (0, tslib_1.__importDefault)(require("commander"));
+const index_1 = (0, tslib_1.__importDefault)(require("./commands/index"));
+const fs_1 = (0, tslib_1.__importDefault)(require("fs"));
 // @ts-ignore
 const get_installed_path_1 = require("get-installed-path");
 const console_1 = require("./utils/console");
-const versionCheck_1 = tslib_1.__importDefault(require("./utils/versionCheck"));
-const kleur_1 = tslib_1.__importDefault(require("kleur"));
-const process_1 = tslib_1.__importDefault(require("process"));
+const versionCheck_1 = (0, tslib_1.__importDefault)(require("./utils/versionCheck"));
+const kleur_1 = (0, tslib_1.__importDefault)(require("kleur"));
+const process_1 = (0, tslib_1.__importDefault)(require("process"));
 process_1.default.removeAllListeners('warning');
-(0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+(0, get_installed_path_1.getInstalledPath)('mage-db-sync').then((path) => (0, tslib_1.__awaiter)(void 0, void 0, void 0, function* () {
     // Lets make sure all required files are in place before running the tool
     let npmPath = path;
     let missingFiles = false;

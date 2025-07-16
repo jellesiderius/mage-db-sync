@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stripOutputString = exports.localhostWpRootExec = exports.wordpressReplaces = exports.localhostRsyncDownloadCommand = exports.localhostMagentoRootExec = exports.sshMagentoRootFolderMagerunCommand = exports.sshMagentoRootFolderPhpCommand = exports.sshNavigateToMagentoRootCommand = exports.consoleCommand = exports.clearConsole = exports.emptyLine = exports.url = exports.error = exports.warning = exports.success = exports.info = exports.verbose = void 0;
 const tslib_1 = require("tslib");
-const kleur_1 = tslib_1.__importDefault(require("kleur"));
-const readline = tslib_1.__importStar(require("readline"));
+const kleur_1 = (0, tslib_1.__importDefault)(require("kleur"));
+const readline = (0, tslib_1.__importStar)(require("readline"));
 const prefix = {
     verbose: kleur_1.default.gray(kleur_1.default.bold('🛠 ')),
     info: kleur_1.default.gray(kleur_1.default.bold('✨ ')),

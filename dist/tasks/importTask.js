@@ -5,12 +5,12 @@ const console_1 = require("../utils/console");
 class ImportTask {
     constructor() {
         this.importTasks = [];
-        this.configure = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (list, config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addTasks(list, config);
             return list;
         });
         // Add tasks
-        this.addTasks = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addTasks = (list, config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             list.add({
                 title: 'Import Magento database to localhost',
                 task: (ctx, task) => task.newListr(this.importTasks)
@@ -21,7 +21,7 @@ class ImportTask {
             }
             this.importTasks.push({
                 title: importTitle,
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     if (config.settings.isDdevActive) {
                         let mysqlCommand1 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS ${config.serverVariables.databaseName};"""`;
                         let mysqlCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`;
@@ -44,7 +44,7 @@ class ImportTask {
             });
             this.importTasks.push({
                 title: 'Cleaning up',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Remove local SQL file
                     yield (0, console_1.localhostMagentoRootExec)('rm ' + config.serverVariables.databaseName + '.sql', config);
                 })

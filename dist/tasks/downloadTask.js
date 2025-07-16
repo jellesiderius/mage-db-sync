@@ -3,25 +3,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
 // @ts-ignore
-const static_settings_json_1 = tslib_1.__importDefault(require("../../config/static-settings.json"));
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
-const fs_1 = tslib_1.__importDefault(require("fs"));
+const static_settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/static-settings.json"));
+const settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/settings.json"));
+const fs_1 = (0, tslib_1.__importDefault)(require("fs"));
 class DownloadTask {
     constructor() {
         this.downloadTasks = [];
-        this.configure = (list, config, ssh, sshSecondDatabase) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (list, config, ssh, sshSecondDatabase) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addTasks(list, config, ssh, sshSecondDatabase);
             return list;
         });
         // Add tasks
-        this.addTasks = (list, config, ssh, sshSecondDatabase) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addTasks = (list, config, ssh, sshSecondDatabase) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             list.add({
                 title: `Downloading from server (${config.databases.databaseData.username} | ${config.databases.databaseType})`,
                 task: (ctx, task) => task.newListr(this.downloadTasks)
             });
             this.downloadTasks.push({
                 title: 'Connecting to server through SSH',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Open connection to SSH server
                     yield ssh.connect({
                         host: config.databases.databaseData.server,
@@ -45,7 +45,7 @@ class DownloadTask {
             });
             this.downloadTasks.push({
                 title: 'Retrieving server settings',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Retrieve settings from server to use
                     yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('test -e vendor/magento && echo 2 || echo 1; pwd; which php;', config)).then((result) => {
                         if (result) {
@@ -79,7 +79,7 @@ class DownloadTask {
             if (config.settings.syncTypes.includes('Magento database')) {
                 this.downloadTasks.push({
                     title: 'Downloading Magerun to server',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Download Magerun to the server
                         yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('curl -O https://raw.githubusercontent.com/jellesiderius/mage-db-sync/master/files/' + config.serverVariables.magerunFile, config));
                         if (config.settings.syncDatabases == 'yes') {
@@ -90,7 +90,7 @@ class DownloadTask {
                 });
                 this.downloadTasks.push({
                     title: 'Dumping Magento database and moving it to server root (' + config.settings.strip + ')',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Retrieve database name
                         yield ssh.execCommand((0, console_1.sshMagentoRootFolderMagerunCommand)('db:info --format=json', config)).then((result) => {
                             if (result) {
@@ -161,7 +161,7 @@ class DownloadTask {
                 });
                 this.downloadTasks.push({
                     title: 'Downloading Magento database to localhost',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Download file and place it on localhost
                         let localDatabaseFolderLocation = config.customConfig.localDatabaseFolderLocation;
                         if (config.settings.import == 'no' && config.settings.wordpressImport == 'yes') {
@@ -192,7 +192,7 @@ class DownloadTask {
             if (config.settings.syncImages == 'yes' && config.settings.syncTypes.includes('Images')) {
                 this.downloadTasks.push({
                     title: 'Downloading media images & files',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Sync media to project folder
                         if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes') {
                             yield (0, console_1.localhostMagentoRootExec)(`mkdir pub/media/catalog && mkdir pub/media/wysiwyg`, config, true);
@@ -223,7 +223,7 @@ class DownloadTask {
             if (config.databases.databaseData.wordpress && config.databases.databaseData.wordpress == true && config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
                 this.downloadTasks.push({
                     title: 'Dumping Wordpress database and moving it to server root',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Download Wordpress database
                         yield ssh.execCommand((0, console_1.sshNavigateToMagentoRootCommand)('cd wp; cat wp-config.php', config)).then((result) => {
                             if (result) {
@@ -258,7 +258,7 @@ class DownloadTask {
                 });
                 this.downloadTasks.push({
                     title: 'Downloading Wordpress database to localhost',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         let wordpresslocalDatabaseLocation = config.customConfig.localDatabaseFolderLocation + '/' + config.wordpressConfig.database + '.sql';
                         if (config.settings.rsyncInstalled) {
                             yield (0, console_1.localhostRsyncDownloadCommand)(`~/${config.wordpressConfig.database}.sql`, `${config.customConfig.localDatabaseFolderLocation}`, config);
@@ -276,7 +276,7 @@ class DownloadTask {
             }
             this.downloadTasks.push({
                 title: 'Cleaning up and closing SSH connection',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Remove the magento database file on the server
                     yield ssh.execCommand('rm ' + config.serverVariables.databaseName + '.sql');
                     // Remove Magerun and close connection to SSH

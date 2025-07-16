@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 // @ts-ignore
-const staging_json_1 = tslib_1.__importDefault(require("../../config/databases/staging.json"));
+const staging_json_1 = (0, tslib_1.__importDefault)(require("../../config/databases/staging.json"));
 // @ts-ignore
-const production_json_1 = tslib_1.__importDefault(require("../../config/databases/production.json"));
-const path_1 = tslib_1.__importDefault(require("path"));
-const fs_1 = tslib_1.__importDefault(require("fs"));
-const os_1 = tslib_1.__importDefault(require("os"));
+const production_json_1 = (0, tslib_1.__importDefault)(require("../../config/databases/production.json"));
+const path_1 = (0, tslib_1.__importDefault)(require("path"));
+const fs_1 = (0, tslib_1.__importDefault)(require("fs"));
+const os_1 = (0, tslib_1.__importDefault)(require("os"));
 class DatabasesModel {
     constructor() {
         this.databasesList = [];
@@ -43,7 +43,7 @@ class DatabasesModel {
             'externalElasticsearchPort': ''
         };
         // Collect databases | collect single database
-        this.collectDatabaseData = (databaseKey, databaseType, collectStaging, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.collectDatabaseData = (databaseKey, databaseType, collectStaging, config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             // @ts-ignore
             var databases = staging_json_1.default.databases;
             // @ts-ignore

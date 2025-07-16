@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("console");
-const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
-const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
+const inquirer_1 = (0, tslib_1.__importDefault)(require("inquirer"));
+const databasesModel_1 = (0, tslib_1.__importDefault)(require("../models/databasesModel"));
 class DatabaseTypeQuestion {
     constructor() {
         this.databasesModel = new databasesModel_1.default();
         this.questions = [];
-        this.configure = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addQuestions(config);
             // Set database type
             yield inquirer_1.default
@@ -26,7 +26,7 @@ class DatabaseTypeQuestion {
             });
         });
         // Add questions
-        this.addQuestions = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addQuestions = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             this.questions.push({
                 type: 'list',
                 name: 'databaseType',

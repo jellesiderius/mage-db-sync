@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
-const selfUpdateController_1 = tslib_1.__importDefault(require("../controllers/selfUpdateController"));
+const selfUpdateController_1 = (0, tslib_1.__importDefault)(require("../controllers/selfUpdateController"));
 exports.default = (program) => program
     .command('self-update')
     .description('Updates the database synchronizer to the latest version')

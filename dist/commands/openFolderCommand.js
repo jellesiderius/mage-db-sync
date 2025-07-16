@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const openFolderController_1 = tslib_1.__importDefault(require("../controllers/openFolderController"));
+const openFolderController_1 = (0, tslib_1.__importDefault)(require("../controllers/openFolderController"));
 const console_1 = require("../utils/console");
 exports.default = (program) => program
     .command('open-folder')

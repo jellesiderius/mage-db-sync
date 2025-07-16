@@ -2,14 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 // @ts-ignore
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
+const settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/settings.json"));
 const node_ssh_1 = require("node-ssh");
-const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
-const os = tslib_1.__importStar(require("os"));
-const path = tslib_1.__importStar(require("path"));
+const databasesModel_1 = (0, tslib_1.__importDefault)(require("../models/databasesModel"));
+const os = (0, tslib_1.__importStar)(require("os"));
+const path = (0, tslib_1.__importStar)(require("path"));
 const listr2_1 = require("listr2");
-const command_exists_1 = tslib_1.__importDefault(require("command-exists"));
-const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
+const command_exists_1 = (0, tslib_1.__importDefault)(require("command-exists"));
+const inquirer_1 = (0, tslib_1.__importDefault)(require("inquirer"));
 inquirer_1.default.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
 class MainController {
     constructor() {
@@ -82,7 +82,7 @@ class MainController {
         this.sshSecondDatabase = new node_ssh_1.NodeSSH();
         // @ts-ignore
         this.databases = new databasesModel_1.default(this.config);
-        this.configureConfig = () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configureConfig = () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             // Fetch SSH key location, if non configured
             if (!this.config.customConfig.sshKeyLocation) {
                 this.config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/id_rsa';

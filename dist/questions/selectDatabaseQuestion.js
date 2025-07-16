@@ -2,20 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("console");
-const inquirer_1 = tslib_1.__importDefault(require("inquirer"));
-const databasesModel_1 = tslib_1.__importDefault(require("../models/databasesModel"));
-const path = tslib_1.__importStar(require("path"));
-const fs = tslib_1.__importStar(require("fs"));
-const command_exists_1 = tslib_1.__importDefault(require("command-exists"));
+const inquirer_1 = (0, tslib_1.__importDefault)(require("inquirer"));
+const databasesModel_1 = (0, tslib_1.__importDefault)(require("../models/databasesModel"));
+const path = (0, tslib_1.__importStar)(require("path"));
+const fs = (0, tslib_1.__importStar)(require("fs"));
+const command_exists_1 = (0, tslib_1.__importDefault)(require("command-exists"));
 class SelectDatabaseQuestion {
     constructor() {
         this.databasesModel = new databasesModel_1.default();
         this.questions = [];
-        this.configure = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addQuestions(config);
             yield inquirer_1.default
                 .prompt(this.questions)
-                .then((answers) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                .then((answers) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                 // Get database key to get database settings
                 let keyRegex = /\((.*)\)/i;
                 let selectedDatabase = answers.database;
@@ -62,7 +62,7 @@ class SelectDatabaseQuestion {
             });
         });
         // Add questions
-        this.addQuestions = (config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addQuestions = (config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             this.questions.push({
                 type: 'search-list',
                 name: 'database',

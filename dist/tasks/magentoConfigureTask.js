@@ -2,24 +2,24 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const console_1 = require("../utils/console");
-const settings_json_1 = tslib_1.__importDefault(require("../../config/settings.json"));
-const fs_1 = tslib_1.__importDefault(require("fs"));
+const settings_json_1 = (0, tslib_1.__importDefault)(require("../../config/settings.json"));
+const fs_1 = (0, tslib_1.__importDefault)(require("fs"));
 class MagentoConfigureTask {
     constructor() {
         this.configureTasks = [];
-        this.configure = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.configure = (list, config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             yield this.addTasks(list, config);
             return list;
         });
         // Add tasks
-        this.addTasks = (list, config) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+        this.addTasks = (list, config) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             list.add({
                 title: 'Configuring Magento for development usage',
                 task: (ctx, task) => task.newListr(this.configureTasks)
             });
             this.configureTasks.push({
                 title: "Replacing URL's and doing some preperation for development",
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     var dbQuery = '';
                     // Delete queries
                     var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/css/merge_css_files';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/js/minify_files';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/css/minify_files';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/js/enable_js_bundling';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%smtp%';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'msp_devtools/general/enabled';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'system/security/max_session_size_admin';", dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
@@ -55,7 +55,7 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: "Configuring ElasticSearch 7",
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // make sure amasty elastic is not working anymore
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete amasty_elastic* --all`, config);
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set amasty_elastic/connection/engine elasticsearch7`, config);
@@ -76,7 +76,7 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: 'Creating an admin user',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Remove all current admin users
                     var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
@@ -94,7 +94,7 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: 'Disable reCAPTCHA',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_frontend* --all`, config);
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_backend* --all`, config);
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete msp_securitysuite_recaptcha* --all`, config);
@@ -105,21 +105,21 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: 'Configuring cache',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
                 })
             });
             if (config.settings.syncImageTypes && !config.settings.syncImageTypes.includes('Product images') || !config.settings.syncImageTypes) {
                 this.configureTasks.push({
                     title: 'Removing placeholder configuration',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} config:store:delete catalog/placeholder/* --all`, config);
                     })
                 });
             }
             this.configureTasks.push({
                 title: 'Creating a dummy customer on every website',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Create new dummy customers for all websites
                     // Get all websites
                     let allWebsites = yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:website:list --format=json`, config);
@@ -134,7 +134,7 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: "Configuring Wordpress settings within Magento",
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // If wordpress is imported, we do nothing
                     if (config.settings.wordpressImport && config.settings.wordpressImport == 'yes') {
                         return;
@@ -148,7 +148,7 @@ class MagentoConfigureTask {
             });
             this.configureTasks.push({
                 title: 'Synchronizing module versions on localhost',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Downgrade module data in database
                     if (config.settings.isDdevActive) {
                         yield (0, console_1.localhostMagentoRootExec)(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
@@ -163,7 +163,7 @@ class MagentoConfigureTask {
             if (config.settings.runCommands && config.settings.runCommands == 'yes') {
                 this.configureTasks.push({
                     title: 'Running project commands',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         // Magerun2 commands
                         if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
                             yield (0, console_1.localhostMagentoRootExec)(config.settings.magerun2Command, config, false, true);
@@ -180,7 +180,7 @@ class MagentoConfigureTask {
                 // Use custom config file for the project
                 this.configureTasks.push({
                     title: 'Setting core_config_data configurations through .mage-db-sync-config.json',
-                    task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                    task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                         let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
                         let coreConfigData = jsonData.core_config_data;
                         if (coreConfigData) {
@@ -189,7 +189,7 @@ class MagentoConfigureTask {
                                 let storeId = key, values = jsonData.core_config_data[key];
                                 values = Object.entries(values);
                                 // @ts-ignore
-                                values.map((...args_1) => tslib_1.__awaiter(this, [...args_1], void 0, function* ([path, value] = entry) {
+                                values.map(([path, value] = entry) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                                     var scope = 'default';
                                     // @ts-ignore
                                     if (storeId != 0) {
@@ -210,14 +210,14 @@ class MagentoConfigureTask {
             }
             this.configureTasks.push({
                 title: 'Removing generated code',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Remove generated code
                     yield (0, console_1.localhostMagentoRootExec)("rm -rf generated/code", config);
                 })
             });
             this.configureTasks.push({
                 title: 'Reindexing & flushing Magento caches',
-                task: () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                task: () => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
                     // Flush the magento caches and import config data
                     // Reindex data, only when elastic is used
                     if (config.settings.elasticSearchUsed) {
