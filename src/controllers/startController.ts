@@ -16,6 +16,11 @@ import SyncImportTask from "../tasks/syncImportTask";
 import DownloadTypesQuestion from "../questions/downloadTypesQuestion";
 
 class StartController extends MainController {
+    // V2 compatibility method
+    public async execute(): Promise<void> {
+        return this.executeStart();
+    }
+
     executeStart = async (): Promise<void> => {
         // Ask all the questions to the user
         await this.askQuestions();
@@ -153,4 +158,5 @@ class StartController extends MainController {
     }
 }
 
-export default StartController
+export default StartController;
+export { StartController };  // Named export for V2

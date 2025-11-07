@@ -36,25 +36,42 @@ class DownloadTask {
             {
                 title: 'Connecting to server through SSH',
                 task: async (): Promise<void> => {
-                    // Open connection to SSH server
-                    await ssh.connect({
+                    // Read SSH key file if path is provided
+                    const sshConfig: any = {
                         host: config.databases.databaseData.server,
                         password: config.databases.databaseData.password,
                         username: config.databases.databaseData.username,
-                        port: config.databases.databaseData.port,
-                        privateKey: config.customConfig.sshKeyLocation,
-                        passphrase: config.customConfig.sshPassphrase
-                    });
+                        port: config.databases.databaseData.port
+                    };
+                    
+                    // If SSH key location is provided, read the file
+                    if (config.customConfig.sshKeyLocation && fs.existsSync(config.customConfig.sshKeyLocation)) {
+                        sshConfig.privateKey = fs.readFileSync(config.customConfig.sshKeyLocation, 'utf8');
+                        if (config.customConfig.sshPassphrase) {
+                            sshConfig.passphrase = config.customConfig.sshPassphrase;
+                        }
+                    }
+                    
+                    // Open connection to SSH server
+                    await ssh.connect(sshConfig);
 
                     if (config.settings.syncDatabases == 'yes') {
-                        await sshSecondDatabase.connect({
+                        const sshConfigSecond: any = {
                             host: config.databases.databaseDataSecond.server,
                             password: config.databases.databaseDataSecond.password,
                             username: config.databases.databaseDataSecond.username,
-                            port: config.databases.databaseDataSecond.port,
-                            privateKey: config.customConfig.sshKeyLocation,
-                            passphrase: config.customConfig.sshPassphrase
-                        });
+                            port: config.databases.databaseDataSecond.port
+                        };
+                        
+                        // If SSH key location is provided, read the file
+                        if (config.customConfig.sshKeyLocation && fs.existsSync(config.customConfig.sshKeyLocation)) {
+                            sshConfigSecond.privateKey = fs.readFileSync(config.customConfig.sshKeyLocation, 'utf8');
+                            if (config.customConfig.sshPassphrase) {
+                                sshConfigSecond.passphrase = config.customConfig.sshPassphrase;
+                            }
+                        }
+                        
+                        await sshSecondDatabase.connect(sshConfigSecond);
                     }
                 }
             }

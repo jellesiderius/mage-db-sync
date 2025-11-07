@@ -1,85 +1,126 @@
-import program from 'commander'
-import commandLoader from './commands/index'
-import fs from 'fs';
-// @ts-ignore
-import {getInstalledPath} from 'get-installed-path'
-import {error} from "./utils/console";
-import VersionCheck from "./utils/versionCheck";
-import kleur from "kleur";
-import process from 'process';
+/**
+ * mage-db-sync v2 - Main entry point
+ * 
+ * Clean V2 architecture with services and dependency injection
+ */
 
+import { Command } from 'commander';
+import kleur from 'kleur';
+import process from 'process';
+import fs from 'fs';
+import { getInstalledPath } from 'get-installed-path';
+import { error } from './utils/console';
+import VersionCheck from './utils/versionCheck';
+import { StartController } from './controllers/startController';
+import { OpenFolderController } from './controllers/openFolderController';
+import { SelfUpdateController } from './controllers/selfUpdateController';
+
+// Remove warning listeners
 process.removeAllListeners('warning');
 
-getInstalledPath('mage-db-sync').then(async (path: any) => {
-    // Lets make sure all required files are in place before running the tool
-    let npmPath = path;
-    let missingFiles = false;
-    let requiredFiles = [
-        'config/static-settings.json',
-        'config/settings.json',
-        'config/databases/staging.json',
-        'config/databases/production.json'
-    ];
+/**
+ * Main application entry
+ */
+async function main() {
+    try {
+        // Get npm installation path
+        const npmPath = await getInstalledPath('mage-db-sync');
+        
+        // Check for required files
+        let missingFiles = false;
+        const requiredFiles = [
+            'config/static-settings.json',
+            'config/settings.json',
+            'config/databases/staging.json',
+            'config/databases/production.json'
+        ];
 
-    new Promise((resolve, reject) => {
-        requiredFiles.forEach((path) => {
-            if (!fs.existsSync(`${npmPath}/${path}`)) {
-                error(`${path} was not found. Make sure this file exists (${npmPath}/${path})`);
+        for (const filePath of requiredFiles) {
+            if (!fs.existsSync(`${npmPath}/${filePath}`)) {
+                error(`${filePath} was not found. Make sure this file exists (${npmPath}/${filePath})`);
                 missingFiles = true;
             }
+        }
+
+        // If there are files missing, stop the program
+        if (missingFiles) {
+            return;
+        }
+
+        // Get package version
+        const packageJson = require('../package.json');
+        const versionCheck = new VersionCheck();
+        await versionCheck.getToolVersions();
+
+        // Build description
+        let description = `Magento Database Synchronizer v2, based on Magerun - ${packageJson.version}\n`;
+        description += `• Github Page: https://github.com/jellesiderius/mage-db-sync\n`;
+        description += `• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n`;
+        description += `• Report an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
+
+        if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
+            description += `\n\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
+        }
+
+        description += `\n\n${kleur.bgYellow(kleur.bold('Sponsored by:'))}`;
+        description += `\n• HYPR (https://www.hypershop.nl)`;
+
+        // Setup CLI
+        const program = new Command();
+
+        program
+            .version(packageJson.version)
+            .usage('<command> [options]')
+            .description(description);
+
+        // Start command - main sync operation
+        program
+            .command('start')
+            .description('Start database synchronization process')
+            .action(async () => {
+                const controller = new StartController();
+                await controller.execute();
+            });
+
+        // Open folder command
+        program
+            .command('open-folder')
+            .description('Open the database download folder')
+            .action(async () => {
+                const controller = new OpenFolderController();
+                await controller.execute();
+            });
+
+        // Self update command
+        program
+            .command('self-update')
+            .description('Update mage-db-sync to the latest version')
+            .action(async () => {
+                const controller = new SelfUpdateController();
+                await controller.execute();
+            });
+
+        // Handle unknown commands
+        program.on('command:*', () => {
+            program.help();
         });
-    });
 
-    // If there are files missing, stop the program from running
-    if (missingFiles) {
-        return;
+        // Parse arguments
+        program.parse(process.argv);
+
+        // Show help if no command provided
+        if (!process.argv.slice(2).length) {
+            program.outputHelp();
+            process.exit(0);
+        }
+    } catch (err) {
+        error(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        if (process.env.DEBUG && err instanceof Error) {
+            console.error(err.stack);
+        }
+        process.exit(1);
     }
+}
 
-    commandLoader(program);
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const packageJson = require('../package.json')
-    let versionCheck = new VersionCheck();
-    await versionCheck.getToolVersions();
-    let description = `Magento Database Synchronizer, based on Magerun - ${packageJson.version}\n• Github Page: https://github.com/jellesiderius/mage-db-sync\n• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n• Report an issue: https://github.com/jellesiderius/mage-db-sync/issues`;
-    if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
-        description = `${description}\nRun 'mage-db-sync self-update' to download the newest version: ${versionCheck.config.latestVersion}`;
-    }
-
-    description += `\n\n${kleur.bgYellow(kleur.bold('Sponsored by:'))}
-• HYPR (https://www.hypershop.nl)`;
-
-    let deleteFiles = [
-        `${npmPath}/dist/controllers/importController.js`,
-        `${npmPath}/dist/commands/importCommand.js`
-    ];
-
-    // Remove old files... Kinda dirty but it works
-    new Promise((resolve, reject) => {
-        deleteFiles.forEach((path) => {
-            if (fs.existsSync(`${path}`)) {
-                fs.unlinkSync(`${path}`)
-            }
-
-            if (fs.existsSync(`${path}.map`)) {
-                fs.unlinkSync(`${path}.map`)
-            }
-        });
-    });
-
-    program
-        .version(packageJson.version)
-        .usage('<command> [options]')
-        .description(description)
-
-    program.on('command:*', () => {
-        program.help()
-    })
-
-    program.parse(process.argv)
-
-    if (!process.argv.slice(2).length) {
-        program.outputHelp()
-        process.exit()
-    }
-});
+// Run the application
+main();

@@ -1,0 +1,147 @@
+/**
+ * Core type definitions for mage-db-sync v2
+ */
+
+export interface DatabaseConfig {
+    username: string;
+    password: string;
+    server: string;
+    domainFolder: string;
+    port: number;
+    localProjectFolder?: string;
+    externalProjectFolder: string;
+    wordpress?: boolean;
+    externalPhpPath?: string;
+    localProjectUrl?: string;
+    commandsFolder?: string;
+    stagingUsername?: string;
+    externalElasticsearchPort?: string;
+    sshKeyName?: string;
+    sshKeyLocation?: string;
+}
+
+export interface DatabaseListItem {
+    key: string;
+    domainFolder: string;
+    username: string;
+    displayName: string;
+}
+
+export interface SettingsConfig {
+    general: {
+        localDomainExtension: string;
+        elasticsearchPort: string;
+        databaseLocation: string;
+    };
+    ssh: {
+        keyLocation: string;
+        passphrase: string;
+    };
+    magentoBackend: {
+        adminUsername: string;
+        adminPassword: string;
+        adminEmailAddress: string;
+    };
+}
+
+export interface StaticSettings {
+    settings: {
+        databaseStripDevelopment: string;
+        databaseStripKeepCustomerData: string;
+        databaseStripStaging: string;
+        databaseIncludeStaging: string;
+    };
+}
+
+export interface ProjectConfig {
+    core_config_data?: Record<string, Record<string, string | number>>;
+    databaseStripDevelopment?: string;
+    databaseStripFull?: string;
+}
+
+export interface AppConfig {
+    customConfig: {
+        sshKeyLocation: string;
+        sshPassphrase: string;
+        localDatabaseFolderLocation: string;
+        localDomainExtension: string;
+    };
+    requirements: {
+        magerun2Version: string;
+    };
+    serverVariables: {
+        magentoVersion: number;
+        externalPhpPath: string;
+        magentoRoot: string;
+        magerunFile: string;
+        databaseName: string;
+        secondDatabaseMagerun2: string;
+        secondDatabaseExternalPhpPath: string;
+        wordpress?: boolean;
+    };
+    settings: {
+        currentFolder: string;
+        currentFolderName: string;
+        strip: string;
+        syncImages: string;
+        magentoLocalhostDomainName: string;
+        rsyncInstalled: boolean;
+        elasticSearchUsed: boolean;
+        isDdevProject: boolean;
+        isDdevActive: boolean;
+        import: string;
+        wordpressImport: string;
+        wordpressDownload: string;
+        currentFolderIsMagento: boolean;
+        currentFolderhasWordpress: boolean;
+        runCommands: boolean;
+        magerun2Command: string;
+        magerun2CommandLocal: string;
+        wpCommandLocal: string;
+        databaseCommand: string;
+        syncDatabases: string;
+        syncImageTypes: string[] | null;
+        syncTypes: string[] | null;
+    };
+    finalMessages: {
+        magentoDatabaseLocation: string;
+        magentoDatabaseIncludeLocation: string;
+        wordpressDatabaseLocation: string;
+        importDomain: string;
+        domains: string[];
+        syncDomain?: string;
+        syncDomains?: string[];
+    };
+    databases: {
+        databasesList: DatabaseListItem[] | null;
+        databaseType: string | null;
+        databaseData: DatabaseConfig | null;
+        databaseDataSecond: DatabaseConfig | null;
+    };
+    wordpressConfig: {
+        prefix: string;
+        username: string;
+        password: string;
+        host: string;
+        database: string;
+    };
+}
+
+export interface SSHConnection {
+    host: string;
+    port: number;
+    username: string;
+    password?: string;
+    privateKey?: string;
+    passphrase?: string;
+}
+
+export interface CommandResult {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+}
+
+export type DatabaseType = 'staging' | 'production';
+export type StripType = 'development' | 'keep customer data' | 'full and human readable' | 'staging';
+export type SyncType = 'media' | 'pub/media' | 'var/import';

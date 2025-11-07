@@ -38,7 +38,8 @@ class DatabasesModel {
 		'externalPhpPath': '',
 		'localProjectUrl': '',
 		'commandsFolder': '',
-		'externalElasticsearchPort': ''
+		'externalElasticsearchPort': '',
+		'sshKeyLocation': ''
 	};
 
 	// Collect databases | collect single database

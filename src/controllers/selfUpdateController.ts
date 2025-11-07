@@ -10,6 +10,11 @@ import VersionCheck from "../utils/versionCheck";
 class SelfUpdateController {
     private versionCheck = new VersionCheck();
 
+    // V2 compatibility method
+    public async execute(): Promise<void> {
+        await this.executeStart(undefined);
+    }
+
     executeStart = async (serviceName: string | undefined): Promise<boolean> => {
         await this.versionCheck.getToolVersions();
 
@@ -39,4 +44,5 @@ class SelfUpdateController {
     }
 }
 
-export default SelfUpdateController
+export default SelfUpdateController;
+export { SelfUpdateController };  // Named export for V2

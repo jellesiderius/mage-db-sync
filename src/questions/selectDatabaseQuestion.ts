@@ -1,10 +1,14 @@
-import { error } from "console";
 import inquirer from 'inquirer'
 import DatabasesModel from "../models/databasesModel";
 import * as path from 'path'
 import * as fs from 'fs'
+// @ts-ignore
 import {command} from "commander";
+// @ts-ignore
 import CommandExists from "command-exists";
+
+const searchList = require("inquirer-search-list");
+inquirer.registerPrompt("search-list", searchList);
 
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
@@ -68,7 +72,7 @@ class SelectDatabaseQuestion {
 
         })
         .catch((err: { message: any; }) => {
-            error(`Something went wrong: ${err.message}`)
+            console.error(`Something went wrong: ${err.message}`)
         });
     }
 
