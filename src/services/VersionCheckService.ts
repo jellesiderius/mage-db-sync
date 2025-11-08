@@ -5,11 +5,21 @@
 import fetch from 'node-fetch';
 
 export class VersionCheckService {
+    private static instance: VersionCheckService;
     public latestVersion: string = '';
-    private currentVersion: string;
+    private currentVersion: string = '';
 
-    constructor(currentVersion: string) {
-        this.currentVersion = currentVersion;
+    private constructor() {}
+
+    public static getInstance(): VersionCheckService {
+        if (!VersionCheckService.instance) {
+            VersionCheckService.instance = new VersionCheckService();
+        }
+        return VersionCheckService.instance;
+    }
+
+    public setCurrentVersion(version: string): void {
+        this.currentVersion = version;
     }
 
     /**

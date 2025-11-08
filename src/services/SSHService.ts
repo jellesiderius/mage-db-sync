@@ -7,11 +7,19 @@ import { SSHConnection } from '../types';
 import { SSHError } from '../types/errors';
 
 export class SSHService {
+    private static instance: SSHService;
     private ssh: NodeSSH;
     private connected: boolean = false;
 
-    constructor() {
+    private constructor() {
         this.ssh = new NodeSSH();
+    }
+
+    public static getInstance(): SSHService {
+        if (!SSHService.instance) {
+            SSHService.instance = new SSHService();
+        }
+        return SSHService.instance;
     }
 
     /**
@@ -107,5 +115,15 @@ export class SSHService {
      */
     public getConnection(): NodeSSH {
         return this.ssh;
+    }
+
+    /**
+     * Close all connections (for compatibility with SSHConnectionPool)
+     */
+    public async closeAll(): Promise<void> {
+        if (this.connected) {
+            this.ssh.dispose();
+            this.connected = false;
+        }
     }
 }

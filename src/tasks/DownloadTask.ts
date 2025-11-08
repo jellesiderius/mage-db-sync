@@ -15,8 +15,14 @@ import staticConfigFile from '../../config/static-settings.json';
 import configFile from '../../config/settings.json';
 import fs from 'fs';
 
+interface TaskItem {
+    title: string;
+    task: (ctx?: any, task?: any) => Promise<void | boolean>;
+    skip?: string | (() => boolean);
+}
+
 class DownloadTask {
-    private downloadTasks = [];
+    private downloadTasks: TaskItem[] = [];
 
     configure = async (list: any, config: any, ssh: any, sshSecondDatabase: any) => {
         await this.addTasks(list, config, ssh, sshSecondDatabase);
@@ -64,10 +70,11 @@ class DownloadTask {
                 return ssh;
             });
         } catch (error) {
+            const err = error as Error;
             throw new Error(
                 `Failed to connect to ${host}\n` +
                 `💡 Check your SSH credentials and key format\n` +
-                `Error: ${error.message}`
+                `Error: ${err.message}`
             );
         }
     }

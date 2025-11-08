@@ -40,10 +40,11 @@ class StartController extends MainController {
 
             process.exit(0);
         } catch (e) {
-            UI.error(`Operation failed: ${e.message}`);
+            const error = e as Error;
+            UI.error(`Operation failed: ${error.message}`);
 
-            if (e.stack) {
-                console.log('\n' + e.stack);
+            if (error.stack) {
+                console.log('\n' + error.stack);
             }
 
             await SSHConnectionPool.closeAll();
@@ -57,7 +58,7 @@ class StartController extends MainController {
 
         const tasks = [];
 
-        if (this.config.settings.syncTypes && this.config.settings.syncTypes.includes('Magento database')) {
+        if (this.config.settings.syncTypes && Array.isArray(this.config.settings.syncTypes) && this.config.settings.syncTypes.includes('Magento database')) {
             tasks.push({
                 label: 'Download Database',
                 value: `${this.config.databases.databaseType} (${this.config.settings.strip || 'full'})`
@@ -85,7 +86,7 @@ class StartController extends MainController {
             });
         }
 
-        if (this.config.settings.syncDatabases === 'yes') {
+        if (this.config.settings.syncDatabases === 'yes' && this.config.databases.databaseData && this.config.databases.databaseDataSecond) {
             tasks.push({
                 label: 'Sync Databases',
                 value: `${this.config.databases.databaseData.username} ⟷ ${this.config.databases.databaseDataSecond.username}`
@@ -154,9 +155,10 @@ class StartController extends MainController {
         let selectDatabaseQuestion = await new SelectDatabaseQuestion();
         await selectDatabaseQuestion.configure(this.config);
 
-        // @ts-ignore
         if (
+            this.config.databases.databaseData &&
             this.config.databases.databaseData.stagingUsername &&
+            this.config.databases.databaseDataSecond &&
             this.config.databases.databaseDataSecond.username &&
             this.config.settings.rsyncInstalled
         ) {

@@ -7,6 +7,16 @@ import path from 'path';
 import { FileSystemError } from '../types/errors';
 
 export class FileSystemService {
+    private static instance: FileSystemService;
+
+    private constructor() {}
+
+    public static getInstance(): FileSystemService {
+        if (!FileSystemService.instance) {
+            FileSystemService.instance = new FileSystemService();
+        }
+        return FileSystemService.instance;
+    }
     /**
      * Check if directory exists
      */

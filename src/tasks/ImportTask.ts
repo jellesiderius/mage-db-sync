@@ -1,8 +1,14 @@
 import {localhostMagentoRootExec, success} from '../utils/Console';
 import { Listr } from 'listr2';
 
+interface TaskItem {
+    title: string;
+    task: (ctx?: any, task?: any) => Promise<void | boolean>;
+    skip?: string | (() => boolean);
+}
+
 class ImportTask {
-    private importTasks = [];
+    private importTasks: TaskItem[] = [];
 
     configure = async (list: any, config: any) => {
         await this.addTasks(list, config);

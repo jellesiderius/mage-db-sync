@@ -12,7 +12,7 @@ inquirer.registerPrompt("search-list", searchList);
 
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
-    private questions = [];
+    private questions: any[] = [];
 
     configure = async (config: any) => {
         await this.addQuestions(config);

@@ -4,7 +4,7 @@ import DatabasesModel from "../models/DatabasesModel";
 
 class syncDatabasesQuestions {
     private databasesModel = new DatabasesModel();
-    private questionsOne = [];
+    private questionsOne: any[] = [];
 
     configure = async (config: any) => {
         await this.addQuestions(config);

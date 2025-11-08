@@ -10,6 +10,16 @@ import { CommandResult } from '../types';
 const execAsync = promisify(exec);
 
 export class CommandService {
+    private static instance: CommandService;
+
+    private constructor() {}
+
+    public static getInstance(): CommandService {
+        if (!CommandService.instance) {
+            CommandService.instance = new CommandService();
+        }
+        return CommandService.instance;
+    }
     /**
      * Execute local command
      */

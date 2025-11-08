@@ -3,8 +3,14 @@ import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 import fs from "fs";
 
+interface TaskItem {
+    title: string;
+    task: (ctx?: any, task?: any) => Promise<void | boolean>;
+    skip?: string | (() => boolean);
+}
+
 class MagentoConfigureTask {
-    private configureTasks = [];
+    private configureTasks: TaskItem[] = [];
 
     configure = async (list: any, config: any) => {
         await this.addTasks(list, config);

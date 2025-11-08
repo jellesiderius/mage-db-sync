@@ -7,9 +7,15 @@ import {
 import { Listr } from 'listr2';
 import fs from 'fs';
 
+interface TaskItem {
+    title: string;
+    task: (ctx?: any, task?: any) => Promise<void | boolean>;
+    skip?: string | (() => boolean);
+}
+
 class SyncImportTask {
-    private importTasks = [];
-    private configureTasks = [];
+    private importTasks: TaskItem[] = [];
+    private configureTasks: TaskItem[] = [];
     private stagingValues = {};
 
     configure = async (list: any, config: any, ssh: any) => {

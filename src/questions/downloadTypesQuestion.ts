@@ -3,7 +3,7 @@ import inquirer from 'inquirer'
 import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
 
 class DownloadTypesQuestion {
-    private questionsOne = [];
+    private questionsOne: any[] = [];
 
     configure = async (config: any) => {
         inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);

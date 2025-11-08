@@ -9,7 +9,19 @@ import { ConfigService } from './ConfigService';
 import { DatabaseError } from '../types/errors';
 
 export class DatabaseService {
-    constructor(private configService: ConfigService) {}
+    private static instance: DatabaseService;
+    private configService: ConfigService;
+
+    private constructor() {
+        this.configService = ConfigService.getInstance();
+    }
+
+    public static getInstance(): DatabaseService {
+        if (!DatabaseService.instance) {
+            DatabaseService.instance = new DatabaseService();
+        }
+        return DatabaseService.instance;
+    }
 
     /**
      * Get list of databases for a given type

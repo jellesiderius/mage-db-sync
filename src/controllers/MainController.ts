@@ -51,8 +51,8 @@ class MainController {
             'wpCommandLocal': 'wp',
             'databaseCommand': '',
             'syncDatabases': 'no',
-            'syncImageTypes': null,
-            'syncTypes': null
+            'syncImageTypes': null as string[] | null,
+            'syncTypes': null as string[] | null
         },
         'finalMessages': {
             'magentoDatabaseLocation': '',
@@ -62,10 +62,10 @@ class MainController {
             'domains': []
         },
         'databases': {
-            'databasesList': null,
-            'databaseType': null,
-            'databaseData': null,
-            'databaseDataSecond': null
+            'databasesList': null as any,
+            'databaseType': null as string | null,
+            'databaseData': null as any,
+            'databaseDataSecond': null as any
         },
         'wordpressConfig': {
             'prefix': '',

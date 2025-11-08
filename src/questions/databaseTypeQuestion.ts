@@ -4,7 +4,7 @@ import DatabasesModel from "../models/DatabasesModel";
 
 class DatabaseTypeQuestion {
     private databasesModel = new DatabasesModel();
-    private questions = [];
+    private questions: any[] = [];
 
     configure = async (config: any) => {
         await this.addQuestions(config);

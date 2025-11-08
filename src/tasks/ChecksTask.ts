@@ -13,8 +13,14 @@ interface CheckResult {
     duration?: number;
 }
 
+interface TaskItem {
+    title: string;
+    task: (ctx?: any, task?: any) => Promise<void | boolean>;
+    skip?: string | (() => boolean);
+}
+
 class ChecksTask {
-    private checkTasks = [];
+    private checkTasks: TaskItem[] = [];
 
     configure = async (list: any, config: any, ssh: any) => {
         await this.addTasks(list, config, ssh);
@@ -209,7 +215,7 @@ class ChecksTask {
 
                         let envHost = null;
 
-                        for (const [key, value] of Object.entries(host)) {
+                        for (const [key, value] of Object.entries(host as Record<string, any>)) {
                             const hostName = (value as any)['Name'];
                             const hostValue = (value as any)['Value'];
                             if (hostName.toLowerCase() === 'host') {

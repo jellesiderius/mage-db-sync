@@ -11,9 +11,9 @@
         "./node_modules/@types",
         "./src/types"
       ],
-      "strict": false,
-      "strictNullChecks": false,
-      "noImplicitAny": false,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
       "noImplicitReturns": false,
       "esModuleInterop": true,
       "resolveJsonModule": true,
