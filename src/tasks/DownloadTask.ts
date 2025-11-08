@@ -38,28 +38,17 @@ class DownloadTask {
     };
 
     /**
-     * Detect best compression available on remote server
-     * Priority: zstd > gzip > none
+     * Detect gzip compression available on remote server
+     * Using gzip for maximum compatibility and stability
      */
-    private async detectBestCompression(ssh: any): Promise<{ type: 'zstd' | 'gzip' | 'none'; level: string; extension: string }> {
+    private async detectCompression(ssh: any): Promise<{ type: 'gzip' | 'none'; level: string; extension: string }> {
         const logger = this.services.getLogger();
-        
-        // Check for zstd
-        try {
-            const zstdCheck = await ssh.execCommand('which zstd');
-            if (zstdCheck.code === 0) {
-                logger.info('Using zstd compression (best performance)', { level: '-3' });
-                return { type: 'zstd', level: '-3', extension: '.zst' };
-            }
-        } catch (e) {
-            // zstd not available
-        }
         
         // Check for gzip
         try {
             const gzipCheck = await ssh.execCommand('which gzip');
             if (gzipCheck.code === 0) {
-                logger.info('Using gzip compression (zstd not available)', { level: '-6' });
+                logger.info('Using gzip compression', { level: '-6' });
                 return { type: 'gzip', level: '-6', extension: '.gz' };
             }
         } catch (e) {
@@ -67,7 +56,7 @@ class DownloadTask {
         }
         
         // No compression available
-        logger.warn('No compression tools available on server, using uncompressed SQL');
+        logger.warn('Gzip not available on server, using uncompressed SQL');
         return { type: 'none', level: '', extension: '' };
     }
 
@@ -292,9 +281,9 @@ class DownloadTask {
                     PerformanceMonitor.start('database-dump');
                     const logger = this.services.getLogger();
                     
-                    // Detect best compression available on remote server
-                    task.output = EnhancedProgress.step(5, 6, `Detecting compression tools...`);
-                    const compression = await this.detectBestCompression(ssh);
+                    // Detect gzip compression available on remote server
+                    task.output = EnhancedProgress.step(5, 6, `Detecting compression...`);
+                    const compression = await this.detectCompression(ssh);
                     
                     task.output = EnhancedProgress.step(5, 6, `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump...`);
 
@@ -324,9 +313,7 @@ class DownloadTask {
                     }
                     
                     // Build compression command based on what's available
-                    if (compression.type === 'zstd') {
-                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | zstd ${compression.level} -o ${databaseFileName}`;
-                    } else if (compression.type === 'gzip') {
+                    if (compression.type === 'gzip') {
                         dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | gzip ${compression.level} > ${databaseFileName}`;
                     } else {
                         // No compression - just dump to file
