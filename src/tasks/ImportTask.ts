@@ -1,9 +1,8 @@
-import {localhostMagentoRootExec, success} from '../utils/Console';
+import { localhostMagentoRootExec } from '../utils/Console';
 import { Listr } from 'listr2';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
 import { EnhancedProgress } from '../utils/EnhancedProgress';
-import { UI } from '../utils/UI';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import * as fs from 'fs';

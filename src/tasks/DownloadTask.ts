@@ -14,7 +14,6 @@ import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
 import { EnhancedProgress } from '../utils/EnhancedProgress';
 import staticConfigFile from '../../config/static-settings.json';
-import configFile from '../../config/settings.json';
 import fs from 'fs';
 import chalk from 'chalk';
 

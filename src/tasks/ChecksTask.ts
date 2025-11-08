@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
 import { UI } from '../utils/UI';
-import { EnhancedProgress } from '../utils/EnhancedProgress';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
 import configFile from '../../config/settings.json';
 
