@@ -37,15 +37,15 @@ class StartController extends MainController {
             await this.showCompletionMessage();
 
             await SSHConnectionPool.closeAll();
-            
+
             process.exit(0);
         } catch (e) {
             UI.error(`Operation failed: ${e.message}`);
-            
+
             if (e.stack) {
                 console.log('\n' + e.stack);
             }
-            
+
             await SSHConnectionPool.closeAll();
             process.exit(1);
         }
@@ -96,13 +96,8 @@ class StartController extends MainController {
 
         console.log('');
         UI.box(
-            '⏳ This may take a few minutes...\n\n' +
-            '💡 Grab some ☕ coffee while you wait!\n\n' +
-            '⚡ V2 Performance features active:\n' +
-            '  • Parallel validation checks\n' +
-            '  • SSH connection pooling\n' +
-            '  • Real-time progress tracking\n' +
-            '  • Performance monitoring',
+            'This may take a few minutes...\n\n' +
+            'Grab some ☕ coffee while you wait!',
             { type: 'info', title: 'Starting Operations' }
         );
     }
@@ -148,8 +143,6 @@ class StartController extends MainController {
 
             UI.box(message, { type: 'success', title: '📝 WordPress Import Complete' });
         }
-
-        PerformanceMonitor.showSummary();
     }
 
     askQuestions = async () => {
