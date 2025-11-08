@@ -77,7 +77,7 @@ export class ProgressDisplay {
         const bar = this.bars.get(id);
         if (bar) {
             bar.update(bar.getTotal(), {
-                label: chalk.green(`✓ ${message || 'Complete'}`.padEnd(30)),
+                label: chalk.green(`${message || 'Complete'}`.padEnd(30)),
                 speed: chalk.green('Done'),
                 percentage: '100'
             });

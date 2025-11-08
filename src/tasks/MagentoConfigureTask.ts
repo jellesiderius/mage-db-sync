@@ -17,6 +17,21 @@ class MagentoConfigureTask {
         return list;
     }
 
+    /**
+     * Execute SQL query - uses direct MySQL for DDEV, magerun2 for standard
+     * This is much faster for DDEV as it skips the magerun2 wrapper
+     */
+    private async executeQuery(query: string, config: any): Promise<void> {
+        if (config.settings.isDdevActive) {
+            // Direct MySQL for DDEV - much faster!
+            const escapedQuery = query.replace(/"/g, '\\"');
+            await localhostMagentoRootExec(`ddev mysql -e "${escapedQuery}"`, config);
+        } else {
+            // Standard environment uses magerun2
+            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${query}"`, config);
+        }
+    }
+
     // Add tasks
     addTasks = async (list: any, config: any) => {
         list.add(
@@ -92,7 +107,7 @@ class MagentoConfigureTask {
                     // Set import domain for final message on completing all tasks
                     config.finalMessages.importDomain = baseUrl;
 
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+                    await this.executeQuery(dbQuery, config);
 
                     let allUrlsJson = sshMagentoRootFolderMagerunCommand('config:store:get "web/secure/base_url" --format=json', config, false);
 
@@ -140,7 +155,7 @@ class MagentoConfigureTask {
                             ('default', 0, 'amasty_elastic/connection/engine', 'elasticsearch7');
                     `;
                     
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${esQuery}"`, config);
+                    await this.executeQuery(esQuery, config);
                 }
             }
         );
@@ -155,7 +170,7 @@ class MagentoConfigureTask {
                     
                     // Run db query and auth entries in parallel
                     await Promise.all([
-                        localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config),
+                        this.executeQuery(dbQuery, config),
                         localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config)
                     ]);
 
@@ -187,7 +202,7 @@ class MagentoConfigureTask {
                             ('default', 0, 'recaptcha/general/enabled', '0');
                     `;
                     
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${captchaQuery}"`, config);
+                    await this.executeQuery(captchaQuery, config);
                 }
             }
         );
@@ -252,7 +267,7 @@ class MagentoConfigureTask {
                                 ('default', 0, 'wordpress/setup/mode', 'NULL'),
                                 ('default', 0, 'wordpress/multisite/enabled', '0');
                         `;
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${wpQuery}"`, config);
+                        await this.executeQuery(wpQuery, config);
                     }
                 }
             }
@@ -288,7 +303,7 @@ class MagentoConfigureTask {
                         // Database queries
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
                             let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
-                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query '` + dbQuery + `'`, config, false, true);
+                            await this.executeQuery(dbQuery, config);
                         }
                     }
                 }
@@ -329,7 +344,7 @@ class MagentoConfigureTask {
                             });
 
                             if (dbQuery) {
-                                await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
+                                await this.executeQuery(dbQuery, config);
                             }
                         }
                     }
@@ -351,42 +366,81 @@ class MagentoConfigureTask {
             {
                 title: 'Reindexing & flushing Magento caches',
                 task: async (): Promise<void> => {
-                    // Batch cache operations together
+                    // Run cache and reindex operations separately for better error handling
                     if (config.settings.elasticSearchUsed) {
-                        // Clear Elasticsearch index
+                        // Clear Elasticsearch index (ignore errors if doesn't exist)
                         if (config.settings.isDdevActive) {
-                            await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config);
+                            try {
+                                await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config, true);
+                            } catch (e) {
+                                // Ignore errors - index might not exist yet
+                            }
                         }
 
-                        // Batch: enable cache + flush + config import in ONE command
+                        // Enable cache first
                         await localhostMagentoRootExec(
-                            `${config.settings.magerun2CommandLocal} cache:enable && ${config.settings.magerun2CommandLocal} cache:flush && ${config.settings.magerun2CommandLocal} app:config:import`, 
-                            config
+                            `${config.settings.magerun2CommandLocal} cache:enable`, 
+                            config,
+                            true // silent errors
+                        );
+
+                        // Flush cache
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} cache:flush`, 
+                            config,
+                            true // silent errors
+                        );
+
+                        // Import config (separate from cache to avoid timing issues)
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} app:config:import`, 
+                            config,
+                            true // silent errors - might fail on first run
                         );
 
                         // Reindex only essential indexes (skip slow ones)
-                        // Run index:reset and reindex in ONE command with && for speed
                         const indexers = 'catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock';
                         
                         if (config.settings.isDdevActive) {
+                            // Reset indexes
                             await localhostMagentoRootExec(
-                                `ddev exec bin/magento index:reset ${indexers} && ddev exec bin/magento index:reindex ${indexers}`, 
-                                config
+                                `ddev exec bin/magento index:reset ${indexers}`, 
+                                config,
+                                true
                             );
-                            // Run catalogsearch_fulltext separately (can be slow, user can run manually if needed)
-                            // await localhostMagentoRootExec(`ddev exec bin/magento index:reindex catalogsearch_fulltext`, config);
+                            // Reindex separately
+                            await localhostMagentoRootExec(
+                                `ddev exec bin/magento index:reindex ${indexers}`, 
+                                config,
+                                true
+                            );
                         } else {
+                            // Reset indexes
                             await localhostMagentoRootExec(
-                                `${config.settings.magerun2CommandLocal} index:reset ${indexers} && ${config.settings.magerun2CommandLocal} index:reindex ${indexers}`, 
-                                config
+                                `${config.settings.magerun2CommandLocal} index:reset ${indexers}`, 
+                                config,
+                                true
                             );
-                            // Skip catalogsearch_fulltext for speed - user can run manually
+                            // Reindex separately
+                            await localhostMagentoRootExec(
+                                `${config.settings.magerun2CommandLocal} index:reindex ${indexers}`, 
+                                config,
+                                true
+                            );
                         }
                     } else {
                         // No ElasticSearch - just cache operations
+                        // Enable cache
                         await localhostMagentoRootExec(
-                            `${config.settings.magerun2CommandLocal} cache:enable && ${config.settings.magerun2CommandLocal} cache:flush`, 
-                            config
+                            `${config.settings.magerun2CommandLocal} cache:enable`, 
+                            config,
+                            true
+                        );
+                        // Flush cache
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} cache:flush`, 
+                            config,
+                            true
                         );
                     }
 
@@ -400,11 +454,11 @@ class MagentoConfigureTask {
                         }
                     }
 
-                    // Final config import
+                    // Final config import (silent errors - might fail on first run)
                     if (config.settings.isDdevActive) {
-                        await localhostMagentoRootExec(`ddev exec bin/magento app:config:import`, config);
+                        await localhostMagentoRootExec(`ddev exec bin/magento app:config:import`, config, true);
                     } else {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} app:config:import`, config);
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} app:config:import`, config, true);
                     }
                 }
             }

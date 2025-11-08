@@ -43,7 +43,7 @@ class DownloadTask {
      */
     private async detectCompression(ssh: any): Promise<{ type: 'gzip' | 'none'; level: string; extension: string }> {
         const logger = this.services.getLogger();
-        
+
         // Check for gzip
         try {
             const gzipCheck = await ssh.execCommand('which gzip');
@@ -54,7 +54,7 @@ class DownloadTask {
         } catch (e) {
             // gzip not available
         }
-        
+
         // No compression available
         logger.warn('Gzip not available on server, using uncompressed SQL');
         return { type: 'none', level: '', extension: '' };
@@ -119,15 +119,15 @@ class DownloadTask {
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('ssh-connection');
                 const logger = this.services.getLogger();
-                
+
                 task.output = EnhancedProgress.step(1, 6, 'Establishing SSH connection...');
                 logger.info('Connecting to SSH', { host: config.databases.databaseData.server });
-                
+
                 await this.connectSSH(ssh, config, false);
-                task.output = '✓ SSH connection established';
+                task.output = 'SSH connection established';
 
                 const duration = PerformanceMonitor.end('ssh-connection');
-                task.title = `✓ Connected to server through SSH (${ProgressDisplay.formatDuration(duration)})`;
+                task.title = `Connected to server through SSH`;
             }
         });
 
@@ -136,7 +136,7 @@ class DownloadTask {
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('server-settings');
                 const logger = this.services.getLogger();
-                
+
                 task.output = EnhancedProgress.step(2, 6, 'Detecting Magento version...');
 
                 await ssh
@@ -153,9 +153,9 @@ class DownloadTask {
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             config.serverVariables.magentoRoot = serverValues[1];
                             config.serverVariables.externalPhpPath = serverValues[2];
-                            
-                            task.output = `✓ Detected Magento ${config.serverVariables.magentoVersion}`;
-                            logger.info('Server settings retrieved', { 
+
+                            task.output = `Detected Magento ${config.serverVariables.magentoVersion}`;
+                            logger.info('Server settings retrieved', {
                                 magentoVersion: config.serverVariables.magentoVersion,
                                 root: config.serverVariables.magentoRoot
                             });
@@ -177,7 +177,7 @@ class DownloadTask {
                 }
 
                 const duration = PerformanceMonitor.end('server-settings');
-                task.title = `✓ Retrieved server settings (${ProgressDisplay.formatDuration(duration)})`;
+                task.title = `Retrieved server settings (${ProgressDisplay.formatDuration(duration)})`;
             }
         });
 
@@ -186,7 +186,7 @@ class DownloadTask {
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('magerun-download');
                 const logger = this.services.getLogger();
-                
+
                 task.output = EnhancedProgress.step(3, 6, 'Checking if Magerun exists...');
 
                 let magerunExists = await ssh
@@ -204,12 +204,12 @@ class DownloadTask {
                 if (!magerunExists) {
                     task.output = '⚡ Uploading Magerun (0%)...';
                     logger.info('Uploading Magerun', { file: config.serverVariables.magerunFile });
-                    
+
                     await ssh.putFile(
                         `${__dirname}/../../files/${config.serverVariables.magerunFile}`,
                         `${config.serverVariables.magentoRoot}/${config.serverVariables.magerunFile}`
                     );
-                    
+
                     task.output = '✓ Magerun uploaded (100%)';
                 } else {
                     logger.info('Magerun already exists', { file: config.serverVariables.magerunFile });
@@ -218,7 +218,7 @@ class DownloadTask {
 
                 const duration = PerformanceMonitor.end('magerun-download');
                 if (!magerunExists) {
-                    task.title = `✓ Downloaded Magerun to server (${ProgressDisplay.formatDuration(duration)})`;
+                    task.title = `Downloaded Magerun to server (${ProgressDisplay.formatDuration(duration)})`;
                 }
             }
         });
@@ -235,10 +235,10 @@ class DownloadTask {
                     .then((result: any) => {
                         if (result && result.stdout) {
                             const output = stripOutputString(result.stdout);
-                            
+
                             try {
                                 let jsonResult = JSON.parse(output);
-                                
+
                                 for (const key in jsonResult) {
                                     if (jsonResult[key].Name && jsonResult[key].Name.toLowerCase() === 'dbname') {
                                         config.serverVariables.databaseName = jsonResult[key].Value;
@@ -249,10 +249,10 @@ class DownloadTask {
                                 if (config.serverVariables.magentoVersion === 1) {
                                     config.serverVariables.databaseName = jsonResult[3]?.Value;
                                 }
-                                
-                                task.output = `✓ Found database: ${config.serverVariables.databaseName}`;
-                                logger.info('Database name retrieved', { 
-                                    database: config.serverVariables.databaseName 
+
+                                task.output = `Found database: ${config.serverVariables.databaseName}`;
+                                logger.info('Database name retrieved', {
+                                    database: config.serverVariables.databaseName
                                 });
                             } catch (e) {
                                 throw new Error(
@@ -262,7 +262,7 @@ class DownloadTask {
                                 );
                             }
                         }
-                        
+
                         if (!config.serverVariables.databaseName) {
                             throw new Error(
                                 `Database name could not be determined.\n` +
@@ -280,23 +280,23 @@ class DownloadTask {
                 task: async (ctx: any, task: any): Promise<void> => {
                     PerformanceMonitor.start('database-dump');
                     const logger = this.services.getLogger();
-                    
+
                     // Detect gzip compression available on remote server
                     task.output = EnhancedProgress.step(5, 6, `Detecting compression...`);
                     const compression = await this.detectCompression(ssh);
-                    
+
                     task.output = EnhancedProgress.step(5, 6, `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump...`);
 
                     let dumpCommand: string;
                     const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
-                    
+
                     // Store compression info for later use
                     config.compressionInfo = compression;
-                    
+
                     // Build dump command with best available compression
                     let stripOptions = '';
                     let humanReadable = '';
-                    
+
                     if (config.settings.strip === 'keep customer data') {
                         const keepCustomerOptions = (staticConfigFile as any).settings?.databaseStripKeepCustomerData || '';
                         stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
@@ -311,7 +311,7 @@ class DownloadTask {
                         const developmentStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
                         stripOptions = developmentStripOptions ? `--strip="${developmentStripOptions}"` : '';
                     }
-                    
+
                     // Build compression command based on what's available
                     if (compression.type === 'gzip') {
                         dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | gzip ${compression.level} > ${databaseFileName}`;
@@ -319,12 +319,12 @@ class DownloadTask {
                         // No compression - just dump to file
                         dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} > ${databaseFileName}`;
                     }
-                    
-                    logger.info('Using compression for database dump', { 
+
+                    logger.info('Using compression for database dump', {
                         compression: compression.type,
                         level: compression.level,
                         file: databaseFileName,
-                        stripType 
+                        stripType
                     });
 
                     const fullCommand = sshMagentoRootFolderMagerunCommand(
@@ -333,9 +333,9 @@ class DownloadTask {
                     );
 
                     task.output = '⚡ Dumping database (this may take a minute)...';
-                    logger.info('Starting database dump', { 
+                    logger.info('Starting database dump', {
                         database: config.serverVariables.databaseName,
-                        stripType 
+                        stripType
                     });
 
                     await ssh.execCommand(fullCommand).then(function (result: any) {
@@ -349,7 +349,7 @@ class DownloadTask {
 
                     const duration = PerformanceMonitor.end('database-dump');
                     logger.info('Database dump complete', { duration });
-                    task.title = `✓ Dumped database (${ProgressDisplay.formatDuration(duration)})`;
+                    task.title = `Dumped database (${ProgressDisplay.formatDuration(duration)})`;
                 }
             });
 
@@ -363,7 +363,7 @@ class DownloadTask {
                     const databaseUsername = config.databases.databaseData.username;
                     const databaseServer = config.databases.databaseData.server;
                     const databasePort = config.databases.databaseData.port;
-                    
+
                     // Use the compression info determined during dump
                     const compression = config.compressionInfo || { type: 'none', extension: '' };
                     const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
@@ -371,7 +371,7 @@ class DownloadTask {
                     const destination = config.customConfig.localDatabaseFolderLocation;
 
                     // ⚡ SPEED OPTIMIZED: Add compression to rsync
-                    let sshCommand = databasePort 
+                    let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
 
@@ -386,7 +386,7 @@ class DownloadTask {
                         rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
                     }
 
-                    logger.info('Starting compressed download', { 
+                    logger.info('Starting compressed download', {
                         compression: this.useCompression,
                         source: `${databaseServer}:${source}`
                     });
@@ -405,40 +405,40 @@ class DownloadTask {
                     const handleRsyncData = function (data: any) {
                         const dataStr = data.toString();
                         const now = Date.now();
-                        
+
                         // Simple percentage match - rsync always shows X%
                         const percentMatch = dataStr.match(/(\d+)%/);
-                        
+
                         if (percentMatch) {
                             const percentage = parseInt(percentMatch[1]);
-                            
+
                             // Only update display every 500ms for stability
                             if (now - lastUpdate > 500) {
                                 const progressBar = EnhancedProgress.createProgressBar(percentage, 20);
-                                
+
                                 // Try to extract bytes and speed from rsync output
                                 const bytesMatch = dataStr.match(/([\d,]+)\s+\d+%/);
                                 const speedMatch = dataStr.match(/([\d.]+)(MB|KB|GB)\/s/);
-                                
+
                                 let displayText = `${progressBar} ${chalk.bold.cyan(percentage + '%')}`;
-                                
+
                                 if (bytesMatch) {
                                     const bytes = parseInt(bytesMatch[1].replace(/,/g, ''));
                                     bytesTransferred = bytes;
                                     displayText += ` ${chalk.gray(ProgressDisplay.formatBytes(bytes))}`;
                                 }
-                                
+
                                 if (speedMatch) {
                                     const speedValue = parseFloat(speedMatch[1]);
                                     const unit = speedMatch[2];
                                     displayText += ` ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
                                 }
-                                
+
                                 // Show compression type
                                 if (compression.type !== 'none') {
                                     displayText += ` ${chalk.yellow(`⚡ ${compression.type}`)}`;
                                 }
-                                
+
                                 task.output = displayText;
                                 lastUpdate = now;
                             }
@@ -463,7 +463,7 @@ class DownloadTask {
                     });
 
                     const duration = PerformanceMonitor.end('database-download');
-                    
+
                     // Use actual downloaded filename with compression extension
                     const downloadedFile = `${config.customConfig.localDatabaseFolderLocation}/${databaseFileName}`;
                     const fileSize = fs.existsSync(downloadedFile)
@@ -471,16 +471,16 @@ class DownloadTask {
                         : 0;
                     const sizeMB = (fileSize / (1024 * 1024)).toFixed(2);
                     const speedMBps = (parseFloat(sizeMB) / (duration / 1000)).toFixed(2);
-                    
-                    task.title = `✓ Downloaded database (${sizeMB}MB in ${UI.duration(duration)} @ ${speedMBps} MB/s)`;
-                    
-                    logger.info('Download complete with compression', { 
+
+                    task.title = `Downloaded database (${sizeMB}MB in ${UI.duration(duration)} @ ${speedMBps} MB/s)`;
+
+                    logger.info('Download complete with compression', {
                         size: `${sizeMB}MB`,
                         duration,
                         speed: `${speedMBps} MB/s`,
                         compression: compression.type
                     });
-                    
+
                     config.finalMessages.magentoDatabaseLocation = downloadedFile;
                 }
             });
@@ -493,14 +493,14 @@ class DownloadTask {
                 task: async (ctx: any, task: any): Promise<void> => {
                     PerformanceMonitor.start('media-sync');
                     const logger = this.services.getLogger();
-                    
+
                     task.output = EnhancedProgress.step(1, 4, 'Preparing media sync...');
-                    
+
                     const databaseUsername = config.databases.databaseData.username;
                     const databaseServer = config.databases.databaseData.server;
                     const databasePort = config.databases.databaseData.port;
                     const destination = config.settings.currentFolder;
-                    
+
                     // Map image types to folder paths
                     const folderMap: Record<string, string> = {
                         'Category images': 'pub/media/catalog/category/',
@@ -508,11 +508,11 @@ class DownloadTask {
                         'WYSIWYG images': 'pub/media/wysiwyg/',
                         'Everything else': 'pub/media/'
                     };
-                    
+
                     // Build list of folders to sync
                     const foldersToSync: string[] = [];
                     const selectedTypes = config.settings.syncImageTypes;
-                    
+
                     if (selectedTypes.includes('Everything else')) {
                         // If "Everything else" is selected, sync entire pub/media
                         foldersToSync.push('pub/media/');
@@ -524,98 +524,98 @@ class DownloadTask {
                             }
                         });
                     }
-                    
-                    logger.info('Starting media sync', { 
+
+                    logger.info('Starting media sync', {
                         folders: foldersToSync,
-                        destination 
+                        destination
                     });
-                    
+
                     // Build SSH command
-                    let sshCommand = databasePort 
+                    let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
-                    
+
                     if (config.customConfig.sshKeyLocation) {
                         sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
                     }
-                    
+
                     // Sync each folder
                     let folderIndex = 0;
                     let syncedCount = 0;
-                    
+
                     for (const folder of foldersToSync) {
                         folderIndex++;
                         const source = `${config.serverVariables.magentoRoot}/${folder}`;
-                        
+
                         // Remove trailing slash from folder for destination
                         const folderPath = folder.endsWith('/') ? folder.slice(0, -1) : folder;
                         const destFolder = `${destination}/${folderPath}`;
-                        
+
                         task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Checking ${folder}...`);
-                        
+
                         // Check if remote folder exists
                         const checkResult = await ssh.execCommand(`test -d ${source} && echo "EXISTS" || echo "MISSING"`);
                         const folderExists = checkResult.stdout.trim() === 'EXISTS';
-                        
+
                         if (!folderExists) {
                             logger.info('Remote folder does not exist, skipping', { folder, source });
                             task.output = `${chalk.yellow('⚠')} ${chalk.gray(folder)} ${chalk.yellow('(not found on server)')}`;
                             await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause so user can see message
                             continue;
                         }
-                        
+
                         // Ensure destination directory exists (create full path)
                         if (!fs.existsSync(destFolder)) {
                             fs.mkdirSync(destFolder, { recursive: true });
                             logger.info('Created destination directory', { path: destFolder });
                         }
-                        
+
                         task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Syncing ${folder}...`);
-                        
+
                         // Build rsync command with compression
                         // Note: Using trailing slash on source to sync contents, not the folder itself
                         // Using --partial to keep partially transferred files, --ignore-errors to continue on errors
                         let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destFolder}`;
-                        
+
                         if (config.databases.databaseData.password) {
                             rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
                         }
-                        
+
                         logger.info('Syncing folder', { folder, source, destination: destFolder, command: rsyncCommand });
-                        
+
                         // Execute rsync with progress tracking
                         try {
                             await new Promise<void>((resolve, reject) => {
                                 const rsync = require('child_process').exec(rsyncCommand);
                                 let lastUpdate = Date.now();
                                 let stderrOutput = '';
-                                
+
                                 const handleRsyncData = function (data: any) {
                                     const dataStr = data.toString();
                                     const now = Date.now();
-                                    
+
                                     // Extract speed from rsync output
                                     const speedMatch = dataStr.match(/([\d.]+)(MB|KB|GB)\/s/);
-                                    
+
                                     if (speedMatch && now - lastUpdate > 500) {
                                         const speedValue = parseFloat(speedMatch[1]);
                                         const unit = speedMatch[2];
-                                        
+
                                         let displayText = `${chalk.gray(folder)} ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('⚡')}`;
-                                        
+
                                         task.output = displayText;
                                         lastUpdate = now;
                                     }
                                 };
-                                
+
                                 rsync.stdout.on('data', handleRsyncData);
                                 rsync.stderr.on('data', function(data: any) {
                                     stderrOutput += data.toString();
                                     handleRsyncData(data);
                                 });
-                                
+
                                 rsync.on('exit', function (code: any) {
-                                    // Exit codes: 
+                                    // Exit codes:
                                     // 0 = success
                                     // 23 = partial transfer (some files couldn't be transferred)
                                     // 24 = partial transfer due to vanished source files (files disappeared during transfer)
@@ -631,7 +631,7 @@ class DownloadTask {
                                         // Exit code 20 often happens when destination has issues but transfer might have completed
                                         // Log as warning but don't fail
                                         logger.warn('Rsync exit code 20 (signal received or interrupted), checking if files transferred', { folder });
-                                        
+
                                         // Check if destination directory has content (successful transfer)
                                         try {
                                             const files = fs.readdirSync(destFolder);
@@ -656,13 +656,13 @@ class DownloadTask {
                                         reject(new Error(`${errorMsg}\nSource: ${source}\nDestination: ${destFolder}\nStderr: ${stderrOutput.substring(0, 200)}`));
                                     }
                                 });
-                                
+
                                 rsync.on('error', function (err: any) {
                                     logger.error('Rsync process error', err);
                                     reject(err);
                                 });
                             });
-                            
+
                             syncedCount++;
                             logger.info('Folder sync complete', { folder });
                         } catch (error) {
@@ -673,21 +673,21 @@ class DownloadTask {
                             await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause so user can see message
                         }
                     }
-                    
+
                     const duration = PerformanceMonitor.end('media-sync');
-                    
+
                     if (syncedCount === 0) {
                         task.title = `⚠️  No media folders synced (${ProgressDisplay.formatDuration(duration)})`;
                     } else if (syncedCount < foldersToSync.length) {
-                        task.title = `✓ Synced ${syncedCount}/${foldersToSync.length} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                        task.title = `Synced ${syncedCount}/${foldersToSync.length} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
                     } else {
-                        task.title = `✓ Synced ${syncedCount} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                        task.title = `Synced ${syncedCount} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
                     }
-                    
-                    logger.info('Media sync complete', { 
+
+                    logger.info('Media sync complete', {
                         foldersRequested: foldersToSync.length,
                         foldersSynced: syncedCount,
-                        duration 
+                        duration
                     });
                 }
             });

@@ -33,7 +33,7 @@ class ChecksTask {
      */
     private async runParallelChecks(config: any): Promise<void> {
         const startTime = Date.now();
-        
+
         // Define all independent checks that can run in parallel
         const parallelChecks: Array<{ name: string; check: () => Promise<CheckResult> }> = [];
 
@@ -149,7 +149,7 @@ class ChecksTask {
         });
 
         const totalDuration = Date.now() - startTime;
-        
+
         if (failedChecks.length > 0) {
             throw new Error(`\n${failedChecks.join('\n')}\n\n💡 Completed ${parallelChecks.length} checks in ${totalDuration}ms (parallel)`);
         }
@@ -167,10 +167,10 @@ class ChecksTask {
         this.checkTasks.push({
             title: 'File system & configuration checks',
             task: async (ctx: any, task: any): Promise<void> => {
-                task.output = '⚡ Running parallel checks (0%)...';
+                task.output = 'Running parallel checks (0%)...';
                 await this.runParallelChecks(config);
                 const duration = Date.now() - Date.now();
-                task.title = `✓ File system & configuration checks (${ProgressDisplay.formatDuration(duration)})`;
+                task.title = `File system & configuration checks`;
             }
         });
 
@@ -191,7 +191,7 @@ class ChecksTask {
                     let installedMagerun2Version: any = await consoleCommand('magerun2 -V', false);
                     installedMagerun2Version = String(installedMagerun2Version).split(' ')[1];
 
-                    task.output = `✓ Found Magerun2 v${installedMagerun2Version}`;
+                    task.output = `Found Magerun2 v${installedMagerun2Version}`;
 
                     if (installedMagerun2Version < config.requirements.magerun2Version) {
                         throw new Error(
@@ -234,7 +234,7 @@ class ChecksTask {
 
                         // db = ddev
                         if (envHost === 'localhost' || envHost === '127.0.0.1' || envHost === 'db') {
-                            task.output = `✓ Database host: ${envHost}`;
+                            task.output = `Database host: ${envHost}`;
                             return true;
                         }
 
