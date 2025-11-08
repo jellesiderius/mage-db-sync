@@ -177,7 +177,7 @@ class DownloadTask {
                 }
 
                 const duration = PerformanceMonitor.end('server-settings');
-                task.title = `Retrieved server settings (${ProgressDisplay.formatDuration(duration)})`;
+                task.title = `Retrieved server settings`;
             }
         });
 
@@ -218,7 +218,7 @@ class DownloadTask {
 
                 const duration = PerformanceMonitor.end('magerun-download');
                 if (!magerunExists) {
-                    task.title = `Downloaded Magerun to server (${ProgressDisplay.formatDuration(duration)})`;
+                    task.title = `Downloaded Magerun to server`;
                 }
             }
         });
@@ -349,7 +349,7 @@ class DownloadTask {
 
                     const duration = PerformanceMonitor.end('database-dump');
                     logger.info('Database dump complete', { duration });
-                    task.title = `Dumped database (${ProgressDisplay.formatDuration(duration)})`;
+                    task.title = `Dumped database`;
                 }
             });
 
@@ -677,11 +677,11 @@ class DownloadTask {
                     const duration = PerformanceMonitor.end('media-sync');
 
                     if (syncedCount === 0) {
-                        task.title = `⚠️  No media folders synced (${ProgressDisplay.formatDuration(duration)})`;
+                        task.title = `⚠️  No media folders synced`;
                     } else if (syncedCount < foldersToSync.length) {
-                        task.title = `Synced ${syncedCount}/${foldersToSync.length} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                        task.title = `Synced ${syncedCount}/${foldersToSync.length} media folder(s)`;
                     } else {
-                        task.title = `Synced ${syncedCount} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                        task.title = `Synced ${syncedCount} media folder(s)`;
                     }
 
                     logger.info('Media sync complete', {
