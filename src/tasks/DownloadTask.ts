@@ -39,6 +39,40 @@ class DownloadTask {
     };
 
     /**
+     * Detect best compression available on remote server
+     * Priority: zstd > gzip > none
+     */
+    private async detectBestCompression(ssh: any): Promise<{ type: 'zstd' | 'gzip' | 'none'; level: string; extension: string }> {
+        const logger = this.services.getLogger();
+        
+        // Check for zstd
+        try {
+            const zstdCheck = await ssh.execCommand('which zstd');
+            if (zstdCheck.code === 0) {
+                logger.info('Using zstd compression (best performance)', { level: '-3' });
+                return { type: 'zstd', level: '-3', extension: '.zst' };
+            }
+        } catch (e) {
+            // zstd not available
+        }
+        
+        // Check for gzip
+        try {
+            const gzipCheck = await ssh.execCommand('which gzip');
+            if (gzipCheck.code === 0) {
+                logger.info('Using gzip compression (zstd not available)', { level: '-6' });
+                return { type: 'gzip', level: '-6', extension: '.gz' };
+            }
+        } catch (e) {
+            // gzip not available
+        }
+        
+        // No compression available
+        logger.warn('No compression tools available on server, using uncompressed SQL');
+        return { type: 'none', level: '', extension: '' };
+    }
+
+    /**
      * Create SSH configuration object with key file reading
      */
     private createSSHConfig(databaseConfig: any, customConfig: any): any {
@@ -259,33 +293,53 @@ class DownloadTask {
                     PerformanceMonitor.start('database-dump');
                     const logger = this.services.getLogger();
                     
-                    task.output = EnhancedProgress.step(5, 6, `Creating compressed ${stripType} database dump...`);
+                    // Detect best compression available on remote server
+                    task.output = EnhancedProgress.step(5, 6, `Detecting compression tools...`);
+                    const compression = await this.detectBestCompression(ssh);
+                    
+                    task.output = EnhancedProgress.step(5, 6, `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump...`);
 
                     let dumpCommand: string;
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql.gz`;
+                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
                     
-                    // Use Magerun's built-in compression (gzip) - typically 5-10x smaller!
+                    // Store compression info for later use
+                    config.compressionInfo = compression;
+                    
+                    // Build dump command with best available compression
+                    let stripOptions = '';
+                    let humanReadable = '';
+                    
                     if (config.settings.strip === 'keep customer data') {
                         const keepCustomerOptions = (staticConfigFile as any).settings?.databaseStripKeepCustomerData || '';
-                        dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${keepCustomerOptions}" ${databaseFileName}`;
+                        stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
                     } else if (config.settings.strip === 'full and human readable') {
                         const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
-                        if (fullStripOptions) {
-                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --human-readable --strip="${fullStripOptions}" ${databaseFileName}`;
-                        } else {
-                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --human-readable ${databaseFileName}`;
-                        }
+                        stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
+                        humanReadable = '--human-readable';
                     } else if (config.settings.strip === 'full') {
                         const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
-                        if (fullStripOptions) {
-                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${fullStripOptions}" ${databaseFileName}`;
-                        } else {
-                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces ${databaseFileName}`;
-                        }
+                        stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
                     } else {
                         const developmentStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
-                        dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${developmentStripOptions}" ${databaseFileName}`;
+                        stripOptions = developmentStripOptions ? `--strip="${developmentStripOptions}"` : '';
                     }
+                    
+                    // Build compression command based on what's available
+                    if (compression.type === 'zstd') {
+                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | zstd ${compression.level} -o ${databaseFileName}`;
+                    } else if (compression.type === 'gzip') {
+                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | gzip ${compression.level} > ${databaseFileName}`;
+                    } else {
+                        // No compression - just dump to file
+                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} > ${databaseFileName}`;
+                    }
+                    
+                    logger.info('Using compression for database dump', { 
+                        compression: compression.type,
+                        level: compression.level,
+                        file: databaseFileName,
+                        stripType 
+                    });
 
                     const fullCommand = sshMagentoRootFolderMagerunCommand(
                         `${dumpCommand}; mv ${databaseFileName} ~`,
@@ -323,7 +377,10 @@ class DownloadTask {
                     const databaseUsername = config.databases.databaseData.username;
                     const databaseServer = config.databases.databaseData.server;
                     const databasePort = config.databases.databaseData.port;
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql.gz`;
+                    
+                    // Use the compression info determined during dump
+                    const compression = config.compressionInfo || { type: 'none', extension: '' };
+                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
 
@@ -391,7 +448,10 @@ class DownloadTask {
                                     displayText += ` ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
                                 }
                                 
-                                displayText += ` ${chalk.yellow('⚡ compressed')}`;
+                                // Show compression type
+                                if (compression.type !== 'none') {
+                                    displayText += ` ${chalk.yellow(`⚡ ${compression.type}`)}`;
+                                }
                                 
                                 task.output = displayText;
                                 lastUpdate = now;
@@ -417,7 +477,9 @@ class DownloadTask {
                     });
 
                     const duration = PerformanceMonitor.end('database-download');
-                    const downloadedFile = `${config.customConfig.localDatabaseFolderLocation}/${config.serverVariables.databaseName}.sql`;
+                    
+                    // Use actual downloaded filename with compression extension
+                    const downloadedFile = `${config.customConfig.localDatabaseFolderLocation}/${databaseFileName}`;
                     const fileSize = fs.existsSync(downloadedFile)
                         ? fs.statSync(downloadedFile).size
                         : 0;
@@ -429,7 +491,8 @@ class DownloadTask {
                     logger.info('Download complete with compression', { 
                         size: `${sizeMB}MB`,
                         duration,
-                        speed: `${speedMBps} MB/s`
+                        speed: `${speedMBps} MB/s`,
+                        compression: compression.type
                     });
                     
                     config.finalMessages.magentoDatabaseLocation = downloadedFile;
