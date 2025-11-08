@@ -1,6 +1,6 @@
 // @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
-import {consoleCommand, success} from "../utils/console";
+import {consoleCommand, success} from "../utils/Console";
 import path from "path";
 
 class OpenFolderController {

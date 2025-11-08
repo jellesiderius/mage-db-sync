@@ -3,7 +3,7 @@ import {
     localhostMagentoRootExec,
     sshNavigateToMagentoRootCommand,
     sshMagentoRootFolderMagerunCommand, consoleCommand, stripOutputString
-} from '../utils/console';
+} from '../utils/Console';
 import { Listr } from 'listr2';
 import fs from 'fs';
 

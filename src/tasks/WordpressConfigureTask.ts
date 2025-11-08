@@ -1,4 +1,4 @@
-import {localhostMagentoRootExec, localhostWpRootExec, wordpressReplaces} from '../utils/console';
+import {localhostMagentoRootExec, localhostWpRootExec, wordpressReplaces} from '../utils/Console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 

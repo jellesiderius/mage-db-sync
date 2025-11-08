@@ -1,6 +1,6 @@
 import { error } from "console";
 import inquirer from 'inquirer'
-import DatabasesModel from "../models/databasesModel";
+import DatabasesModel from "../models/DatabasesModel";
 
 class DatabaseTypeQuestion {
     private databasesModel = new DatabasesModel();

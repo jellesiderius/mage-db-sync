@@ -2,10 +2,10 @@
 import download from 'download-git-repo'
 // @ts-ignore
 import {getInstalledPath} from 'get-installed-path'
-import {consoleCommand, success} from "../utils/console";
+import {consoleCommand, success} from "../utils/Console";
 // @ts-ignore
 import packageFile from '../../package.json';
-import VersionCheck from "../utils/versionCheck";
+import VersionCheck from "../utils/VersionCheck";
 
 class SelfUpdateController {
     private versionCheck = new VersionCheck();

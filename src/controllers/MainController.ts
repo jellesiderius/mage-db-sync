@@ -1,7 +1,7 @@
 // @ts-ignore
 import configFile from '../../config/settings.json'
 import {NodeSSH} from 'node-ssh'
-import DatabasesModel from "../models/databasesModel";
+import DatabasesModel from "../models/DatabasesModel";
 import * as os from 'os'
 import * as path from 'path'
 import { Listr } from 'listr2';

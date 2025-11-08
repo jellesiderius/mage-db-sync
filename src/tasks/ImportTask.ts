@@ -1,4 +1,4 @@
-import {localhostMagentoRootExec, success} from '../utils/console';
+import {localhostMagentoRootExec, success} from '../utils/Console';
 import { Listr } from 'listr2';
 
 class ImportTask {

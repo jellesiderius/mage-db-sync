@@ -1,5 +1,5 @@
 import inquirer from 'inquirer'
-import DatabasesModel from "../models/databasesModel";
+import DatabasesModel from "../models/DatabasesModel";
 import * as path from 'path'
 import * as fs from 'fs'
 // @ts-ignore

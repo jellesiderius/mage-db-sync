@@ -1,4 +1,4 @@
-import {localhostMagentoRootExec, sshMagentoRootFolderMagerunCommand} from '../utils/console';
+import {localhostMagentoRootExec, sshMagentoRootFolderMagerunCommand} from '../utils/Console';
 import { Listr } from 'listr2';
 import configFile from '../../config/settings.json'
 import fs from "fs";
