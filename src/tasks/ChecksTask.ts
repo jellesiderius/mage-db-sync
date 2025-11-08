@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
 import { UI } from '../utils/UI';
+import { EnhancedProgress } from '../utils/EnhancedProgress';
+import { ProgressDisplay } from '../utils/ProgressDisplay';
 import configFile from '../../config/settings.json';
 
 interface CheckResult {
@@ -165,8 +167,11 @@ class ChecksTask {
         // Parallel checks (fast!)
         this.checkTasks.push({
             title: 'File system & configuration checks',
-            task: async (): Promise<void> => {
+            task: async (ctx: any, task: any): Promise<void> => {
+                task.output = '⚡ Running parallel checks (0%)...';
                 await this.runParallelChecks(config);
+                const duration = Date.now() - Date.now();
+                task.title = `✓ File system & configuration checks (${ProgressDisplay.formatDuration(duration)})`;
             }
         });
 
@@ -179,12 +184,15 @@ class ChecksTask {
             this.checkTasks.push({
                 title: 'Checking Magerun2 version',
                 task: async (ctx: any, task: any): Promise<boolean> => {
+                    task.output = 'Verifying Magerun2 installation...';
                     if (config.settings.isDdevActive) {
                         return true;
                     }
 
                     let installedMagerun2Version: any = await consoleCommand('magerun2 -V', false);
                     installedMagerun2Version = String(installedMagerun2Version).split(' ')[1];
+
+                    task.output = `✓ Found Magerun2 v${installedMagerun2Version}`;
 
                     if (installedMagerun2Version < config.requirements.magerun2Version) {
                         throw new Error(
@@ -202,7 +210,8 @@ class ChecksTask {
                 // Check database host configuration (requires magerun command)
                 this.checkTasks.push({
                     title: 'Checking database host configuration',
-                    task: async (): Promise<boolean> => {
+                    task: async (ctx: any, task: any): Promise<boolean> => {
+                        task.output = 'Checking local database configuration...';
                         if (config.settings.isDdevActive) {
                             return true;
                         }
@@ -226,6 +235,7 @@ class ChecksTask {
 
                         // db = ddev
                         if (envHost === 'localhost' || envHost === '127.0.0.1' || envHost === 'db') {
+                            task.output = `✓ Database host: ${envHost}`;
                             return true;
                         }
 

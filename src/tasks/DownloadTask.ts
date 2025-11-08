@@ -12,9 +12,11 @@ import { SSHConnectionPool, PerformanceMonitor } from '../utils/Performance';
 import { UI } from '../utils/UI';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
+import { EnhancedProgress } from '../utils/EnhancedProgress';
 import staticConfigFile from '../../config/static-settings.json';
 import configFile from '../../config/settings.json';
 import fs from 'fs';
+import chalk from 'chalk';
 
 interface TaskItem {
     title: string;
@@ -94,23 +96,34 @@ class DownloadTask {
 
         this.downloadTasks.push({
             title: 'Connecting to server through SSH ⚡',
-            task: async (): Promise<void> => {
+            task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('ssh-connection');
+                const logger = this.services.getLogger();
+                
+                task.output = EnhancedProgress.step(1, 6, 'Establishing SSH connection...');
+                logger.info('Connecting to SSH', { host: config.databases.databaseData.server });
                 
                 await this.connectSSH(ssh, config, false);
+                task.output = '✓ Primary SSH connection established';
 
                 if (config.settings.syncDatabases === 'yes') {
+                    task.output = EnhancedProgress.step(2, 6, 'Connecting to secondary database...');
                     await this.connectSSH(sshSecondDatabase, config, true);
+                    task.output = '✓ Both SSH connections established';
                 }
 
-                PerformanceMonitor.end('ssh-connection');
+                const duration = PerformanceMonitor.end('ssh-connection');
+                task.title = `✓ Connected to server through SSH (${ProgressDisplay.formatDuration(duration)})`;
             }
         });
 
         this.downloadTasks.push({
             title: 'Retrieving server settings',
-            task: async (): Promise<void> => {
+            task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('server-settings');
+                const logger = this.services.getLogger();
+                
+                task.output = EnhancedProgress.step(2, 6, 'Detecting Magento version...');
 
                 await ssh
                     .execCommand(
@@ -126,6 +139,12 @@ class DownloadTask {
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             config.serverVariables.magentoRoot = serverValues[1];
                             config.serverVariables.externalPhpPath = serverValues[2];
+                            
+                            task.output = `✓ Detected Magento ${config.serverVariables.magentoVersion}`;
+                            logger.info('Server settings retrieved', { 
+                                magentoVersion: config.serverVariables.magentoVersion,
+                                root: config.serverVariables.magentoRoot
+                            });
                         }
                     });
 
@@ -152,7 +171,8 @@ class DownloadTask {
                     config.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
                 }
 
-                PerformanceMonitor.end('server-settings');
+                const duration = PerformanceMonitor.end('server-settings');
+                task.title = `✓ Retrieved server settings (${ProgressDisplay.formatDuration(duration)})`;
             }
         });
 
@@ -160,6 +180,9 @@ class DownloadTask {
             title: 'Downloading Magerun to server',
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('magerun-download');
+                const logger = this.services.getLogger();
+                
+                task.output = EnhancedProgress.step(3, 6, 'Checking if Magerun exists...');
 
                 let magerunExists = await ssh
                     .execCommand(
@@ -174,21 +197,32 @@ class DownloadTask {
                     });
 
                 if (!magerunExists) {
+                    task.output = '⚡ Uploading Magerun (0%)...';
+                    logger.info('Uploading Magerun', { file: config.serverVariables.magerunFile });
+                    
                     await ssh.putFile(
                         `${__dirname}/../../files/${config.serverVariables.magerunFile}`,
                         `${config.serverVariables.magentoRoot}/${config.serverVariables.magerunFile}`
                     );
+                    
+                    task.output = '✓ Magerun uploaded (100%)';
                 } else {
+                    logger.info('Magerun already exists', { file: config.serverVariables.magerunFile });
                     task.skip('Magerun already exists on server');
                 }
 
-                PerformanceMonitor.end('magerun-download');
+                const duration = PerformanceMonitor.end('magerun-download');
+                if (!magerunExists) {
+                    task.title = `✓ Downloaded Magerun to server (${ProgressDisplay.formatDuration(duration)})`;
+                }
             }
         });
 
         this.downloadTasks.push({
             title: 'Retrieving database name from server',
-            task: async (): Promise<void> => {
+            task: async (ctx: any, task: any): Promise<void> => {
+                const logger = this.services.getLogger();
+                task.output = EnhancedProgress.step(4, 6, 'Querying database info...');
                 await ssh
                     .execCommand(
                         sshMagentoRootFolderMagerunCommand('db:info --format=json', config)
@@ -210,6 +244,11 @@ class DownloadTask {
                                 if (config.serverVariables.magentoVersion === 1) {
                                     config.serverVariables.databaseName = jsonResult[3]?.Value;
                                 }
+                                
+                                task.output = `✓ Found database: ${config.serverVariables.databaseName}`;
+                                logger.info('Database name retrieved', { 
+                                    database: config.serverVariables.databaseName 
+                                });
                             } catch (e) {
                                 throw new Error(
                                     `Could not retrieve database name from server.\n` +
@@ -233,8 +272,11 @@ class DownloadTask {
             const stripType = config.settings.strip || 'full';
             this.downloadTasks.push({
                 title: `Dumping Magento database and moving it to server root (${stripType})`,
-                task: async (): Promise<void> => {
+                task: async (ctx: any, task: any): Promise<void> => {
                     PerformanceMonitor.start('database-dump');
+                    const logger = this.services.getLogger();
+                    
+                    task.output = EnhancedProgress.step(5, 6, `Creating ${stripType} database dump...`);
 
                     let dumpCommand: string;
                     const databaseFileName = `${config.serverVariables.databaseName}.sql`;
@@ -266,15 +308,24 @@ class DownloadTask {
                         config
                     );
 
+                    task.output = '⚡ Dumping database (this may take a minute)...';
+                    logger.info('Starting database dump', { 
+                        database: config.serverVariables.databaseName,
+                        stripType 
+                    });
+
                     await ssh.execCommand(fullCommand).then(function (result: any) {
                         if (result.code && result.code !== 0) {
                             throw new Error(
                                 `Database dump failed\n💡 Check database permissions and disk space\nError: ${result.stderr}`
                             );
                         }
+                        task.output = '✓ Database dump completed';
                     });
 
-                    PerformanceMonitor.end('database-dump');
+                    const duration = PerformanceMonitor.end('database-dump');
+                    logger.info('Database dump complete', { duration });
+                    task.title = `✓ Dumped database (${ProgressDisplay.formatDuration(duration)})`;
                 }
             });
 
@@ -283,6 +334,7 @@ class DownloadTask {
                 task: async (ctx: any, task: any): Promise<void> => {
                     PerformanceMonitor.start('database-download');
                     const logger = this.services.getLogger();
+                    EnhancedProgress.resetDownload();
 
                     const databaseUsername = config.databases.databaseData.username;
                     const databaseServer = config.databases.databaseData.server;
@@ -309,44 +361,62 @@ class DownloadTask {
 
                     logger.info('Starting compressed download', { 
                         compression: this.useCompression,
-                        source: `${databaseServer}:${source}` 
+                        source: `${databaseServer}:${source}`
                     });
+
+                    task.output = '⚡ Initializing download...';
 
                     let rsync = require('child_process').exec(rsyncCommand);
 
                     let lastUpdate = Date.now();
+                    let startTime = Date.now();
                     let bytesTransferred = 0;
                     let lastBytes = 0;
+                    let totalBytes = 0;
 
-                    rsync.stdout.on('data', function (data: any) {
+                    // Capture both stdout and stderr (rsync sends progress to stderr on some systems)
+                    const handleRsyncData = function (data: any) {
+                        const dataStr = data.toString();
                         const now = Date.now();
-                        if (now - lastUpdate > 500) {
-                            const match = data.toString().match(/(\d+)%/);
-                            const bytesMatch = data.toString().match(/(\d+,?\d*)\s+\d+%/);
+                        
+                        // Simple percentage match - rsync always shows X%
+                        const percentMatch = dataStr.match(/(\d+)%/);
+                        
+                        if (percentMatch) {
+                            const percentage = parseInt(percentMatch[1]);
                             
-                            if (match) {
-                                const percentage = match[1];
+                            // Only update display every 500ms for stability
+                            if (now - lastUpdate > 500) {
+                                const progressBar = EnhancedProgress.createProgressBar(percentage, 20);
                                 
-                                // Calculate speed
+                                // Try to extract bytes and speed from rsync output
+                                const bytesMatch = dataStr.match(/([\d,]+)\s+\d+%/);
+                                const speedMatch = dataStr.match(/([\d.]+)(MB|KB|GB)\/s/);
+                                
+                                let displayText = `${progressBar} ${chalk.bold.cyan(percentage + '%')}`;
+                                
                                 if (bytesMatch) {
-                                    bytesTransferred = parseInt(bytesMatch[1].replace(/,/g, ''));
-                                    const bytesDiff = bytesTransferred - lastBytes;
-                                    const timeDiff = (now - lastUpdate) / 1000;
-                                    const speed = bytesDiff / timeDiff;
-                                    
-                                    task.output = `⚡ Downloading: ${percentage}% (${ProgressDisplay.formatSpeed(speed)} compressed)`;
-                                    lastBytes = bytesTransferred;
-                                } else {
-                                    task.output = `⚡ Downloading: ${percentage}% (compressed)`;
+                                    const bytes = parseInt(bytesMatch[1].replace(/,/g, ''));
+                                    bytesTransferred = bytes;
+                                    displayText += ` ${chalk.gray(ProgressDisplay.formatBytes(bytes))}`;
                                 }
+                                
+                                if (speedMatch) {
+                                    const speedValue = parseFloat(speedMatch[1]);
+                                    const unit = speedMatch[2];
+                                    displayText += ` ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
+                                }
+                                
+                                displayText += ` ${chalk.yellow('⚡ compressed')}`;
+                                
+                                task.output = displayText;
+                                lastUpdate = now;
                             }
-                            lastUpdate = now;
                         }
-                    });
+                    };
 
-                    rsync.stderr.on('data', function (data: any) {
-                        logger.debug('rsync stderr', { output: data.toString() });
-                    });
+                    rsync.stdout.on('data', handleRsyncData);
+                    rsync.stderr.on('data', handleRsyncData);
 
                     await new Promise((resolve, reject) => {
                         rsync.on('exit', function (code: any) {
