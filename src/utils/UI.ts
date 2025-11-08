@@ -6,7 +6,6 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 import * as gradientString from 'gradient-string';
 import ora, { Ora } from 'ora';
-import {fruit, mind, retro, summer, teen, vice} from "gradient-string";
 
 export class UI {
     private static spinners: Map<string, Ora> = new Map();

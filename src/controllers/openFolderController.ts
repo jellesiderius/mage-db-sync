@@ -1,5 +1,4 @@
-import {getInstalledPath} from 'get-installed-path';
-import {consoleCommand, success} from "../utils/Console";
+import {consoleCommand} from "../utils/Console";
 import path from "path";
 
 class OpenFolderController {
@@ -16,4 +15,4 @@ class OpenFolderController {
 }
 
 export default OpenFolderController;
-export { OpenFolderController };
+export {OpenFolderController};

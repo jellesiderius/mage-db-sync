@@ -1,7 +1,6 @@
 import download from 'download-git-repo';
 import {getInstalledPath} from 'get-installed-path';
 import {consoleCommand, success} from "../utils/Console";
-import packageFile from '../../package.json';
 import VersionCheck from "../utils/VersionCheck";
 
 class SelfUpdateController {

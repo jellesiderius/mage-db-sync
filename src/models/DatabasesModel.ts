@@ -5,94 +5,94 @@ import fs from "fs";
 import os from "os";
 
 class DatabasesModel {
-	public databasesList: { [k: string]: any } = [];
-	public databaseData = {
-		'username': '',
-		'password': '',
-		'server': '',
-		'domainFolder': '',
-		'port': 22,
-		'localProjectFolder': '',
-		'externalProjectFolder': '',
-		'wordpress': false,
-		'externalPhpPath': '',
-		'localProjectUrl': '',
-		'commandsFolder': '',
-		'stagingUsername': '',
-		'externalElasticsearchPort': '',
-		'sshKeyLocation': ''
-	};
+    public databasesList: { [k: string]: any } = [];
+    public databaseData = {
+        'username': '',
+        'password': '',
+        'server': '',
+        'domainFolder': '',
+        'port': 22,
+        'localProjectFolder': '',
+        'externalProjectFolder': '',
+        'wordpress': false,
+        'externalPhpPath': '',
+        'localProjectUrl': '',
+        'commandsFolder': '',
+        'stagingUsername': '',
+        'externalElasticsearchPort': '',
+        'sshKeyLocation': ''
+    };
 
-	// Collect databases | collect single database
-	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
-		let databases: Record<string, any> = stagingDatabases.databases;
-		let databaseDataType = this.databaseData;
+    // Collect databases | collect single database
+    collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
+        let databases: Record<string, any> = stagingDatabases.databases;
+        let databaseDataType = this.databaseData;
 
-		if (databaseType == 'production') {
-			databases = productionDatabases.databases as Record<string, any>;
-		}
+        if (databaseType == 'production') {
+            databases = productionDatabases.databases as Record<string, any>;
+        }
 
-		for (let [key, db] of Object.entries(databases)) {
-			const database = db as any; // Database entries have dynamic structure
-			
-			if (databaseKey == key) {
-				// Collect single database info
-				databaseDataType.username = database.username;
-				databaseDataType.password = database.password;
-				databaseDataType.server = database.server;
-				databaseDataType.domainFolder = database.domainFolder;
-				databaseDataType.port = database.port;
-				databaseDataType.localProjectFolder = database.localProjectFolder || '';
-				databaseDataType.externalProjectFolder = database.externalProjectFolder;
-				databaseDataType.wordpress = database.wordpress || false;
-				databaseDataType.externalPhpPath = database.externalPhpPath || '';
-				databaseDataType.localProjectUrl = database.localProjectUrl || '';
-				if (database.externalElasticsearchPort) {
-					databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
-				}
-				if (database.sshKeyName) {
-					config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/' + database.sshKeyName;
-				}
+        for (let [key, db] of Object.entries(databases)) {
+            const database = db as any; // Database entries have dynamic structure
 
-				if (database.commandsFolder) {
-					databaseDataType.commandsFolder = database.commandsFolder;
+            if (databaseKey == key) {
+                // Collect single database info
+                databaseDataType.username = database.username;
+                databaseDataType.password = database.password;
+                databaseDataType.server = database.server;
+                databaseDataType.domainFolder = database.domainFolder;
+                databaseDataType.port = database.port;
+                databaseDataType.localProjectFolder = database.localProjectFolder || '';
+                databaseDataType.externalProjectFolder = database.externalProjectFolder;
+                databaseDataType.wordpress = database.wordpress || false;
+                databaseDataType.externalPhpPath = database.externalPhpPath || '';
+                databaseDataType.localProjectUrl = database.localProjectUrl || '';
+                if (database.externalElasticsearchPort) {
+                    databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
+                }
+                if (database.sshKeyName) {
+                    config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/' + database.sshKeyName;
+                }
 
-					let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
-					let commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
+                if (database.commandsFolder) {
+                    databaseDataType.commandsFolder = database.commandsFolder;
 
-					if (fs.existsSync(commandsPath)) {
-						let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath+'/'+file).isFile());
-						if (filesArray.length > 0) {
-							for (const file of filesArray) {
-								let filePath = commandsPath + '/' + file;
+                    let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
+                    let commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
 
-								if (file == 'database.txt') {
-									let data = fs.readFileSync(filePath, 'utf8');
-									let dataString = data.toString().split('\n').join('');
+                    if (fs.existsSync(commandsPath)) {
+                        let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath + '/' + file).isFile());
+                        if (filesArray.length > 0) {
+                            for (const file of filesArray) {
+                                let filePath = commandsPath + '/' + file;
 
-									config.settings.databaseCommand = dataString;
-								}
+                                if (file == 'database.txt') {
+                                    let data = fs.readFileSync(filePath, 'utf8');
+                                    let dataString = data.toString().split('\n').join('');
 
-								if (file == 'magerun2.txt') {
-									let data = fs.readFileSync(filePath, 'utf8');
-									let dataString = data.toString().split('\n').join('');
+                                    config.settings.databaseCommand = dataString;
+                                }
 
-									config.settings.magerun2Command = dataString;
-								}
-							}
-						}
-					}
-				}
+                                if (file == 'magerun2.txt') {
+                                    let data = fs.readFileSync(filePath, 'utf8');
+                                    let dataString = data.toString().split('\n').join('');
 
-				if (database.stagingUsername) {
-					databaseDataType.stagingUsername = database.stagingUsername;
-				}
-			} else {
-				// Collect all database
-				this.databasesList.push(`${database.domainFolder} / ${database.username} (${key})`);
-			}
-		}
-	}
+                                    config.settings.magerun2Command = dataString;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (database.stagingUsername) {
+                    databaseDataType.stagingUsername = database.stagingUsername;
+                }
+            } else {
+                // Collect all database
+                this.databasesList.push(`${database.domainFolder} / ${database.username} (${key})`);
+            }
+        }
+    }
 }
 
 export default DatabasesModel;
