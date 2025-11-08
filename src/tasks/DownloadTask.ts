@@ -276,31 +276,32 @@ class DownloadTask {
                     PerformanceMonitor.start('database-dump');
                     const logger = this.services.getLogger();
                     
-                    task.output = EnhancedProgress.step(5, 6, `Creating ${stripType} database dump...`);
+                    task.output = EnhancedProgress.step(5, 6, `Creating compressed ${stripType} database dump...`);
 
                     let dumpCommand: string;
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql`;
+                    const databaseFileName = `${config.serverVariables.databaseName}.sql.gz`;
                     
+                    // Use Magerun's built-in compression (gzip) - typically 5-10x smaller!
                     if (config.settings.strip === 'keep customer data') {
                         const keepCustomerOptions = (staticConfigFile as any).settings?.databaseStripKeepCustomerData || '';
-                        dumpCommand = `db:dump -n --no-tablespaces --strip="${keepCustomerOptions}" ${databaseFileName}`;
+                        dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${keepCustomerOptions}" ${databaseFileName}`;
                     } else if (config.settings.strip === 'full and human readable') {
                         const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
                         if (fullStripOptions) {
-                            dumpCommand = `db:dump -n --no-tablespaces --human-readable --strip="${fullStripOptions}" ${databaseFileName}`;
+                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --human-readable --strip="${fullStripOptions}" ${databaseFileName}`;
                         } else {
-                            dumpCommand = `db:dump -n --no-tablespaces --human-readable ${databaseFileName}`;
+                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --human-readable ${databaseFileName}`;
                         }
                     } else if (config.settings.strip === 'full') {
                         const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
                         if (fullStripOptions) {
-                            dumpCommand = `db:dump -n --no-tablespaces --strip="${fullStripOptions}" ${databaseFileName}`;
+                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${fullStripOptions}" ${databaseFileName}`;
                         } else {
-                            dumpCommand = `db:dump -n --no-tablespaces ${databaseFileName}`;
+                            dumpCommand = `db:dump --compression=gzip -n --no-tablespaces ${databaseFileName}`;
                         }
                     } else {
                         const developmentStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
-                        dumpCommand = `db:dump -n --no-tablespaces --strip="${developmentStripOptions}" ${databaseFileName}`;
+                        dumpCommand = `db:dump --compression=gzip -n --no-tablespaces --strip="${developmentStripOptions}" ${databaseFileName}`;
                     }
 
                     const fullCommand = sshMagentoRootFolderMagerunCommand(
@@ -339,7 +340,7 @@ class DownloadTask {
                     const databaseUsername = config.databases.databaseData.username;
                     const databaseServer = config.databases.databaseData.server;
                     const databasePort = config.databases.databaseData.port;
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql`;
+                    const databaseFileName = `${config.serverVariables.databaseName}.sql.gz`;
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
 

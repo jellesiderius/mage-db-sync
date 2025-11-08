@@ -24,7 +24,7 @@ class ImportTask {
     }
 
     // Import with live progress tracking
-    private async importWithProgress(task: any, config: any, sqlFilePath: string, sqlFileSize: number): Promise<void> {
+    private async importWithProgress(task: any, config: any, sqlFilePath: string, sqlFileSize: number, isCompressed: boolean = false): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
             let estimatedProgress = 0;
@@ -38,17 +38,17 @@ class ImportTask {
                 
                 if (hasPv && sqlFileSize > 0) {
                     // Use pv for accurate progress tracking
-                    this.importWithPv(task, config, sqlFilePath, sqlFileSize, resolve, reject);
+                    this.importWithPv(task, config, sqlFilePath, sqlFileSize, resolve, reject, isCompressed);
                 } else {
                     // Use time-based estimation
-                    this.importWithEstimation(task, config, sqlFilePath, sqlFileSize, resolve, reject);
+                    this.importWithEstimation(task, config, sqlFilePath, sqlFileSize, resolve, reject, isCompressed);
                 }
             });
         });
     }
 
     // Import with pv (pipe viewer) for accurate progress
-    private importWithPv(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any): void {
+    private importWithPv(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any, isCompressed: boolean = false): void {
         const startTime = Date.now();
         let lastUpdate = Date.now();
         
@@ -65,8 +65,9 @@ class ImportTask {
             // Fall back to basic mysql command
         }
         
-        // Use pv to track progress: pv sqlfile.sql | mysql
-        const pvProcess = spawn('sh', ['-c', `pv -f "${sqlFilePath}" | ${mysqlCmd}`], {
+        // Use pv to track progress with automatic decompression if needed
+        const decompressCmd = isCompressed ? 'gunzip | ' : '';
+        const pvProcess = spawn('sh', ['-c', `pv -f "${sqlFilePath}" | ${decompressCmd}${mysqlCmd}`], {
             cwd: currentFolder
         });
         
@@ -118,7 +119,7 @@ class ImportTask {
     }
 
     // Import with time-based estimation (fallback if pv not available)
-    private async importWithEstimation(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any): Promise<void> {
+    private async importWithEstimation(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any, isCompressed: boolean = false): Promise<void> {
         const startTime = Date.now();
         
         // Estimate ~10MB/s import speed (conservative)
@@ -137,8 +138,12 @@ class ImportTask {
         }, 1000);
         
         try {
-            // Run the actual import
-            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:import ${config.serverVariables.databaseName}.sql --force --skip-authorization-entry-creation -q --drop`, config);
+            // Run the actual import with decompression if needed
+            const filename = isCompressed ? 
+                `<(gunzip < ${config.serverVariables.databaseName}.sql.gz)` : 
+                `${config.serverVariables.databaseName}.sql`;
+            
+            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:import ${filename} --force --skip-authorization-entry-creation -q --drop`, config);
             
             clearInterval(progressInterval);
             task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.green('✓')}`;
@@ -150,7 +155,7 @@ class ImportTask {
     }
 
     // Import with progress tracking for DDEV
-    private async importWithProgressDdev(task: any, config: any, sqlFilePath: string, sqlFileSize: number): Promise<void> {
+    private async importWithProgressDdev(task: any, config: any, sqlFilePath: string, sqlFileSize: number, isCompressed: boolean = false): Promise<void> {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
             
@@ -163,23 +168,24 @@ class ImportTask {
                 
                 if (hasPv && sqlFileSize > 0) {
                     // Use pv for accurate progress
-                    this.importDdevWithPv(task, config, sqlFilePath, sqlFileSize, resolve, reject);
+                    this.importDdevWithPv(task, config, sqlFilePath, sqlFileSize, resolve, reject, isCompressed);
                 } else {
                     // Use time-based estimation
-                    this.importDdevWithEstimation(task, config, sqlFilePath, sqlFileSize, resolve, reject);
+                    this.importDdevWithEstimation(task, config, sqlFilePath, sqlFileSize, resolve, reject, isCompressed);
                 }
             });
         });
     }
 
     // DDEV import with pv (accurate progress)
-    private importDdevWithPv(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any): void {
+    private importDdevWithPv(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any, isCompressed: boolean = false): void {
         const startTime = Date.now();
         let lastUpdate = Date.now();
         
-        // Use pv to track progress: pv sqlfile.sql | ddev mysql
+        // Use pv to track progress with automatic decompression if needed
         const currentFolder = config.settings.currentFolder || process.cwd();
-        const pvProcess = spawn('sh', ['-c', `pv -f "${sqlFilePath}" | ddev mysql -uroot -proot -hdb ${config.serverVariables.databaseName}`], {
+        const decompressCmd = isCompressed ? 'gunzip | ' : '';
+        const pvProcess = spawn('sh', ['-c', `pv -f "${sqlFilePath}" | ${decompressCmd}ddev mysql -uroot -proot -hdb ${config.serverVariables.databaseName}`], {
             cwd: currentFolder
         });
         
@@ -231,7 +237,7 @@ class ImportTask {
     }
 
     // DDEV import with time-based estimation
-    private async importDdevWithEstimation(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any): Promise<void> {
+    private async importDdevWithEstimation(task: any, config: any, sqlFilePath: string, sqlFileSize: number, resolve: any, reject: any, isCompressed: boolean = false): Promise<void> {
         const startTime = Date.now();
         
         // If file size is unknown, show simple spinner without estimates
@@ -239,7 +245,10 @@ class ImportTask {
             task.output = `${chalk.cyan('⚡')} Importing database... ${chalk.magenta('🐳 DDEV')}`;
             
             try {
-                await localhostMagentoRootExec(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
+                const filename = isCompressed ? 
+                    `${config.serverVariables.databaseName}.sql.gz` : 
+                    `${config.serverVariables.databaseName}.sql`;
+                await localhostMagentoRootExec(`ddev import-db --src=${filename}`, config);
                 task.output = `${chalk.green('✓')} Import complete ${chalk.magenta('🐳 DDEV')}`;
                 resolve();
             } catch (err) {
@@ -248,24 +257,47 @@ class ImportTask {
             return;
         }
         
-        // Estimate ~10MB/s import speed (conservative)
-        const estimatedDuration = (sqlFileSize / (10 * 1024 * 1024)) * 1000;
+        // More realistic import speed estimation (compressed files are smaller but import takes similar time)
+        // Use uncompressed size for time estimate if compressed
+        const estimatedUncompressedSize = isCompressed ? sqlFileSize * 10 : sqlFileSize;
+        // Conservative 5MB/s for actual SQL import (decompression + MySQL insert)
+        const estimatedDuration = (estimatedUncompressedSize / (5 * 1024 * 1024)) * 1000;
+        
+        let lastPercentage = 0;
         
         // Update progress every second
         const progressInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
-            const percentage = Math.min(95, Math.round((elapsed / estimatedDuration) * 100));
+            let percentage = Math.round((elapsed / estimatedDuration) * 100);
+            
+            // More gradual slowdown as we approach completion
+            if (percentage > 90) {
+                percentage = 90 + Math.min(9, Math.round((percentage - 90) / 2));
+            }
+            percentage = Math.min(99, percentage); // Cap at 99% until actual completion
+            
+            // Only update if percentage increased (avoid going backwards)
+            if (percentage > lastPercentage) {
+                lastPercentage = percentage;
+            } else {
+                percentage = lastPercentage;
+            }
+            
             const progressBar = EnhancedProgress.createProgressBar(percentage, 20);
             
             const estimatedBytes = Math.min(sqlFileSize, (percentage / 100) * sqlFileSize);
             const speed = elapsed > 0 ? (estimatedBytes / (elapsed / 1000)) : 0;
             
-            task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(speed))} ${chalk.magenta('🐳 DDEV')}`;
+            const statusText = percentage >= 95 ? chalk.yellow('(finishing up...)') : '';
+            task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(speed))} ${statusText} ${chalk.magenta('🐳 DDEV')}`;
         }, 1000);
         
         try {
-            // Run the actual DDEV import
-            await localhostMagentoRootExec(`ddev import-db --src=${config.serverVariables.databaseName}.sql`, config);
+            // Run the actual DDEV import (DDEV handles .gz automatically)
+            const filename = isCompressed ? 
+                `${config.serverVariables.databaseName}.sql.gz` : 
+                `${config.serverVariables.databaseName}.sql`;
+            await localhostMagentoRootExec(`ddev import-db --src=${filename}`, config);
             
             clearInterval(progressInterval);
             task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.green('✓')}`;
@@ -329,13 +361,17 @@ class ImportTask {
                         // Get SQL file size for progress tracking - try multiple possible locations
                         const currentFolder = config.settings.currentFolder || process.cwd();
                         const possiblePaths = [
+                            `${currentFolder}/${config.serverVariables.databaseName}.sql.gz`,
                             `${currentFolder}/${config.serverVariables.databaseName}.sql`,
+                            `${currentFolder}/${config.databases.databaseData.database}.sql.gz`,
                             `${currentFolder}/${config.databases.databaseData.database}.sql`,
+                            `${currentFolder}/database.sql.gz`,
                             `${currentFolder}/database.sql`
                         ];
                         
                         let sqlFilePath = '';
                         let sqlFileSize = 0;
+                        let isCompressed = false;
                         
                         // Also show user which paths we're checking
                         task.output = `Locating SQL file...`;
@@ -345,8 +381,9 @@ class ImportTask {
                             if (fs.existsSync(path)) {
                                 sqlFilePath = path;
                                 sqlFileSize = fs.statSync(path).size;
-                                logger.info('Found SQL file', { path, size: sqlFileSize });
-                                task.output = `Found SQL file: ${ProgressDisplay.formatBytes(sqlFileSize)}`;
+                                isCompressed = path.endsWith('.gz');
+                                logger.info('Found SQL file', { path, size: sqlFileSize, compressed: isCompressed });
+                                task.output = `Found SQL file: ${ProgressDisplay.formatBytes(sqlFileSize)}${isCompressed ? ' (compressed)' : ''}`;
                                 break;
                             }
                         }
@@ -355,16 +392,13 @@ class ImportTask {
                             logger.warn('SQL file not found or empty, using fallback import', { 
                                 tried: possiblePaths,
                                 databaseName: config.serverVariables.databaseName,
-                                magentoRoot: currentFolder
+                                currentFolder
                             });
-                            
-                            // Show user what we tried
-                            task.output = `SQL file not found at expected locations. Checked:\n${possiblePaths.map(p => `  • ${p}`).join('\n')}`;
                             
                             // List all .sql files in the directory to help debug
                             try {
                                 const files = fs.readdirSync(currentFolder);
-                                const sqlFiles = files.filter((f: string) => f.endsWith('.sql'));
+                                const sqlFiles = files.filter((f: string) => f.endsWith('.sql') || f.endsWith('.sql.gz'));
                                 logger.info('Available SQL files in directory', { 
                                     directory: currentFolder,
                                     sqlFiles 
@@ -373,11 +407,15 @@ class ImportTask {
                                 if (sqlFiles.length > 0) {
                                     task.output = `Found ${sqlFiles.length} SQL file(s): ${sqlFiles.join(', ')}`;
                                     
-                                    // Use the first one
-                                    sqlFilePath = `${currentFolder}/${sqlFiles[0]}`;
+                                    // Prefer .gz files
+                                    const gzFiles = sqlFiles.filter((f: string) => f.endsWith('.gz'));
+                                    const fileToUse = gzFiles.length > 0 ? gzFiles[0] : sqlFiles[0];
+                                    
+                                    sqlFilePath = `${currentFolder}/${fileToUse}`;
                                     sqlFileSize = fs.statSync(sqlFilePath).size;
-                                    logger.info('Using first SQL file found', { path: sqlFilePath, size: sqlFileSize });
-                                    task.output = `Using: ${sqlFiles[0]} (${ProgressDisplay.formatBytes(sqlFileSize)})`;
+                                    isCompressed = fileToUse.endsWith('.gz');
+                                    logger.info('Using first SQL file found', { path: sqlFilePath, size: sqlFileSize, compressed: isCompressed });
+                                    task.output = `Using: ${fileToUse} (${ProgressDisplay.formatBytes(sqlFileSize)})`;
                                 } else {
                                     task.output = `No SQL files found in: ${currentFolder}`;
                                 }
@@ -388,7 +426,7 @@ class ImportTask {
                         }
                         
                         // Import with progress tracking (DDEV)
-                        await this.importWithProgressDdev(task, config, sqlFilePath, sqlFileSize);
+                        await this.importWithProgressDdev(task, config, sqlFilePath, sqlFileSize, isCompressed);
                     } else {
                         // Standard environment with speed optimizations
                         task.output = EnhancedProgress.step(1, 3, 'Creating database...');
@@ -400,13 +438,17 @@ class ImportTask {
                         // Get SQL file size for progress tracking - try multiple possible locations
                         const currentFolder = config.settings.currentFolder || process.cwd();
                         const possiblePaths = [
+                            `${currentFolder}/${config.serverVariables.databaseName}.sql.gz`,
                             `${currentFolder}/${config.serverVariables.databaseName}.sql`,
+                            `${currentFolder}/${config.databases.databaseData.database}.sql.gz`,
                             `${currentFolder}/${config.databases.databaseData.database}.sql`,
+                            `${currentFolder}/database.sql.gz`,
                             `${currentFolder}/database.sql`
                         ];
                         
                         let sqlFilePath = '';
                         let sqlFileSize = 0;
+                        let isCompressed = false;
                         
                         task.output = `Locating SQL file...`;
                         
@@ -458,7 +500,7 @@ class ImportTask {
                         }
                         
                         // Import with progress tracking
-                        await this.importWithProgress(task, config, sqlFilePath, sqlFileSize);
+                        await this.importWithProgress(task, config, sqlFilePath, sqlFileSize, isCompressed);
                         
                         task.output = EnhancedProgress.step(3, 3, 'Adding authorization entries...');
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries -q`, config);
@@ -480,11 +522,11 @@ class ImportTask {
                     const logger = this.services.getLogger();
                     task.output = 'Removing temporary SQL file...';
                     
-                    // Remove local SQL file
-                    await localhostMagentoRootExec('rm ' + config.serverVariables.databaseName + '.sql', config);
+                    // Remove local SQL file (both .sql and .sql.gz)
+                    await localhostMagentoRootExec(`rm -f ${config.serverVariables.databaseName}.sql ${config.serverVariables.databaseName}.sql.gz`, config, true);
                     
                     task.output = '✓ Cleanup complete';
-                    logger.info('Cleanup complete', { removed: `${config.serverVariables.databaseName}.sql` });
+                    logger.info('Cleanup complete', { removed: `${config.serverVariables.databaseName}.sql.gz` });
                 }
             }
         );
