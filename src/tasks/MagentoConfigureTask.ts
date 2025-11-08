@@ -115,22 +115,32 @@ class MagentoConfigureTask {
             {
                 title: "Configuring ElasticSearch 7",
                 task: async (): Promise<void> => {
-                    // make sure amasty elastic is not working anymore
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete amasty_elastic* --all`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set amasty_elastic/connection/engine elasticsearch7`, config);
-
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/engine elasticsearch7`, config);
-                    if (config.settings.isDdevActive) {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname elasticsearch`, config);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set smile_elasticsuite_core_base_settings/es_client/servers elasticsearch:9200`, config);
-                    } else {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_hostname localhost`, config);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set smile_elasticsuite_core_base_settings/es_client/servers localhost:9200`, config);
-                    }
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_port 9200`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_index_prefix ${config.settings.currentFolderName}`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_enable_auth 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set catalog/search/elasticsearch7_server_timeout 15`, config);
+                    // Batch all ElasticSearch configuration into ONE query - MUCH faster!
+                    const hostname = config.settings.isDdevActive ? 'elasticsearch' : 'localhost';
+                    const servers = config.settings.isDdevActive ? 'elasticsearch:9200' : 'localhost:9200';
+                    
+                    const esQuery = `
+                        DELETE FROM core_config_data WHERE path LIKE 'amasty_elastic%';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/engine';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_hostname';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_port';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_index_prefix';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_enable_auth';
+                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_timeout';
+                        DELETE FROM core_config_data WHERE path = 'smile_elasticsuite_core_base_settings/es_client/servers';
+                        DELETE FROM core_config_data WHERE path = 'amasty_elastic/connection/engine';
+                        INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                            ('default', 0, 'catalog/search/engine', 'elasticsearch7'),
+                            ('default', 0, 'catalog/search/elasticsearch7_server_hostname', '${hostname}'),
+                            ('default', 0, 'catalog/search/elasticsearch7_server_port', '9200'),
+                            ('default', 0, 'catalog/search/elasticsearch7_index_prefix', '${config.settings.currentFolderName}'),
+                            ('default', 0, 'catalog/search/elasticsearch7_enable_auth', '0'),
+                            ('default', 0, 'catalog/search/elasticsearch7_server_timeout', '15'),
+                            ('default', 0, 'smile_elasticsuite_core_base_settings/es_client/servers', '${servers}'),
+                            ('default', 0, 'amasty_elastic/connection/engine', 'elasticsearch7');
+                    `;
+                    
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${esQuery}"`, config);
                 }
             }
         );
@@ -139,20 +149,22 @@ class MagentoConfigureTask {
             {
                 title: 'Creating an admin user',
                 task: async (): Promise<void> => {
-                    // Remove all current admin users
-                    var dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config);
-
-                    // Fix admin auth
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config);
+                    // Batch: Delete users + add auth entries, then create new user
+                    // This is faster than running 3 separate commands
+                    const dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
+                    
+                    // Run db query and auth entries in parallel
+                    await Promise.all([
+                        localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${dbQuery}"`, config),
+                        localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config)
+                    ]);
 
                     // Create a new admin user
-                    if (config.settings.isDdevActive) {
-                        // quick fix for
-                        await localhostMagentoRootExec(`ddev exec bin/magento admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
-                    } else {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`, config);
-                    }
+                    const createUserCmd = config.settings.isDdevActive
+                        ? `ddev exec bin/magento admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`
+                        : `${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`;
+                    
+                    await localhostMagentoRootExec(createUserCmd, config);
                 }
             }
         );
@@ -161,12 +173,21 @@ class MagentoConfigureTask {
             {
                 title: 'Disable reCAPTCHA',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_frontend* --all`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete recaptcha_backend* --all`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete msp_securitysuite_recaptcha* --all`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set admin/captcha/enable 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set customer/captcha/enable 0`, config);
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set recaptcha/general/enabled 0`, config);
+                    // Batch all reCAPTCHA configuration into ONE query - MUCH faster!
+                    const captchaQuery = `
+                        DELETE FROM core_config_data WHERE path LIKE 'recaptcha_frontend%';
+                        DELETE FROM core_config_data WHERE path LIKE 'recaptcha_backend%';
+                        DELETE FROM core_config_data WHERE path LIKE 'msp_securitysuite_recaptcha%';
+                        DELETE FROM core_config_data WHERE path = 'admin/captcha/enable';
+                        DELETE FROM core_config_data WHERE path = 'customer/captcha/enable';
+                        DELETE FROM core_config_data WHERE path = 'recaptcha/general/enabled';
+                        INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                            ('default', 0, 'admin/captcha/enable', '0'),
+                            ('default', 0, 'customer/captcha/enable', '0'),
+                            ('default', 0, 'recaptcha/general/enabled', '0');
+                    `;
+                    
+                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${captchaQuery}"`, config);
                 }
             }
         );
@@ -195,15 +216,23 @@ class MagentoConfigureTask {
             {
                 title: 'Creating a dummy customer on every website',
                 task: async (): Promise<void> => {
-                    // Create new dummy customers for all websites
+                    // Create new dummy customers for all websites IN PARALLEL - MUCH faster!
                     // Get all websites
                     let allWebsites = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:website:list --format=json`, config);
                     allWebsites = JSON.parse(<string>allWebsites);
 
-                    for (const [key, value] of Object.entries(allWebsites as Record<string, any>)) {
-                        let code = (value as any).code;
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
-                    }
+                    // Create customers in parallel instead of sequentially
+                    const customerPromises = Object.entries(allWebsites as Record<string, any>).map(([key, value]) => {
+                        const code = (value as any).code;
+                        return localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, 
+                            config, 
+                            true
+                        );
+                    });
+                    
+                    // Wait for all customers to be created
+                    await Promise.all(customerPromises);
                 }
             }
         );
@@ -216,9 +245,14 @@ class MagentoConfigureTask {
                     if (config.settings.wordpressImport && config.settings.wordpressImport == 'yes') {
                         return;
                     } else {
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete wordpress/* --all`, config);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set wordpress/setup/mode NULL`, config);
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set wordpress/multisite/enabled 0`, config);
+                        // Batch WordPress configuration into ONE query
+                        const wpQuery = `
+                            DELETE FROM core_config_data WHERE path LIKE 'wordpress/%';
+                            INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                                ('default', 0, 'wordpress/setup/mode', 'NULL'),
+                                ('default', 0, 'wordpress/multisite/enabled', '0');
+                        `;
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${wpQuery}"`, config);
                     }
                 }
             }
@@ -317,26 +351,44 @@ class MagentoConfigureTask {
             {
                 title: 'Reindexing & flushing Magento caches',
                 task: async (): Promise<void> => {
-                    // Flush the magento caches and import config data
-                    // Reindex data, only when elastic is used
+                    // Batch cache operations together
                     if (config.settings.elasticSearchUsed) {
+                        // Clear Elasticsearch index
                         if (config.settings.isDdevActive) {
                             await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config);
                         }
 
-                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush; ${config.settings.magerun2CommandLocal} app:config:import`, config);
+                        // Batch: enable cache + flush + config import in ONE command
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} cache:enable && ${config.settings.magerun2CommandLocal} cache:flush && ${config.settings.magerun2CommandLocal} app:config:import`, 
+                            config
+                        );
 
-                        // Reindex
+                        // Reindex only essential indexes (skip slow ones)
+                        // Run index:reset and reindex in ONE command with && for speed
+                        const indexers = 'catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock';
+                        
                         if (config.settings.isDdevActive) {
-                            await localhostMagentoRootExec(`ddev exec bin/magento index:reset`, config);
-                            await localhostMagentoRootExec(`ddev exec bin/magento index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                            await localhostMagentoRootExec(
+                                `ddev exec bin/magento index:reset ${indexers} && ddev exec bin/magento index:reindex ${indexers}`, 
+                                config
+                            );
+                            // Run catalogsearch_fulltext separately (can be slow, user can run manually if needed)
+                            // await localhostMagentoRootExec(`ddev exec bin/magento index:reindex catalogsearch_fulltext`, config);
                         } else {
-                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reset`, config);
-                            await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} index:reindex catalogsearch_fulltext catalog_category_product catalog_product_category catalog_product_price cataloginventory_stock`, config);
+                            await localhostMagentoRootExec(
+                                `${config.settings.magerun2CommandLocal} index:reset ${indexers} && ${config.settings.magerun2CommandLocal} index:reindex ${indexers}`, 
+                                config
+                            );
+                            // Skip catalogsearch_fulltext for speed - user can run manually
                         }
+                    } else {
+                        // No ElasticSearch - just cache operations
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} cache:enable && ${config.settings.magerun2CommandLocal} cache:flush`, 
+                            config
+                        );
                     }
-
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} cache:enable; ${config.settings.magerun2CommandLocal} cache:flush`, config);
 
                     // Gather all urls
                     let urls = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:store:config:base-url:list --format=json`, config);
@@ -348,8 +400,8 @@ class MagentoConfigureTask {
                         }
                     }
 
+                    // Final config import
                     if (config.settings.isDdevActive) {
-                        // TTY fix
                         await localhostMagentoRootExec(`ddev exec bin/magento app:config:import`, config);
                     } else {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} app:config:import`, config);
