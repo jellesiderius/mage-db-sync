@@ -18,6 +18,7 @@ import { DatabaseService } from '../services/DatabaseService';
 import { CommandService } from '../services/CommandService';
 import { FileSystemService } from '../services/FileSystemService';
 import { VersionCheckService } from '../services/VersionCheckService';
+import { DatabaseStreamService } from '../services/DatabaseStreamService';
 
 /**
  * Service container for dependency injection
@@ -63,6 +64,7 @@ export class ServiceContainer {
         // Initialize remaining services
         this.services.set('ssh', SSHService.getInstance());
         this.services.set('database', DatabaseService.getInstance());
+        this.services.set('databaseStream', DatabaseStreamService.getInstance());
         this.services.set('command', CommandService.getInstance());
         this.services.set('filesystem', FileSystemService.getInstance());
         this.services.set('versionCheck', VersionCheckService.getInstance());
@@ -131,6 +133,13 @@ export class ServiceContainer {
      */
     public getDatabase(): DatabaseService {
         return this.getService<DatabaseService>('database');
+    }
+
+    /**
+     * Get database stream service
+     */
+    public getDatabaseStream(): DatabaseStreamService {
+        return this.getService<DatabaseStreamService>('databaseStream');
     }
 
     /**

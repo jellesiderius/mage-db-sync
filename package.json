@@ -18,6 +18,7 @@
     "lint:fix": "eslint src/**/*.ts --fix"
   },
   "devDependencies": {
+    "@types/cli-progress": "^3.11.6",
     "@types/command-exists": "^1.2.3",
     "@types/get-installed-path": "^4.0.3",
     "@types/inquirer": "^9.0.7",
