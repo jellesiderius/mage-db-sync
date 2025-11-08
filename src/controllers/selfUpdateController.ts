@@ -36,7 +36,7 @@ class SelfUpdateController {
             success(`mage-db-sync is already up to date`);
         }
 
-        return true;
+        process.exit();
     }
 }
 
