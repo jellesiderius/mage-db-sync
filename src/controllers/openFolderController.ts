@@ -10,7 +10,7 @@ class OpenFolderController {
     executeStart = async (serviceName: string | undefined): Promise<boolean> => {
         let mageDbSyncRootFolder = path.join(__dirname, '../../')
         await consoleCommand(`open ${mageDbSyncRootFolder}`, false);
-        return true;
+        process.exit();
     }
 }
 
