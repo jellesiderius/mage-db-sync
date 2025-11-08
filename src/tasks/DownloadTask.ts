@@ -66,9 +66,7 @@ class DownloadTask {
      * Connect to SSH with connection pooling
      */
     private async connectSSH(ssh: any, config: any, isSecondary: boolean = false): Promise<void> {
-        const databaseConfig = isSecondary
-            ? config.databases.databaseDataSecond
-            : config.databases.databaseData;
+        const databaseConfig = config.databases.databaseData;
 
         const sshConfig = this.createSSHConfig(databaseConfig, config.customConfig);
         const host = databaseConfig.server;
@@ -104,13 +102,7 @@ class DownloadTask {
                 logger.info('Connecting to SSH', { host: config.databases.databaseData.server });
                 
                 await this.connectSSH(ssh, config, false);
-                task.output = '✓ Primary SSH connection established';
-
-                if (config.settings.syncDatabases === 'yes') {
-                    task.output = EnhancedProgress.step(2, 6, 'Connecting to secondary database...');
-                    await this.connectSSH(sshSecondDatabase, config, true);
-                    task.output = '✓ Both SSH connections established';
-                }
+                task.output = '✓ SSH connection established';
 
                 const duration = PerformanceMonitor.end('ssh-connection');
                 task.title = `✓ Connected to server through SSH (${ProgressDisplay.formatDuration(duration)})`;
@@ -157,15 +149,6 @@ class DownloadTask {
 
                 config.serverVariables.magerunFile = `n98-magerun2-${config.requirements.magerun2Version}.phar`;
 
-                if (config.settings.syncDatabases === 'yes') {
-                    if (
-                        config.databases.databaseDataSecond.externalPhpPath &&
-                        config.databases.databaseDataSecond.externalPhpPath.length > 0
-                    ) {
-                        config.serverVariables.secondDatabaseExternalPhpPath =
-                            config.databases.databaseDataSecond.externalPhpPath;
-                    }
-                }
 
                 if (config.serverVariables.magentoVersion === 1) {
                     config.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
@@ -454,6 +437,213 @@ class DownloadTask {
             });
         }
 
+        // Media sync task - only runs if syncImages is enabled
+        if (config.settings.syncImages === 'yes' && config.settings.syncImageTypes && config.settings.syncImageTypes.length > 0) {
+            this.downloadTasks.push({
+                title: 'Synchronizing media images to localhost',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    PerformanceMonitor.start('media-sync');
+                    const logger = this.services.getLogger();
+                    
+                    task.output = EnhancedProgress.step(1, 4, 'Preparing media sync...');
+                    
+                    const databaseUsername = config.databases.databaseData.username;
+                    const databaseServer = config.databases.databaseData.server;
+                    const databasePort = config.databases.databaseData.port;
+                    const destination = config.settings.currentFolder;
+                    
+                    // Map image types to folder paths
+                    const folderMap: Record<string, string> = {
+                        'Category images': 'pub/media/catalog/category/',
+                        'Product images': 'pub/media/catalog/product/',
+                        'WYSIWYG images': 'pub/media/wysiwyg/',
+                        'Everything else': 'pub/media/'
+                    };
+                    
+                    // Build list of folders to sync
+                    const foldersToSync: string[] = [];
+                    const selectedTypes = config.settings.syncImageTypes;
+                    
+                    if (selectedTypes.includes('Everything else')) {
+                        // If "Everything else" is selected, sync entire pub/media
+                        foldersToSync.push('pub/media/');
+                    } else {
+                        // Otherwise, sync individual folders
+                        selectedTypes.forEach((type: string) => {
+                            if (folderMap[type]) {
+                                foldersToSync.push(folderMap[type]);
+                            }
+                        });
+                    }
+                    
+                    logger.info('Starting media sync', { 
+                        folders: foldersToSync,
+                        destination 
+                    });
+                    
+                    // Build SSH command
+                    let sshCommand = databasePort 
+                        ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
+                        : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
+                    
+                    if (config.customConfig.sshKeyLocation) {
+                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                    }
+                    
+                    // Sync each folder
+                    let folderIndex = 0;
+                    let syncedCount = 0;
+                    
+                    for (const folder of foldersToSync) {
+                        folderIndex++;
+                        const source = `${config.serverVariables.magentoRoot}/${folder}`;
+                        
+                        // Remove trailing slash from folder for destination
+                        const folderPath = folder.endsWith('/') ? folder.slice(0, -1) : folder;
+                        const destFolder = `${destination}/${folderPath}`;
+                        
+                        task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Checking ${folder}...`);
+                        
+                        // Check if remote folder exists
+                        const checkResult = await ssh.execCommand(`test -d ${source} && echo "EXISTS" || echo "MISSING"`);
+                        const folderExists = checkResult.stdout.trim() === 'EXISTS';
+                        
+                        if (!folderExists) {
+                            logger.info('Remote folder does not exist, skipping', { folder, source });
+                            task.output = `${chalk.yellow('⚠')} ${chalk.gray(folder)} ${chalk.yellow('(not found on server)')}`;
+                            await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause so user can see message
+                            continue;
+                        }
+                        
+                        // Ensure destination directory exists (create full path)
+                        if (!fs.existsSync(destFolder)) {
+                            fs.mkdirSync(destFolder, { recursive: true });
+                            logger.info('Created destination directory', { path: destFolder });
+                        }
+                        
+                        task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Syncing ${folder}...`);
+                        
+                        // Build rsync command with compression
+                        // Note: Using trailing slash on source to sync contents, not the folder itself
+                        // Using --partial to keep partially transferred files, --ignore-errors to continue on errors
+                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destFolder}`;
+                        
+                        if (config.databases.databaseData.password) {
+                            rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                        }
+                        
+                        logger.info('Syncing folder', { folder, source, destination: destFolder, command: rsyncCommand });
+                        
+                        // Execute rsync with progress tracking
+                        try {
+                            await new Promise<void>((resolve, reject) => {
+                                const rsync = require('child_process').exec(rsyncCommand);
+                                let lastUpdate = Date.now();
+                                let stderrOutput = '';
+                                
+                                const handleRsyncData = function (data: any) {
+                                    const dataStr = data.toString();
+                                    const now = Date.now();
+                                    
+                                    // Extract speed from rsync output
+                                    const speedMatch = dataStr.match(/([\d.]+)(MB|KB|GB)\/s/);
+                                    
+                                    if (speedMatch && now - lastUpdate > 500) {
+                                        const speedValue = parseFloat(speedMatch[1]);
+                                        const unit = speedMatch[2];
+                                        
+                                        let displayText = `${chalk.gray(folder)} ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('⚡')}`;
+                                        
+                                        task.output = displayText;
+                                        lastUpdate = now;
+                                    }
+                                };
+                                
+                                rsync.stdout.on('data', handleRsyncData);
+                                rsync.stderr.on('data', function(data: any) {
+                                    stderrOutput += data.toString();
+                                    handleRsyncData(data);
+                                });
+                                
+                                rsync.on('exit', function (code: any) {
+                                    // Exit codes: 
+                                    // 0 = success
+                                    // 23 = partial transfer (some files couldn't be transferred)
+                                    // 24 = partial transfer due to vanished source files (files disappeared during transfer)
+                                    // We'll accept these as success since some files being unavailable is okay
+                                    if (code === 0 || code === 23 || code === 24) {
+                                        if (code === 23) {
+                                            logger.info('Partial transfer completed (some files skipped)', { folder });
+                                        } else if (code === 24) {
+                                            logger.info('Partial transfer completed (some source files vanished)', { folder });
+                                        }
+                                        resolve();
+                                    } else if (code === 20) {
+                                        // Exit code 20 often happens when destination has issues but transfer might have completed
+                                        // Log as warning but don't fail
+                                        logger.warn('Rsync exit code 20 (signal received or interrupted), checking if files transferred', { folder });
+                                        
+                                        // Check if destination directory has content (successful transfer)
+                                        try {
+                                            const files = fs.readdirSync(destFolder);
+                                            if (files.length > 0) {
+                                                logger.info('Files were transferred despite exit code 20, marking as success', { folder, fileCount: files.length });
+                                                resolve();
+                                            } else {
+                                                logger.warn('No files transferred, treating as failure', { folder });
+                                                reject(new Error(`Rsync failed for ${folder} with exit code ${code}`));
+                                            }
+                                        } catch (err) {
+                                            logger.warn('Could not check destination directory', { folder, error: (err as Error).message });
+                                            reject(new Error(`Rsync failed for ${folder} with exit code ${code}`));
+                                        }
+                                    } else {
+                                        const errorMsg = `Rsync failed for ${folder} with exit code ${code}`;
+                                        logger.error(errorMsg, new Error(errorMsg));
+                                        logger.info('Failed rsync command', { command: rsyncCommand, source, destination: destFolder });
+                                        if (stderrOutput) {
+                                            logger.info('Rsync stderr output', { stderr: stderrOutput.substring(0, 500) });
+                                        }
+                                        reject(new Error(`${errorMsg}\nSource: ${source}\nDestination: ${destFolder}\nStderr: ${stderrOutput.substring(0, 200)}`));
+                                    }
+                                });
+                                
+                                rsync.on('error', function (err: any) {
+                                    logger.error('Rsync process error', err);
+                                    reject(err);
+                                });
+                            });
+                            
+                            syncedCount++;
+                            logger.info('Folder sync complete', { folder });
+                        } catch (error) {
+                            // Log the error but continue with other folders
+                            const err = error as Error;
+                            logger.warn('Folder sync failed, continuing with remaining folders', { folder, error: err.message });
+                            task.output = `${chalk.yellow('⚠')} ${chalk.gray(folder)} ${chalk.red('(sync failed)')}`;
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause so user can see message
+                        }
+                    }
+                    
+                    const duration = PerformanceMonitor.end('media-sync');
+                    
+                    if (syncedCount === 0) {
+                        task.title = `⚠️  No media folders synced (${ProgressDisplay.formatDuration(duration)})`;
+                    } else if (syncedCount < foldersToSync.length) {
+                        task.title = `✓ Synced ${syncedCount}/${foldersToSync.length} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                    } else {
+                        task.title = `✓ Synced ${syncedCount} media folder(s) (${ProgressDisplay.formatDuration(duration)})`;
+                    }
+                    
+                    logger.info('Media sync complete', { 
+                        foldersRequested: foldersToSync.length,
+                        foldersSynced: syncedCount,
+                        duration 
+                    });
+                }
+            });
+        }
+
         this.downloadTasks.push({
             title: 'Cleaning up and closing SSH connection',
             task: async (): Promise<void> => {
@@ -461,12 +651,6 @@ class DownloadTask {
 
                 const databaseFileName = `${config.serverVariables.databaseName}.sql`;
                 await ssh.execCommand(`rm -f ~/${databaseFileName}`);
-
-                if (config.settings.syncDatabases === 'yes') {
-                    if (sshSecondDatabase && typeof sshSecondDatabase.dispose === 'function') {
-                        await sshSecondDatabase.dispose().catch(() => {});
-                    }
-                }
 
                 PerformanceMonitor.end('cleanup');
             }

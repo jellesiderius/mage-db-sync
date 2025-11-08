@@ -76,7 +76,7 @@ class ConfigurationQuestions {
 
     // Add questions
     addQuestions = async (config: any) => {
-        if (config.settings.syncTypes.includes('Magento database') && config.settings.syncDatabases != 'yes') {
+        if (config.settings.syncTypes.includes('Magento database')) {
             this.questionsOne.push(
                 {
                     type: 'list',
@@ -92,7 +92,7 @@ class ConfigurationQuestions {
         }
 
         // Only push questions if Magento project is found
-        if (config.settings.currentFolderIsMagento && config.settings.syncDatabases != 'yes' && config.settings.syncTypes.includes('Magento database')) {
+        if (config.settings.currentFolderIsMagento && config.settings.syncTypes.includes('Magento database')) {
             this.questionsOne.push(
                 {
                     type: 'list',
@@ -107,7 +107,7 @@ class ConfigurationQuestions {
             );
         }
 
-        if (config.settings.currentFolderIsMagento && config.settings.syncTypes.includes('Images') || config.settings.syncDatabases == 'yes') {
+        if (config.settings.currentFolderIsMagento && config.settings.syncTypes.includes('Images')) {
             if (config.settings.rsyncInstalled) {
                 this.questionsOne.push(
                     {
@@ -139,7 +139,7 @@ class ConfigurationQuestions {
             );
         }
 
-        if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes' && config.settings.syncTypes.includes('Wordpress database')) {
+        if (config.databases.databaseData.wordpress && config.settings.syncTypes.includes('Wordpress database')) {
             this.questionsOne.push(
                 {
                     type: 'list',

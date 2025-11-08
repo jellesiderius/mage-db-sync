@@ -27,7 +27,6 @@ class SelectDatabaseQuestion {
 
             // Set database data in config
             config.databases.databaseData = this.databasesModel.databaseData;
-            config.databases.databaseDataSecond = this.databasesModel.databaseDataSecond;
 
             // If local folder is set for project, use that as currentFolder
             config.settings.currentFolder = process.cwd();

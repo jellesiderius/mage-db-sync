@@ -23,31 +23,10 @@ class DatabasesModel {
 		'sshKeyLocation': ''
 	};
 
-	public databaseDataSecond = {
-		'username': '',
-		'password': '',
-		'server': '',
-		'domainFolder': '',
-		'port': 22,
-		'stagingUsername': '',
-		'localProjectFolder': '',
-		'externalProjectFolder': '',
-		'wordpress': false,
-		'externalPhpPath': '',
-		'localProjectUrl': '',
-		'commandsFolder': '',
-		'externalElasticsearchPort': '',
-		'sshKeyLocation': ''
-	};
-
 	// Collect databases | collect single database
 	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
 		let databases: Record<string, any> = stagingDatabases.databases;
 		let databaseDataType = this.databaseData;
-
-		if (collectStaging) {
-			databaseDataType = this.databaseDataSecond;
-		}
 
 		if (databaseType == 'production') {
 			databases = productionDatabases.databases as Record<string, any>;
@@ -107,7 +86,6 @@ class DatabasesModel {
 
 				if (database.stagingUsername) {
 					databaseDataType.stagingUsername = database.stagingUsername;
-					await this.collectDatabaseData(databaseDataType.stagingUsername, 'staging', true, config)
 				}
 			} else {
 				// Collect all database

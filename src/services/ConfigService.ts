@@ -136,7 +136,6 @@ export class ConfigService {
                 magerun2CommandLocal: '',
                 wpCommandLocal: '',
                 databaseCommand: '',
-                syncDatabases: '',
                 syncImageTypes: null,
                 syncTypes: null
             },
@@ -150,8 +149,7 @@ export class ConfigService {
             databases: {
                 databasesList: null,
                 databaseType: null,
-                databaseData: null,
-                databaseDataSecond: null
+                databaseData: null
             },
             wordpressConfig: {
                 prefix: '',

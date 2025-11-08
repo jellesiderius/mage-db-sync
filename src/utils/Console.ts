@@ -76,10 +76,6 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
 const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
     let databaseData = config.databases.databaseData;
 
-    if (useSecondDatabase) {
-        databaseData = config.databases.databaseDataSecond;
-    }
-
     let returnString = '';
 
     // See if external project folder is filled in, otherwise try default path
@@ -104,10 +100,6 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecond
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderPhpCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
     let phpPath = config.serverVariables.externalPhpPath;
-
-    if (config.settings.syncDatabases == 'yes' && useSecondDatabase) {
-        phpPath = config.serverVariables.secondDatabaseExternalPhpPath;
-    }
 
     return sshNavigateToMagentoRootCommand(phpPath + ' ' + command, config, useSecondDatabase, log);
 }
@@ -145,12 +137,6 @@ const localhostRsyncDownloadCommand = (source: string, destination: string, conf
         databaseUsername = config.databases.databaseData.username,
         databaseServer = config.databases.databaseData.server,
         databasePort = config.databases.databaseData.port;
-
-    if (useSecondDatabase) {
-        databaseUsername = config.databases.databaseDataSecond.username,
-        databaseServer = config.databases.databaseDataSecond.server,
-        databasePort = config.databases.databaseDataSecond.port;
-    }
 
     config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
 

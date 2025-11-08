@@ -13,7 +13,6 @@ import DownloadTask from '../tasks/DownloadTask';
 import ImportTask from '../tasks/ImportTask';
 import MagentoConfigureTask from '../tasks/MagentoConfigureTask';
 import WordpressConfigureTask from '../tasks/WordpressConfigureTask';
-import SyncImportTask from '../tasks/SyncImportTask';
 
 export class TaskFactory {
     private static instance: TaskFactory;
@@ -63,12 +62,5 @@ export class TaskFactory {
      */
     public createWordpressConfigureTask(): WordpressConfigureTask {
         return new WordpressConfigureTask();
-    }
-
-    /**
-     * Create SyncImportTask instance
-     */
-    public createSyncImportTask(): SyncImportTask {
-        return new SyncImportTask();
     }
 }

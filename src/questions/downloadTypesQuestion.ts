@@ -25,7 +25,7 @@ class DownloadTypesQuestion {
         let choices = ['Magento database'];
         let defaultChoices = ['Magento database'];
 
-        if (config.databases.databaseData.wordpress && config.settings.syncDatabases != 'yes') {
+        if (config.databases.databaseData.wordpress) {
             choices.push('Wordpress database')
         }
 

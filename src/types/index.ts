@@ -99,7 +99,6 @@ export interface AppConfig {
         magerun2CommandLocal: string;
         wpCommandLocal: string;
         databaseCommand: string;
-        syncDatabases: string;
         syncImageTypes: string[] | null;
         syncTypes: string[] | null;
     };
@@ -116,7 +115,6 @@ export interface AppConfig {
         databasesList: DatabaseListItem[] | null;
         databaseType: string | null;
         databaseData: DatabaseConfig | null;
-        databaseDataSecond: DatabaseConfig | null;
     };
     wordpressConfig: {
         prefix: string;

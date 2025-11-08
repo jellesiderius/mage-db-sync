@@ -5,7 +5,6 @@ import MainController from './MainController';
 import DatabaseTypeQuestion from '../questions/DatabaseTypeQuestion';
 import SelectDatabaseQuestion from '../questions/SelectDatabaseQuestion';
 import ConfigurationQuestions from '../questions/ConfigurationQuestions';
-import SyncDatabasesQuestions from '../questions/SyncDatabasesQuestions';
 import DownloadTypesQuestion from '../questions/DownloadTypesQuestion';
 import { UI } from '../utils/UI';
 import { PerformanceMonitor, SSHConnectionPool } from '../utils/Performance';
@@ -89,12 +88,6 @@ class StartController extends MainController {
             });
         }
 
-        if (this.config.settings.syncDatabases === 'yes' && this.config.databases.databaseData && this.config.databases.databaseDataSecond) {
-            tasks.push({
-                label: 'Sync Databases',
-                value: `${this.config.databases.databaseData.username} ⟷ ${this.config.databases.databaseDataSecond.username}`
-            });
-        }
 
         UI.table(tasks);
 
@@ -155,16 +148,16 @@ class StartController extends MainController {
 
         // Show performance summary with speed improvements
         PerformanceMonitor.showSummary();
-        
+
         // Log completion
         const logger = this.services.getLogger();
-        logger.info('Operation completed successfully', { 
+        logger.info('Operation completed successfully', {
             component: 'StartController'
         });
     }
 
     askQuestions = async () => {
-        UI.section('⚙️  Configuration');
+        UI.section('Configuration');
 
         let databaseTypeQuestion = await new DatabaseTypeQuestion();
         await databaseTypeQuestion.configure(this.config);
@@ -172,16 +165,6 @@ class StartController extends MainController {
         let selectDatabaseQuestion = await new SelectDatabaseQuestion();
         await selectDatabaseQuestion.configure(this.config);
 
-        if (
-            this.config.databases.databaseData &&
-            this.config.databases.databaseData.stagingUsername &&
-            this.config.databases.databaseDataSecond &&
-            this.config.databases.databaseDataSecond.username &&
-            this.config.settings.rsyncInstalled
-        ) {
-            let syncDatabaseQuestion = await new SyncDatabasesQuestions();
-            await syncDatabaseQuestion.configure(this.config);
-        }
 
         let downloadTypesQuestion = await new DownloadTypesQuestion();
         await downloadTypesQuestion.configure(this.config);
@@ -209,10 +192,6 @@ class StartController extends MainController {
             await importTask.configure(this.list, this.config);
         }
 
-        if (this.config.settings.syncDatabases === 'yes') {
-            const syncImportTask = this.taskFactory.createSyncImportTask();
-            await syncImportTask.configure(this.list, this.config, this.sshSecondDatabase);
-        }
 
         if (this.config.settings.import === 'yes') {
             const magentoConfigureTask = this.taskFactory.createMagentoConfigureTask();
@@ -224,8 +203,8 @@ class StartController extends MainController {
             await wordpressConfigureTask.configure(this.list, this.config);
         }
 
-        logger.info('Task pipeline prepared successfully', { 
-            taskCount: this.list.tasks.length 
+        logger.info('Task pipeline prepared successfully', {
+            taskCount: this.list.tasks.length
         });
     };
 }

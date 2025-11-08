@@ -49,7 +49,6 @@ class MainController {
             'magerun2CommandLocal': 'magerun2',
             'wpCommandLocal': 'wp',
             'databaseCommand': '',
-            'syncDatabases': 'no',
             'syncImageTypes': null as string[] | null,
             'syncTypes': null as string[] | null
         },
@@ -63,8 +62,7 @@ class MainController {
         'databases': {
             'databasesList': null as any,
             'databaseType': null as string | null,
-            'databaseData': null as any,
-            'databaseDataSecond': null as any
+            'databaseData': null as any
         },
         'wordpressConfig': {
             'prefix': '',

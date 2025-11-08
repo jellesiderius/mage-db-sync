@@ -6,6 +6,7 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 import * as gradientString from 'gradient-string';
 import ora, { Ora } from 'ora';
+import {fruit, mind, retro, summer, teen, vice} from "gradient-string";
 
 export class UI {
     private static spinners: Map<string, Ora> = new Map();
@@ -19,7 +20,7 @@ export class UI {
             font: 'Standard',
             horizontalLayout: 'default'
         });
-        const gradient = gradientString.pastel;
+        const gradient = gradientString.cristal;
         console.log(gradient.multiline(banner));
         console.log(chalk.gray(' Database synchronizer for Magento & WordPress - V2'));
     }
