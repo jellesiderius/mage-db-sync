@@ -182,6 +182,9 @@ class ImportTask {
         const startTime = Date.now();
         let lastUpdate = Date.now();
         
+        // For compressed files, pv reads compressed bytes from disk
+        const displaySize = sqlFileSize; // Always show the actual file size being read
+        
         // Use pv to track progress with automatic decompression if needed
         const currentFolder = config.settings.currentFolder || process.cwd();
         const decompressCmd = isCompressed ? 'gunzip | ' : '';
@@ -205,15 +208,16 @@ class ImportTask {
                 else if (unit.includes('M')) bytesRead *= 1024 * 1024;
                 else if (unit.includes('G')) bytesRead *= 1024 * 1024 * 1024;
                 
-                const percentage = Math.min(99, Math.round((bytesRead / sqlFileSize) * 100));
+                const percentage = Math.min(99, Math.round((bytesRead / displaySize) * 100));
                 const progressBar = EnhancedProgress.createProgressBar(percentage, 20);
                 
                 const elapsed = (now - startTime) / 1000;
                 const speed = elapsed > 0 ? bytesRead / elapsed : 0;
-                const remaining = sqlFileSize - bytesRead;
+                const remaining = displaySize - bytesRead;
                 const eta = speed > 0 ? Math.round(remaining / speed) : 0;
                 
-                task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(bytesRead) + ' / ' + ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.green('↓')} ${chalk.cyan(ProgressDisplay.formatSpeed(speed))}${eta > 0 && eta < 600 ? chalk.gray(' ETA: ' + eta + 's') : ''} ${chalk.magenta('🐳 DDEV')}`;
+                const compressionNote = isCompressed ? chalk.dim(' (gzip)') : '';
+                task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(bytesRead) + ' / ' + ProgressDisplay.formatBytes(displaySize))}${compressionNote} ${chalk.green('↓')} ${chalk.cyan(ProgressDisplay.formatSpeed(speed))}${eta > 0 && eta < 600 ? chalk.gray(' ETA: ' + eta + 's') : ''} ${chalk.magenta('🐳 DDEV')}`;
                 
                 lastUpdate = now;
             }
@@ -224,7 +228,8 @@ class ImportTask {
         
         pvProcess.on('exit', (code) => {
             if (code === 0) {
-                task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.green('✓')}`;
+                const compressionNote = isCompressed ? chalk.dim(' (gzip)') : '';
+                task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(displaySize))}${compressionNote} ${chalk.green('✓')}`;
                 resolve();
             } else {
                 reject(new Error(`DDEV import failed with code ${code}`));
@@ -285,11 +290,14 @@ class ImportTask {
             
             const progressBar = EnhancedProgress.createProgressBar(percentage, 20);
             
-            const estimatedBytes = Math.min(sqlFileSize, (percentage / 100) * sqlFileSize);
+            // For display, show progress against the estimated uncompressed size (not compressed file size)
+            const displaySize = isCompressed ? estimatedUncompressedSize : sqlFileSize;
+            const estimatedBytes = Math.min(displaySize, (percentage / 100) * displaySize);
             const speed = elapsed > 0 ? (estimatedBytes / (elapsed / 1000)) : 0;
             
             const statusText = percentage >= 95 ? chalk.yellow('(finishing up...)') : '';
-            task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(speed))} ${statusText} ${chalk.magenta('🐳 DDEV')}`;
+            const compressionNote = isCompressed ? chalk.dim(' (gzip)') : '';
+            task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + ProgressDisplay.formatBytes(displaySize))}${compressionNote} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(speed))} ${statusText} ${chalk.magenta('🐳 DDEV')}`;
         }, 1000);
         
         try {
@@ -300,7 +308,9 @@ class ImportTask {
             await localhostMagentoRootExec(`ddev import-db --src=${filename}`, config);
             
             clearInterval(progressInterval);
-            task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(sqlFileSize))} ${chalk.green('✓')}`;
+            const finalSize = isCompressed ? estimatedUncompressedSize : sqlFileSize;
+            const compressionNote = isCompressed ? chalk.dim(' (gzip)') : '';
+            task.output = `${EnhancedProgress.createProgressBar(100, 20)} ${chalk.bold.cyan('100%')} ${chalk.gray(ProgressDisplay.formatBytes(finalSize))}${compressionNote} ${chalk.green('✓')}`;
             resolve();
         } catch (err) {
             clearInterval(progressInterval);

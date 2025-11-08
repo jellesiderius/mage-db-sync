@@ -1,6 +1,6 @@
 /**
  * mage-db-sync v2 - Main entry point
- * 
+ *
  * Clean V2 architecture with services and dependency injection
  */
 
@@ -27,10 +27,10 @@ async function main() {
         // Initialize ServiceContainer first
         const container = ServiceContainer.getInstance();
         await container.initialize();
-        
+
         // Get npm installation path
         const npmPath = await getInstalledPath('mage-db-sync');
-        
+
         // Check for required files
         let missingFiles = false;
         const requiredFiles = [
@@ -58,13 +58,7 @@ async function main() {
         await versionCheck.getToolVersions();
 
         // Build description
-        let description = `🚀 Magento Database Synchronizer V2 - Enhanced Performance Edition - ${packageJson.version}\n\n`;
-        description += `${kleur.cyan('New V2 Features:')}\n`;
-        description += `  ⚡ Parallel validation checks for 3x faster startup\n`;
-        description += `  🔄 SSH connection pooling and reuse\n`;
-        description += `  📊 Real-time progress tracking with estimates\n`;
-        description += `  🎨 Beautiful modern CLI interface\n`;
-        description += `  💾 Performance monitoring and statistics\n\n`;
+        let description = `mage-db-sync - Magento Database Synchronizer - ${packageJson.version}\n\n`;
         description += `${kleur.gray('Resources:')}\n`;
         description += `• Github: https://github.com/jellesiderius/mage-db-sync\n`;
         description += `• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n`;
@@ -87,7 +81,7 @@ async function main() {
         // Start command - main sync operation
         program
             .command('start')
-            .description('🚀 Start database synchronization (V2 with performance enhancements)')
+            .description('Start database synchronization')
             .action(async () => {
                 const controller = new StartController();
                 await controller.execute();
