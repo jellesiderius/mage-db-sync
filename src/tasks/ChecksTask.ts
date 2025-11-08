@@ -4,8 +4,6 @@
 import * as fs from 'fs';
 import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
-import { UI } from '../utils/UI';
-import { ProgressDisplay } from '../utils/ProgressDisplay';
 import configFile from '../../config/settings.json';
 
 interface CheckResult {
@@ -158,7 +156,7 @@ class ChecksTask {
     // Add tasks
     addTasks = async (list: any, config: any, ssh: any) => {
         list.add({
-            title: 'Running parallel validation checks ⚡',
+            title: 'Running parallel validation checks',
             task: (ctx: any, task: any): Listr =>
                 task.newListr(this.checkTasks)
         });

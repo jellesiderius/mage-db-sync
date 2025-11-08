@@ -3,7 +3,6 @@
  */
 import {
     sshMagentoRootFolderMagerunCommand,
-    sshMagentoRootFolderPhpCommand,
     sshNavigateToMagentoRootCommand,
     stripOutputString
 } from '../utils/Console';
