@@ -1,24 +1,28 @@
 /**
- * StartController - Enhanced with modern UI and performance features
+ * StartController - Enhanced with modern UI, performance features, and DI
  */
 import MainController from './MainController';
 import DatabaseTypeQuestion from '../questions/DatabaseTypeQuestion';
 import SelectDatabaseQuestion from '../questions/SelectDatabaseQuestion';
 import ConfigurationQuestions from '../questions/ConfigurationQuestions';
-import ChecksTask from '../tasks/ChecksTask';
-import DownloadTask from '../tasks/DownloadTask';
-import ImportTask from '../tasks/ImportTask';
-import MagentoConfigureTask from '../tasks/MagentoConfigureTask';
-import WordpressConfigureTask from '../tasks/WordpressConfigureTask';
 import SyncDatabasesQuestions from '../questions/SyncDatabasesQuestions';
-import SyncImportTask from '../tasks/SyncImportTask';
 import DownloadTypesQuestion from '../questions/DownloadTypesQuestion';
 import { UI } from '../utils/UI';
 import { PerformanceMonitor, SSHConnectionPool } from '../utils/Performance';
+import { TaskFactory } from '../core/TaskFactory';
+import { ServiceContainer } from '../core/ServiceContainer';
 // @ts-ignore
 import configFile from '../../config/settings.json';
 
 class StartController extends MainController {
+    private taskFactory: TaskFactory;
+    private services: ServiceContainer;
+
+    constructor() {
+        super();
+        this.taskFactory = TaskFactory.getInstance();
+        this.services = ServiceContainer.getInstance();
+    }
     public async execute(): Promise<void> {
         return this.executeStart();
     }
@@ -177,31 +181,39 @@ class StartController extends MainController {
         console.log('');
         UI.info('Preparing tasks...\n');
 
-        let checksTask = await new ChecksTask();
+        const logger = this.services.getLogger();
+        logger.info('Preparing task pipeline', { component: 'StartController' });
+
+        // Create tasks via factory (DI pattern)
+        const checksTask = this.taskFactory.createChecksTask();
         await checksTask.configure(this.list, this.config, this.ssh);
 
-        let downloadTask = await new DownloadTask();
+        const downloadTask = this.taskFactory.createDownloadTask();
         await downloadTask.configure(this.list, this.config, this.ssh, this.sshSecondDatabase);
 
         if (this.config.settings.import === 'yes') {
-            let importTask = await new ImportTask();
+            const importTask = this.taskFactory.createImportTask();
             await importTask.configure(this.list, this.config);
         }
 
         if (this.config.settings.syncDatabases === 'yes') {
-            let syncImportTask = await new SyncImportTask();
+            const syncImportTask = this.taskFactory.createSyncImportTask();
             await syncImportTask.configure(this.list, this.config, this.sshSecondDatabase);
         }
 
         if (this.config.settings.import === 'yes') {
-            let magentoConfigureTask = await new MagentoConfigureTask();
+            const magentoConfigureTask = this.taskFactory.createMagentoConfigureTask();
             await magentoConfigureTask.configure(this.list, this.config);
         }
 
         if (this.config.settings.wordpressImport === 'yes') {
-            let wordpressConfigureTask = await new WordpressConfigureTask();
+            const wordpressConfigureTask = this.taskFactory.createWordpressConfigureTask();
             await wordpressConfigureTask.configure(this.list, this.config);
         }
+
+        logger.info('Task pipeline prepared successfully', { 
+            taskCount: this.list.tasks.length 
+        });
     };
 }
 

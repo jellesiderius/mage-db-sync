@@ -14,6 +14,7 @@ import VersionCheck from './utils/VersionCheck';
 import { StartController } from './controllers/StartController';
 import { OpenFolderController } from './controllers/OpenFolderController';
 import { SelfUpdateController } from './controllers/SelfUpdateController';
+import { ServiceContainer } from './core/ServiceContainer';
 
 // Remove warning listeners
 process.removeAllListeners('warning');
@@ -23,6 +24,10 @@ process.removeAllListeners('warning');
  */
 async function main() {
     try {
+        // Initialize ServiceContainer first
+        const container = ServiceContainer.getInstance();
+        await container.initialize();
+        
         // Get npm installation path
         const npmPath = await getInstalledPath('mage-db-sync');
         
