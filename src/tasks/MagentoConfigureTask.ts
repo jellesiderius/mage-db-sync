@@ -200,10 +200,8 @@ class MagentoConfigureTask {
                     let allWebsites = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:website:list --format=json`, config);
                     allWebsites = JSON.parse(<string>allWebsites);
 
-                    // @ts-ignore
-                    for (const [key, value] of Object.entries(allWebsites)) {
-                        // @ts-ignore
-                        let code = value.code;
+                    for (const [key, value] of Object.entries(allWebsites as Record<string, any>)) {
+                        let code = (value as any).code;
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, config, true);
                     }
                 }
@@ -281,11 +279,10 @@ class MagentoConfigureTask {
 
                                 values = Object.entries(values);
 
-                                // @ts-ignore
-                                values.map(async ([path, value] = entry) => {
+                                values.map(async (entry: any) => {
+                                    const [path, value] = entry;
                                     var scope = 'default';
-                                    // @ts-ignore
-                                    if (storeId != 0) {
+                                    if (Number(storeId) !== 0) {
                                         scope = 'stores';
                                     }
 
@@ -344,11 +341,8 @@ class MagentoConfigureTask {
                     // Gather all urls
                     let urls = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:store:config:base-url:list --format=json`, config);
                     urls = JSON.parse(<string>urls);
-                    // @ts-ignore
-                    for (const [key, value] of Object.entries(urls)) {
-                        // @ts-ignore
-                        let url = value.secure_baseurl;
-                        // @ts-ignore
+                    for (const [key, value] of Object.entries(urls as Record<string, any>)) {
+                        let url = (value as any).secure_baseurl;
                         if (!config.finalMessages.domains.includes(url)) {
                             config.finalMessages.domains.push(url);
                         }

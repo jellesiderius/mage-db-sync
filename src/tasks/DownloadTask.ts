@@ -12,7 +12,6 @@ import { SSHConnectionPool, PerformanceMonitor } from '../utils/Performance';
 import { UI } from '../utils/UI';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
-// @ts-ignore
 import staticConfigFile from '../../config/static-settings.json';
 import configFile from '../../config/settings.json';
 import fs from 'fs';

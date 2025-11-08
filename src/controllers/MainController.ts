@@ -1,4 +1,3 @@
-// @ts-ignore
 import configFile from '../../config/settings.json'
 import {NodeSSH} from 'node-ssh'
 import DatabasesModel from "../models/DatabasesModel";
@@ -81,8 +80,7 @@ class MainController {
     );
     public ssh = new NodeSSH();
     public sshSecondDatabase = new NodeSSH();
-    // @ts-ignore
-    public databases = new DatabasesModel(this.config);
+    public databases = new DatabasesModel();
 
     constructor() {
         this.configureConfig().then();

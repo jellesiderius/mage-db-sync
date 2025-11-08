@@ -1,9 +1,6 @@
-// @ts-ignore
-import download from 'download-git-repo'
-// @ts-ignore
-import {getInstalledPath} from 'get-installed-path'
+import download from 'download-git-repo';
+import {getInstalledPath} from 'get-installed-path';
 import {consoleCommand, success} from "../utils/Console";
-// @ts-ignore
 import packageFile from '../../package.json';
 import VersionCheck from "../utils/VersionCheck";
 

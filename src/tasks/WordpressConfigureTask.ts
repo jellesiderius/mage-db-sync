@@ -66,8 +66,7 @@ class WordpressConfigureTask {
                         // Retrieve current site URL from database
                         let wordpressUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"""`;
                         let wordpressUrl = await localhostMagentoRootExec(wordpressUrlCommand, config, true);
-                        // @ts-ignore
-                        wordpressUrl = wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
+                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
 
                         let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"""`;
                         await localhostMagentoRootExec(replaceCommandBlogs, config, true);
@@ -77,8 +76,7 @@ class WordpressConfigureTask {
                     } else {
                         // Retrieve current site URL from database
                         let wordpressUrl = await localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
-                        // @ts-ignore
-                        wordpressUrl = wordpressReplaces(wordpressUrl.replace('option_value', '').trim(), 'https://').split('/')[0];
+                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
                         // Replace options for localhost
                         await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'${wordpressUrl}', '${config.settings.magentoLocalhostDomainName}');"`, config);
                         await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value,'https://', 'http://');"`, config);

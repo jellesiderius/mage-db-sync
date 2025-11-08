@@ -64,8 +64,7 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
     return new Promise((resolve, reject) => {
         exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
             if (error && !skipErrors) {
-                // @ts-ignore
-                throw new Error(error)
+                throw new Error(String(error))
                 process.exit();
             }
             resolve(stdout ? stdout : stderr);

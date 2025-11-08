@@ -1,6 +1,4 @@
-// @ts-ignore
 import stagingDatabases from "../../config/databases/staging.json";
-// @ts-ignore
 import productionDatabases from "../../config/databases/production.json";
 import path from "path";
 import fs from "fs";
@@ -44,59 +42,46 @@ class DatabasesModel {
 
 	// Collect databases | collect single database
 	collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
-		// @ts-ignore
-		var databases = stagingDatabases.databases;
-		// @ts-ignore
-		var databaseDataType = this.databaseData;
+		let databases: Record<string, any> = stagingDatabases.databases;
+		let databaseDataType = this.databaseData;
 
 		if (collectStaging) {
 			databaseDataType = this.databaseDataSecond;
 		}
 
 		if (databaseType == 'production') {
-			// @ts-ignore
-			databases = productionDatabases.databases;
+			databases = productionDatabases.databases as Record<string, any>;
 		}
 
-		for (let [key, database] of Object.entries(databases)) {
+		for (let [key, db] of Object.entries(databases)) {
+			const database = db as any; // Database entries have dynamic structure
+			
 			if (databaseKey == key) {
 				// Collect single database info
 				databaseDataType.username = database.username;
-				// @ts-ignore
 				databaseDataType.password = database.password;
 				databaseDataType.server = database.server;
 				databaseDataType.domainFolder = database.domainFolder;
-				// @ts-ignore
 				databaseDataType.port = database.port;
-				databaseDataType.localProjectFolder = database.localProjectFolder;
+				databaseDataType.localProjectFolder = database.localProjectFolder || '';
 				databaseDataType.externalProjectFolder = database.externalProjectFolder;
-				// @ts-ignore
-				databaseDataType.wordpress = database.wordpress;
-				// @ts-ignore
-				databaseDataType.externalPhpPath = database.externalPhpPath;
-				// @ts-ignore
-				databaseDataType.localProjectUrl = database.localProjectUrl;
-				// @ts-ignore
+				databaseDataType.wordpress = database.wordpress || false;
+				databaseDataType.externalPhpPath = database.externalPhpPath || '';
+				databaseDataType.localProjectUrl = database.localProjectUrl || '';
 				if (database.externalElasticsearchPort) {
-					// @ts-ignore
 					databaseDataType.externalElasticsearchPort = database.externalElasticsearchPort;
 				}
-				// @ts-ignore
 				if (database.sshKeyName) {
-					// @ts-ignore
 					config.customConfig.sshKeyLocation = os.userInfo().homedir + '/.ssh/' + database.sshKeyName;
 				}
 
-				// @ts-ignore
 				if (database.commandsFolder) {
-					// @ts-ignore
 					databaseDataType.commandsFolder = database.commandsFolder;
 
 					let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
 					let commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
 
 					if (fs.existsSync(commandsPath)) {
-						// @ts-ignore
 						let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath+'/'+file).isFile());
 						if (filesArray.length > 0) {
 							for (const file of filesArray) {
@@ -120,9 +105,7 @@ class DatabasesModel {
 					}
 				}
 
-				// @ts-ignore
 				if (database.stagingUsername) {
-					// @ts-ignore
 					databaseDataType.stagingUsername = database.stagingUsername;
 					await this.collectDatabaseData(databaseDataType.stagingUsername, 'staging', true, config)
 				}

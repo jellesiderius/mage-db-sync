@@ -16,7 +16,7 @@ interface TaskItem {
 class SyncImportTask {
     private importTasks: TaskItem[] = [];
     private configureTasks: TaskItem[] = [];
-    private stagingValues = {};
+    private stagingValues: Record<string, any[]> = {};
 
     configure = async (list: any, config: any, ssh: any) => {
         await this.addTasks(list, config, ssh);
@@ -38,7 +38,6 @@ class SyncImportTask {
         if (json) {
             const jsonObj = JSON.parse(<string>json);
             if (jsonObj && typeof jsonObj === `object`) {
-                // @ts-ignore
                 self.stagingValues[path] = [];
 
                 Object.keys(jsonObj).forEach(function (item) {
@@ -52,16 +51,11 @@ class SyncImportTask {
                         return;
                     }
 
-                    // @ts-ignore
                     self.stagingValues[path].push(
                         {
-                            // @ts-ignore
                             'path': objectItemPath,
-                            // @ts-ignore
                             'scope': objectItemScope,
-                            // @ts-ignore
                             'scope_id': objectItemScopeId,
-                            // @ts-ignore
                             'value': objectItemValue
                         }
                     )
@@ -286,10 +280,8 @@ class SyncImportTask {
                         var itemDeleteQuery = '';
                         var itemInsertQuery = '';
 
-                        // @ts-ignore
                         for (const itemKeyChild of Object.keys(this.stagingValues[itemKey])) {
-                            // @ts-ignore
-                            var item = this.stagingValues[itemKey][itemKeyChild];
+                            var item = this.stagingValues[itemKey][Number(itemKeyChild)];
 
                             itemDeleteQuery = itemDeleteQuery + `DELETE FROM core_config_data WHERE path LIKE '${item.path}';`;
                             itemInsertQuery = itemInsertQuery + `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${item.scope}', '${item.scope_id}', '${item.path}', '${item.value}');`;
@@ -314,8 +306,7 @@ class SyncImportTask {
                     let jsonEngineCheck = ''; // Types supported: 'elasticsearch7', 'amasty_elastic';
 
                     let engineCheck = await ssh.execCommand(sshMagentoRootFolderMagerunCommand('config:store:get "catalog/search/engine" --format=json', config, true));
-                    // @ts-ignore
-                    if (engineCheck.length > 0) {
+                    if (engineCheck && engineCheck.stdout && engineCheck.stdout.length > 0) {
                         try {
                             const obj = JSON.parse(<string>engineCheck);
                             if (obj && typeof obj === `object`) {

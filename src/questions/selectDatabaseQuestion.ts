@@ -1,10 +1,7 @@
 import inquirer from 'inquirer'
 import DatabasesModel from "../models/DatabasesModel";
-import * as path from 'path'
-import * as fs from 'fs'
-// @ts-ignore
-import {command} from "commander";
-// @ts-ignore
+import * as path from 'path';
+import * as fs from 'fs';
 import CommandExists from "command-exists";
 
 const searchList = require("inquirer-search-list");

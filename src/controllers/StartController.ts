@@ -11,7 +11,6 @@ import { UI } from '../utils/UI';
 import { PerformanceMonitor, SSHConnectionPool } from '../utils/Performance';
 import { TaskFactory } from '../core/TaskFactory';
 import { ServiceContainer } from '../core/ServiceContainer';
-// @ts-ignore
 import configFile from '../../config/settings.json';
 
 class StartController extends MainController {

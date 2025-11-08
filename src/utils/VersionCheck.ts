@@ -1,7 +1,5 @@
-// @ts-ignore
 import packageFile from "../../package.json";
-// @ts-ignore
-import fetch from 'node-fetch'
+import fetch from 'node-fetch';
 
 class VersionCheck {
 	public config = {

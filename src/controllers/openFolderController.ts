@@ -1,5 +1,4 @@
-// @ts-ignore
-import {getInstalledPath} from 'get-installed-path'
+import {getInstalledPath} from 'get-installed-path';
 import {consoleCommand, success} from "../utils/Console";
 import path from "path";
 
