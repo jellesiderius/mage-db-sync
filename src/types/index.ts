@@ -122,6 +122,8 @@ export interface AppConfig {
         password: string;
         host: string;
         database: string;
+        isMultisite?: boolean;
+        multisiteType?: 'subdomain' | 'subdirectory';
     };
 }
 
