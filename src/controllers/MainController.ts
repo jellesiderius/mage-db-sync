@@ -6,7 +6,6 @@ import * as path from 'path'
 import { Listr } from 'listr2';
 import CommandExists from 'command-exists';
 import inquirer from 'inquirer'
-inquirer.registerPrompt("search-list", require("../../node_modules/inquirer-search-list"));
 
 
 class MainController {

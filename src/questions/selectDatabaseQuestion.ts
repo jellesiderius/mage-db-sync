@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import CommandExists from "command-exists";
 
-const searchList = require("inquirer-search-list");
-inquirer.registerPrompt("search-list", searchList);
+const searchList = require('inquirer-search-list');
+inquirer.registerPrompt('search-list', searchList);
 
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
@@ -79,10 +79,7 @@ class SelectDatabaseQuestion {
                 type: 'search-list',
                 name: 'database',
                 message: 'Select or search database',
-                choices: config.databases.databasesList,
-                validate: (input: string) => {
-                    return input !== ''
-                }
+                choices: config.databases.databasesList
             }
         )
     }
