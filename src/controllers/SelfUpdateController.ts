@@ -31,7 +31,7 @@ class SelfUpdateController {
                 info(`Updating from ${config.currentVersion} to ${config.latestVersion}...`);
 
                 // Remove old dist folder
-                await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
+                await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, true);
 
                 // Download the latest version from GitHub
                 info('Downloading latest version from GitHub...');
@@ -39,10 +39,10 @@ class SelfUpdateController {
 
                 // Install dependencies
                 info('Installing dependencies...');
-                await consoleCommand(`cd ${config.npmPath}; npm install`, false);
+                await consoleCommand(`cd ${config.npmPath}; npm install`, true);
 
                 success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
-                
+
                 process.exit();
             } catch (err) {
                 error(`Update failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
