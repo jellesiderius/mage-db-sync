@@ -53,7 +53,7 @@ class SelectDatabaseQuestion {
                     // Check if ddev is installed locally
                     await CommandExists('ddev').then(() => {
                         config.settings.isDdevActive = true;
-                        config.settings.magerun2CommandLocal = "ddev magerun2";
+                        config.settings.magerun2CommandLocal = "ddev exec magerun2";
                     }).catch(function () {});
                 }
             }
