@@ -84,6 +84,8 @@ export interface AppConfig {
         currentFolder: string;
         currentFolderName: string;
         strip: string;
+        stripMode?: string;
+        stripOptions?: string[];
         syncImages: string;
         magentoLocalhostDomainName: string;
         rsyncInstalled: boolean;

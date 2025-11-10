@@ -297,7 +297,62 @@ class DownloadTask {
                     let stripOptions = '';
                     let humanReadable = '';
 
-                    if (config.settings.strip === 'keep customer data') {
+                    if (config.settings.strip === 'custom') {
+                        // Build custom strip options based on user selection
+                        // Uses official magerun2 table groups: https://github.com/netz98/n98-magerun2
+                        const customStripParts: string[] = [];
+                        const keepOptions = config.settings.stripOptions || [];
+                        
+                        // Always strip these for development (safe to remove)
+                        customStripParts.push(
+                            '@log',              // Log tables
+                            '@sessions',         // Session tables
+                            '@temp',             // Temporary indexer tables
+                            '@aggregated',       // Aggregated tables
+                            '@replica',          // Replica tables
+                            '@newrelic_reporting' // New Relic tables
+                        );
+                        
+                        // Strip based on what user wants to KEEP (unchecked = strip)
+                        if (!keepOptions.includes('customers')) {
+                            customStripParts.push('@customers');
+                        }
+                        
+                        if (!keepOptions.includes('admin')) {
+                            customStripParts.push('@admin', '@oauth', '@2fa');
+                        }
+                        
+                        if (!keepOptions.includes('sales')) {
+                            customStripParts.push('@sales');
+                        }
+                        
+                        if (!keepOptions.includes('quotes')) {
+                            customStripParts.push('@quotes');
+                        }
+                        
+                        if (!keepOptions.includes('search')) {
+                            customStripParts.push('@search', '@idx');
+                        }
+                        
+                        if (!keepOptions.includes('dotmailer')) {
+                            customStripParts.push('@dotmailer', '@mailchimp');
+                        }
+                        
+                        // Note: We don't strip config even if unchecked, as it would break the database
+                        // Configuration data (core_config_data) is not in any strip group - it's always kept
+                        if (!keepOptions.includes('config')) {
+                            logger.warn('Configuration settings are always kept as they are required for Magento to function');
+                        }
+                        
+                        const customStripString = customStripParts.join(' ');
+                        stripOptions = customStripString ? `--strip="${customStripString}"` : '';
+                        
+                        logger.info('Using custom strip configuration', {
+                            keepOptions,
+                            stripGroups: customStripParts,
+                            stripCommand: customStripString
+                        });
+                    } else if (config.settings.strip === 'keep customer data') {
                         const keepCustomerOptions = (staticConfigFile as any).settings?.databaseStripKeepCustomerData || '';
                         stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
                     } else if (config.settings.strip === 'full and human readable') {

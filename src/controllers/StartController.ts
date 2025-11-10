@@ -63,7 +63,7 @@ class StartController extends MainController {
         if (this.config.settings.syncTypes && Array.isArray(this.config.settings.syncTypes) && this.config.settings.syncTypes.includes('Magento database')) {
             tasks.push({
                 label: 'Download Database',
-                value: `${this.config.databases.databaseType} (${this.config.settings.strip || 'full'})`
+                value: `${this.config.databases.databaseType} (${this.config.settings.strip === 'custom' ? 'custom strip' : this.config.settings.strip || 'full'})`
             });
         }
 

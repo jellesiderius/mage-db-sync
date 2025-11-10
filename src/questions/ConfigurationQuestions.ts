@@ -16,7 +16,15 @@ class ConfigurationQuestions {
             .prompt(this.questionsOne)
             .then((answers) => {
                 // Set stripped setting
-                config.settings.strip = answers.strip;
+                config.settings.stripMode = answers.stripMode;
+                
+                if (answers.stripMode === 'preset') {
+                    config.settings.strip = answers.strip;
+                } else if (answers.stripMode === 'custom') {
+                    // Build custom strip configuration
+                    config.settings.strip = 'custom';
+                    config.settings.stripOptions = answers.stripOptions || [];
+                }
 
                 // Set import setting for Magento
                 config.settings.import = answers.import;
@@ -85,10 +93,36 @@ class ConfigurationQuestions {
             this.questionsOne.push(
                 {
                     type: 'list',
+                    name: 'stripMode',
+                    default: 'preset',
+                    message: 'How do you want to configure database stripping?',
+                    choices: [
+                        { name: 'Use preset (recommended)', value: 'preset' },
+                        { name: 'Custom selection', value: 'custom' }
+                    ]
+                },
+                {
+                    type: 'list',
                     name: 'strip',
                     default: 'stripped',
-                    message: 'Does the Magento database need to be stripped, keep customer data or have a full database?',
-                    choices: ['stripped', 'keep customer data', 'full', 'full and human readable']
+                    message: 'Select a preset configuration:',
+                    choices: ['stripped', 'keep customer data', 'full', 'full and human readable'],
+                    when: (answers: any) => answers.stripMode === 'preset'
+                },
+                {
+                    type: 'checkbox',
+                    name: 'stripOptions',
+                    message: 'Select data to KEEP in the database (uncheck to strip):',
+                    choices: [
+                        { name: 'Customer data (addresses, accounts, etc.)', value: 'customers', checked: false },
+                        { name: 'Admin users', value: 'admin', checked: false },
+                        { name: 'Sales data (orders, invoices, shipments)', value: 'sales', checked: false },
+                        { name: 'Quotes/Cart data', value: 'quotes', checked: false },
+                        { name: 'Search indexes', value: 'search', checked: false },
+                        { name: 'Dotmailer/Email marketing data', value: 'dotmailer', checked: false },
+                        { name: 'Configuration settings', value: 'config', checked: true }
+                    ],
+                    when: (answers: any) => answers.stripMode === 'custom'
                 }
             );
         }
