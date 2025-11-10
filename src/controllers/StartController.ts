@@ -132,8 +132,19 @@ class StartController extends MainController {
         }
 
         if (this.config.settings.wordpressImport === 'yes') {
-            const message =
-                `WordPress successfully imported!\n\n` +
+            let message =
+                `WordPress successfully imported!\n\n`;
+            
+            // Add blog URLs if available
+            if (this.config.finalMessages.wordpressBlogUrls && this.config.finalMessages.wordpressBlogUrls.length > 0) {
+                message += `Your WordPress sites are available at:\n`;
+                message += this.config.finalMessages.wordpressBlogUrls
+                    .map((blog: {blogId: string, domain: string}) => `   Blog ID ${blog.blogId}: ${blog.domain}`)
+                    .join('\n');
+                message += `\n\n`;
+            }
+            
+            message +=
                 `Backend Credentials:\n` +
                 `   Username: ${configFile.magentoBackend.adminEmailAddress}\n` +
                 `   Password: ${configFile.magentoBackend.adminPassword}`;

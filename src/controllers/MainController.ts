@@ -56,7 +56,8 @@ class MainController {
             'magentoDatabaseIncludeLocation': '',
             'wordpressDatabaseLocation': '',
             'importDomain': '',
-            'domains': []
+            'domains': [],
+            'wordpressBlogUrls': []
         },
         'databases': {
             'databasesList': null as any,

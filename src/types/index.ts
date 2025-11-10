@@ -88,6 +88,7 @@ export interface AppConfig {
         magentoLocalhostDomainName: string;
         rsyncInstalled: boolean;
         elasticSearchUsed: boolean;
+        searchEngine?: string; // Detected search engine: 'opensearch', 'elasticsearch7', 'elasticsearch8', etc.
         isDdevProject: boolean;
         isDdevActive: boolean;
         import: string;
@@ -111,6 +112,7 @@ export interface AppConfig {
         domains: string[];
         syncDomain?: string;
         syncDomains?: string[];
+        wordpressBlogUrls?: Array<{blogId: string, domain: string}>;
     };
     databases: {
         databasesList: DatabaseListItem[] | null;

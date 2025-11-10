@@ -45,6 +45,45 @@ class MagentoConfigureTask {
             }
         )
 
+        // FIRST: Detect search engine from imported database
+        this.configureTasks.push(
+            {
+                title: 'Detecting search engine configuration',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    try {
+                        const query = `SELECT value FROM core_config_data WHERE path = 'catalog/search/engine' AND scope = 'default' LIMIT 1`;
+                        
+                        let result: string;
+                        if (config.settings.isDdevActive) {
+                            result = await localhostMagentoRootExec(`ddev mysql -e "${query}"`, config, true) as string;
+                        } else {
+                            result = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${query}"`, config, true) as string;
+                        }
+                        
+                        if (result) {
+                            const lines = String(result).split('\n').filter(l => l && !l.startsWith('value'));
+                            if (lines.length > 0) {
+                                const searchEngine = lines[0].trim();
+                                config.settings.searchEngine = searchEngine;
+                                config.settings.elasticSearchUsed = true; // Any search engine uses elasticsearch-like service
+                                task.title = `Detected search engine: ${searchEngine}`;
+                            } else {
+                                config.settings.searchEngine = 'elasticsearch7'; // Default fallback
+                                task.title = 'No search engine found, using default: elasticsearch7';
+                            }
+                        } else {
+                            config.settings.searchEngine = 'elasticsearch7'; // Default fallback
+                            task.title = 'Could not detect search engine, using default: elasticsearch7';
+                        }
+                    } catch (err) {
+                        // If detection fails, use default
+                        config.settings.searchEngine = 'elasticsearch7';
+                        task.title = 'Search engine detection failed, using default: elasticsearch7';
+                    }
+                }
+            }
+        );
+        
         // IMPORTANT: Remove generated code FIRST before any configuration
         this.configureTasks.push(
             {
@@ -140,34 +179,65 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: "Configuring ElasticSearch 7",
-                task: async (): Promise<void> => {
-                    // Batch all ElasticSearch configuration into ONE query - MUCH faster!
-                    const hostname = config.settings.isDdevActive ? 'elasticsearch' : 'localhost';
-                    const servers = config.settings.isDdevActive ? 'elasticsearch:9200' : 'localhost:9200';
+                title: "Configuring Search Engine",
+                task: async (ctx: any, task: any): Promise<void> => {
+                    const searchEngine = config.settings.searchEngine || 'elasticsearch7';
+                    const hostname = config.settings.isDdevActive 
+                        ? (searchEngine === 'opensearch' ? 'opensearch' : 'elasticsearch')
+                        : 'localhost';
+                    const servers = `${hostname}:9200`;
                     
-                    const esQuery = `
+                    task.title = `Configuring ${searchEngine}`;
+                    
+                    // Build query based on detected search engine
+                    let searchQuery = `
                         DELETE FROM core_config_data WHERE path LIKE 'amasty_elastic%';
                         DELETE FROM core_config_data WHERE path = 'catalog/search/engine';
-                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_hostname';
-                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_port';
-                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_index_prefix';
-                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_enable_auth';
-                        DELETE FROM core_config_data WHERE path = 'catalog/search/elasticsearch7_server_timeout';
+                        DELETE FROM core_config_data WHERE path LIKE 'catalog/search/elasticsearch%';
+                        DELETE FROM core_config_data WHERE path LIKE 'catalog/search/opensearch%';
                         DELETE FROM core_config_data WHERE path = 'smile_elasticsuite_core_base_settings/es_client/servers';
                         DELETE FROM core_config_data WHERE path = 'amasty_elastic/connection/engine';
-                        INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
-                            ('default', 0, 'catalog/search/engine', 'elasticsearch7'),
-                            ('default', 0, 'catalog/search/elasticsearch7_server_hostname', '${hostname}'),
-                            ('default', 0, 'catalog/search/elasticsearch7_server_port', '9200'),
-                            ('default', 0, 'catalog/search/elasticsearch7_index_prefix', '${config.settings.currentFolderName}'),
-                            ('default', 0, 'catalog/search/elasticsearch7_enable_auth', '0'),
-                            ('default', 0, 'catalog/search/elasticsearch7_server_timeout', '15'),
-                            ('default', 0, 'smile_elasticsuite_core_base_settings/es_client/servers', '${servers}'),
-                            ('default', 0, 'amasty_elastic/connection/engine', 'elasticsearch7');
                     `;
                     
-                    await this.executeQuery(esQuery, config);
+                    // Add configuration based on search engine type
+                    if (searchEngine === 'opensearch') {
+                        searchQuery += `
+                            INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                                ('default', 0, 'catalog/search/engine', 'opensearch'),
+                                ('default', 0, 'catalog/search/opensearch_server_hostname', '${hostname}'),
+                                ('default', 0, 'catalog/search/opensearch_server_port', '9200'),
+                                ('default', 0, 'catalog/search/opensearch_index_prefix', '${config.settings.currentFolderName}'),
+                                ('default', 0, 'catalog/search/opensearch_enable_auth', '0'),
+                                ('default', 0, 'catalog/search/opensearch_server_timeout', '15');
+                        `;
+                    } else if (searchEngine === 'elasticsearch8') {
+                        searchQuery += `
+                            INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                                ('default', 0, 'catalog/search/engine', 'elasticsearch8'),
+                                ('default', 0, 'catalog/search/elasticsearch8_server_hostname', '${hostname}'),
+                                ('default', 0, 'catalog/search/elasticsearch8_server_port', '9200'),
+                                ('default', 0, 'catalog/search/elasticsearch8_index_prefix', '${config.settings.currentFolderName}'),
+                                ('default', 0, 'catalog/search/elasticsearch8_enable_auth', '0'),
+                                ('default', 0, 'catalog/search/elasticsearch8_server_timeout', '15'),
+                                ('default', 0, 'smile_elasticsuite_core_base_settings/es_client/servers', '${servers}'),
+                                ('default', 0, 'amasty_elastic/connection/engine', 'elasticsearch8');
+                        `;
+                    } else {
+                        // elasticsearch7 or default
+                        searchQuery += `
+                            INSERT INTO core_config_data (scope, scope_id, path, value) VALUES 
+                                ('default', 0, 'catalog/search/engine', 'elasticsearch7'),
+                                ('default', 0, 'catalog/search/elasticsearch7_server_hostname', '${hostname}'),
+                                ('default', 0, 'catalog/search/elasticsearch7_server_port', '9200'),
+                                ('default', 0, 'catalog/search/elasticsearch7_index_prefix', '${config.settings.currentFolderName}'),
+                                ('default', 0, 'catalog/search/elasticsearch7_enable_auth', '0'),
+                                ('default', 0, 'catalog/search/elasticsearch7_server_timeout', '15'),
+                                ('default', 0, 'smile_elasticsuite_core_base_settings/es_client/servers', '${servers}'),
+                                ('default', 0, 'amasty_elastic/connection/engine', 'elasticsearch7');
+                        `;
+                    }
+
+                    await this.executeQuery(searchQuery, config);
                 }
             }
         );
@@ -327,17 +397,31 @@ class MagentoConfigureTask {
             this.configureTasks.push(
                 {
                     title: 'Setting core_config_data configurations through .mage-db-sync-config.json',
-                    task: async (): Promise<void> => {
+                    task: async (ctx: any, task: any): Promise<void> => {
+                        const { MagentoStoreValidator } = require('../services/MagentoStoreValidator');
+                        const validator = new MagentoStoreValidator();
+                        
+                        // Fetch valid store IDs once to avoid multiple queries
+                        const validStoreIds = await validator.getValidStoreIds(config);
+                        const allValidIds = ['0', ...validStoreIds]; // Include default scope
+                        
                         const jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
                         const coreConfigData = jsonData.core_config_data;
 
                         if (coreConfigData) {
                             let dbQuery = '';
+                            const skippedStores: string[] = [];
 
                             Object.keys(coreConfigData).forEach(key => {
                                 const storeId = key;
+                                
+                                // Validate store ID exists in Magento
+                                if (!allValidIds.includes(storeId)) {
+                                    skippedStores.push(storeId);
+                                    return; // Skip this store
+                                }
+                                
                                 let values = jsonData.core_config_data[key];
-
                                 values = Object.entries(values);
 
                                 values.map(async (entry: any) => {
@@ -358,6 +442,13 @@ class MagentoConfigureTask {
                             if (dbQuery) {
                                 await this.executeQuery(dbQuery, config);
                             }
+                            
+                            // Update task title with validation info
+                            if (skippedStores.length > 0) {
+                                task.title = `Set core_config_data (skipped non-existent stores: ${skippedStores.join(', ')})`;
+                            } else {
+                                task.title = `Set core_config_data for ${Object.keys(coreConfigData).length} store(s)`;
+                            }
                         }
                     }
                 }
@@ -370,10 +461,12 @@ class MagentoConfigureTask {
                 task: async (): Promise<void> => {
                     // Run cache and reindex operations separately for better error handling
                     if (config.settings.elasticSearchUsed) {
-                        // Clear Elasticsearch index (ignore errors if doesn't exist)
+                        // Clear search engine index (ignore errors if doesn't exist)
                         if (config.settings.isDdevActive) {
+                            const searchEngine = config.settings.searchEngine || 'elasticsearch7';
+                            const serviceName = searchEngine === 'opensearch' ? 'opensearch' : 'elasticsearch';
                             try {
-                                await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config, true);
+                                await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://${serviceName}:9200/_all'`, config, true);
                             } catch (_e) {
                                 // Ignore errors - index might not exist yet
                             }

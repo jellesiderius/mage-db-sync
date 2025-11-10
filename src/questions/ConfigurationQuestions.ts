@@ -132,7 +132,7 @@ class ConfigurationQuestions {
                 {
                     type: 'list',
                     name: 'wordpressDownload',
-                    default: 'no',
+                    default: 'yes',
                     message: 'Download wordpress database?',
                     choices: ['yes', 'no']
                 }
@@ -143,8 +143,8 @@ class ConfigurationQuestions {
                     {
                         type: 'list',
                         name: 'wordpressImport',
-                        default: 'no',
-                        message: '[EXPERIMENTAL]: Import and configure WordPress database?',
+                        default: 'yes',
+                        message: 'Import and configure WordPress database?',
                         choices: ['yes', 'no']
                     }
                 );

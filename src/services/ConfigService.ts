@@ -144,7 +144,8 @@ export class ConfigService {
                 magentoDatabaseIncludeLocation: '',
                 wordpressDatabaseLocation: '',
                 importDomain: '',
-                domains: []
+                domains: [],
+                wordpressBlogUrls: []
             },
             databases: {
                 databasesList: null,

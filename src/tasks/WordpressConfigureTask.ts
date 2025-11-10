@@ -188,9 +188,49 @@ class WordpressConfigureTask {
                                 wordpressDomainMapping = mapper.convertToWordpressDomainMapping(magentoBlogMappings);
                                 task.output = `Found ${Object.keys(wordpressDomainMapping).length} blog ID mapping(s) from Magento database`;
                             }
-                        } catch (err) {
+                        } catch (_err) {
                             // Fallback failed, will use default behavior
                             task.output = 'Could not fetch blog ID mappings from Magento, using default mapping';
+                        }
+                    }
+                    
+                    // VALIDATION: Check if manually configured domains reference valid blogs
+                    // (Note: Auto-fetched mappings from Magento are already validated)
+                    if (Object.keys(wordpressDomainMapping).length > 0 && fs.existsSync(configPath)) {
+                        // Get all valid blog IDs from wp_blogs table
+                        let validBlogIds: string[] = [];
+                        try {
+                            const getBlogsCommand = config.settings.isDdevActive
+                                ? `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT blog_id FROM ${config.wordpressConfig.prefix}blogs"`
+                                : `cd wp; wp db query "SELECT blog_id FROM ${config.wordpressConfig.prefix}blogs"`;
+                            
+                            const blogsResult = await localhostMagentoRootExec(getBlogsCommand, config, true);
+                            if (blogsResult) {
+                                const lines = String(blogsResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
+                                validBlogIds = lines.map(line => line.trim()).filter(id => id);
+                            }
+                            
+                            // Filter out invalid blog IDs
+                            const originalCount = Object.keys(wordpressDomainMapping).length;
+                            const filteredMapping: Record<string, string> = {};
+                            const skippedBlogs: string[] = [];
+                            
+                            for (const [blogId, domain] of Object.entries(wordpressDomainMapping)) {
+                                if (validBlogIds.includes(blogId)) {
+                                    filteredMapping[blogId] = domain;
+                                } else {
+                                    skippedBlogs.push(blogId);
+                                }
+                            }
+                            
+                            wordpressDomainMapping = filteredMapping;
+                            
+                            if (skippedBlogs.length > 0) {
+                                task.output = `Loaded ${Object.keys(wordpressDomainMapping).length}/${originalCount} blog mappings (skipped non-existent: ${skippedBlogs.join(', ')})`;
+                            }
+                        } catch (_err) {
+                            // If validation fails, continue with original mapping
+                            task.output = 'Could not validate blog IDs, proceeding with configured mappings';
                         }
                     }
                     
@@ -310,6 +350,29 @@ class WordpressConfigureTask {
                                 
                                 // Store configured domains for final message
                                 config.wordpressConfig.configuredSites = sites;
+                                
+                                // Fetch actual home URLs from database for final overview (DDEV)
+                                const blogUrls: Array<{blogId: string, domain: string}> = [];
+                                for (const site of sites) {
+                                    const blogId = site.blog_id;
+                                    const optionsTable = blogId === '1' 
+                                        ? `${config.wordpressConfig.prefix}options`
+                                        : `${config.wordpressConfig.prefix}${blogId}_options`;
+                                    
+                                    const getHomeUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${optionsTable} WHERE option_name = 'home' LIMIT 1"""`;
+                                    const homeUrl = await localhostMagentoRootExec(getHomeUrlCommand, config, true);
+                                    
+                                    if (homeUrl) {
+                                        const lines = String(homeUrl).split('\n').filter(l => l && !l.startsWith('option_value'));
+                                        if (lines.length > 0) {
+                                            blogUrls.push({
+                                                blogId: blogId,
+                                                domain: lines[0].trim()
+                                            });
+                                        }
+                                    }
+                                }
+                                config.finalMessages.wordpressBlogUrls = blogUrls;
                             } else {
                                 // No custom mapping - use default behavior (update all sites)
                                 const replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"""`;
@@ -393,6 +456,29 @@ class WordpressConfigureTask {
                                 
                                 // Store configured domains for final message
                                 config.wordpressConfig.configuredSites = sites;
+                                
+                                // Fetch actual home URLs from database for final overview (non-DDEV)
+                                const blogUrls: Array<{blogId: string, domain: string}> = [];
+                                for (const site of sites) {
+                                    const blogId = site.blog_id;
+                                    const optionsTable = blogId === '1' 
+                                        ? `${config.wordpressConfig.prefix}options`
+                                        : `${config.wordpressConfig.prefix}${blogId}_options`;
+                                    
+                                    const getHomeUrlCommand = `cd wp; wp db query "SELECT option_value FROM ${optionsTable} WHERE option_name = 'home' LIMIT 1"`;
+                                    const homeUrl = await localhostMagentoRootExec(getHomeUrlCommand, config, true);
+                                    
+                                    if (homeUrl) {
+                                        const lines = String(homeUrl).split('\n').filter(l => l && !l.startsWith('option_value'));
+                                        if (lines.length > 0) {
+                                            blogUrls.push({
+                                                blogId: blogId,
+                                                domain: lines[0].trim()
+                                            });
+                                        }
+                                    }
+                                }
+                                config.finalMessages.wordpressBlogUrls = blogUrls;
                             } else {
                                 // No custom mapping - use default behavior (update all sites)
                                 await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"`, config);
