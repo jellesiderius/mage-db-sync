@@ -82,7 +82,7 @@ export class EnhancedProgress {
             const bytesDiff = bytesReceived - this.lastBytes;
             const speed = bytesDiff / timeDiff;
             
-            speedText = ` ${chalk.green('↓')} ${chalk.cyan(ProgressDisplay.formatSpeed(speed))}`;
+            speedText = ` ${chalk.green('[DOWN]')} ${chalk.cyan(ProgressDisplay.formatSpeed(speed))}`;
             
             this.lastBytes = bytesReceived;
             this.lastUpdate = now;
@@ -161,7 +161,7 @@ export class EnhancedProgress {
             pending: chalk.gray('○'),
             running: chalk.yellow('⟳'),
             success: chalk.green('✓'),
-            error: chalk.red('✖')
+            error: chalk.red('[ERROR]')
         };
 
         return `${icons[status]} ${text}`;
