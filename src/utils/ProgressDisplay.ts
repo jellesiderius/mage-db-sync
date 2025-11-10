@@ -144,7 +144,7 @@ export class ProgressDisplay {
         const { operation, duration, originalSize, compressedSize, parallelOps, speedBoost } = data;
 
         console.log('\n┌' + '─'.repeat(70) + '┐');
-        console.log('│ ' + chalk.bold.green(`⚡ ${operation} Complete`) + ' '.repeat(70 - operation.length - 12) + '│');
+        console.log('│ ' + chalk.bold.green(`[FAST] ${operation} Complete`) + ' '.repeat(70 - operation.length - 12) + '│');
         console.log('├' + '─'.repeat(70) + '┤');
         
         console.log('│  Duration:        ' + chalk.cyan(ProgressDisplay.formatDuration(duration)) + ' '.repeat(70 - 31 - ProgressDisplay.formatDuration(duration).length) + '│');

@@ -3,11 +3,11 @@ import * as readline from 'readline'
 import {ExecException} from "child_process";
 
 const prefix = {
-    verbose: kleur.gray(kleur.bold('🛠 ')),
-    info: kleur.gray(kleur.bold('✨ ')),
-    success: kleur.gray(kleur.bold('✅ ')),
-    warning: kleur.yellow(kleur.bold('⚠️  Warning: ')),
-    error: kleur.red(kleur.bold('🚨 Error: ')),
+    verbose: kleur.gray(kleur.bold('[DEBUG] ')),
+    info: kleur.gray(kleur.bold('[INFO] ')),
+    success: kleur.gray(kleur.bold('[SUCCESS] ')),
+    warning: kleur.yellow(kleur.bold('Warning: ')),
+    error: kleur.red(kleur.bold('Error: ')),
 }
 
 const body = {

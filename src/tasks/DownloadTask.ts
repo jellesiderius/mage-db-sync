@@ -102,7 +102,7 @@ class DownloadTask {
             const err = error as Error;
             throw new Error(
                 `Failed to connect to ${host}\n` +
-                `💡 Check your SSH credentials and key format\n` +
+                `[TIP] Check your SSH credentials and key format\n` +
                 `Error: ${err.message}`
             );
         }
@@ -115,7 +115,7 @@ class DownloadTask {
         });
 
         this.downloadTasks.push({
-            title: 'Connecting to server through SSH ⚡',
+            title: 'Connecting to server through SSH [FAST]',
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('ssh-connection');
                 const logger = this.services.getLogger();
@@ -202,7 +202,7 @@ class DownloadTask {
                     });
 
                 if (!magerunExists) {
-                    task.output = '⚡ Uploading Magerun (0%)...';
+                    task.output = '[FAST] Uploading Magerun (0%)...';
                     logger.info('Uploading Magerun', { file: config.serverVariables.magerunFile });
 
                     await ssh.putFile(
@@ -258,7 +258,7 @@ class DownloadTask {
                                 throw new Error(
                                     `Could not retrieve database name from server.\n` +
                                     `Magerun output: ${output}\n` +
-                                    `💡 Check if Magerun can connect to the database on the server`
+                                    `[TIP] Check if Magerun can connect to the database on the server`
                                 );
                             }
                         }
@@ -266,7 +266,7 @@ class DownloadTask {
                         if (!config.serverVariables.databaseName) {
                             throw new Error(
                                 `Database name could not be determined.\n` +
-                                `💡 Check server Magento configuration and database connectivity`
+                                `[TIP] Check server Magento configuration and database connectivity`
                             );
                         }
                     });
@@ -332,7 +332,7 @@ class DownloadTask {
                         config
                     );
 
-                    task.output = '⚡ Dumping database (this may take a minute)...';
+                    task.output = '[FAST] Dumping database (this may take a minute)...';
                     logger.info('Starting database dump', {
                         database: config.serverVariables.databaseName,
                         stripType
@@ -341,7 +341,7 @@ class DownloadTask {
                     await ssh.execCommand(fullCommand).then(function (result: any) {
                         if (result.code && result.code !== 0) {
                             throw new Error(
-                                `Database dump failed\n💡 Check database permissions and disk space\nError: ${result.stderr}`
+                                `Database dump failed\n[TIP] Check database permissions and disk space\nError: ${result.stderr}`
                             );
                         }
                         task.output = '✓ Database dump completed';
@@ -370,7 +370,7 @@ class DownloadTask {
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
 
-                    // ⚡ SPEED OPTIMIZED: Add compression to rsync
+                    // [FAST] SPEED OPTIMIZED: Add compression to rsync
                     let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
@@ -391,7 +391,7 @@ class DownloadTask {
                         source: `${databaseServer}:${source}`
                     });
 
-                    task.output = '⚡ Initializing download...';
+                    task.output = '[FAST] Initializing download...';
 
                     const rsync = require('child_process').exec(rsyncCommand);
 
@@ -431,12 +431,12 @@ class DownloadTask {
                                 if (speedMatch) {
                                     const speedValue = parseFloat(speedMatch[1]);
                                     const unit = speedMatch[2];
-                                    displayText += ` ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
+                                    displayText += ` ${chalk.green('[DOWN]')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
                                 }
 
                                 // Show compression type
                                 if (compression.type !== 'none') {
-                                    displayText += ` ${chalk.yellow(`⚡ ${compression.type}`)}`;
+                                    displayText += ` ${chalk.yellow(`[FAST] ${compression.type}`)}`;
                                 }
 
                                 task.output = displayText;
@@ -453,7 +453,7 @@ class DownloadTask {
                             if (code !== 0) {
                                 reject(
                                     new Error(
-                                        `Download failed with code ${code}\n💡 Check SSH connection and file permissions`
+                                        `Download failed with code ${code}\n[TIP] Check SSH connection and file permissions`
                                     )
                                 );
                             } else {
@@ -536,13 +536,13 @@ class DownloadTask {
                         }
                     }).catch((error: any) => {
                         throw new Error(
-                            `Could not read wp-config.php from server\n💡 Make sure WordPress is installed in wp/, blog/, or wordpress/ folder\nError: ${error.message}`
+                            `Could not read wp-config.php from server\n[TIP] Make sure WordPress is installed in wp/, blog/, or wordpress/ folder\nError: ${error.message}`
                         );
                     });
                     
                     if (!config.wordpressConfig.database) {
                         throw new Error(
-                            `Could not parse WordPress database configuration from wp-config.php\n💡 Check if wp-config.php is properly formatted`
+                            `Could not parse WordPress database configuration from wp-config.php\n[TIP] Check if wp-config.php is properly formatted`
                         );
                     }
                     
@@ -591,7 +591,7 @@ class DownloadTask {
                     await ssh.execCommand(dumpCommand).then(function (result: any) {
                         if (result.code && result.code !== 0) {
                             throw new Error(
-                                `WordPress database dump failed\n💡 Check WordPress database credentials and permissions\nError: ${result.stderr}`
+                                `WordPress database dump failed\n[TIP] Check WordPress database credentials and permissions\nError: ${result.stderr}`
                             );
                         }
                         task.output = '✓ WordPress database dump completed';
@@ -778,7 +778,7 @@ class DownloadTask {
 
                         if (!folderExists) {
                             logger.info('Remote folder does not exist, skipping', { folder, source });
-                            task.output = `${chalk.yellow('⚠')} ${chalk.gray(folder)} ${chalk.yellow('(not found on server)')}`;
+                            task.output = `${chalk.yellow('[WARNING]')} ${chalk.gray(folder)} ${chalk.yellow('(not found on server)')}`;
                             await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause so user can see message
                             continue;
                         }
@@ -820,7 +820,7 @@ class DownloadTask {
                                         const speedValue = parseFloat(speedMatch[1]);
                                         const unit = speedMatch[2];
 
-                                        const displayText = `${chalk.gray(folder)} ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('⚡')}`;
+                                        const displayText = `${chalk.gray(folder)} ${chalk.green('[DOWN]')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('[FAST]')}`;
 
                                         task.output = displayText;
                                         lastUpdate = now;
@@ -888,7 +888,7 @@ class DownloadTask {
                             // Log the error but continue with other folders
                             const err = error as Error;
                             logger.warn('Folder sync failed, continuing with remaining folders', { folder, error: err.message });
-                            task.output = `${chalk.yellow('⚠')} ${chalk.gray(folder)} ${chalk.red('(sync failed)')}`;
+                            task.output = `${chalk.yellow('[WARNING]')} ${chalk.gray(folder)} ${chalk.red('(sync failed)')}`;
                             await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause so user can see message
                         }
                     }
@@ -896,7 +896,7 @@ class DownloadTask {
                     const duration = PerformanceMonitor.end('media-sync');
 
                     if (syncedCount === 0) {
-                        task.title = `⚠️  No media folders synced`;
+                        task.title = `[WARNING]  No media folders synced`;
                     } else if (syncedCount < foldersToSync.length) {
                         task.title = `Synced ${syncedCount}/${foldersToSync.length} media folder(s)`;
                     } else {

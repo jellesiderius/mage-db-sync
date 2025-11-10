@@ -30,13 +30,13 @@ export class PerformanceMonitor {
     static end(name: string): number {
         const metric = this.metrics.get(name);
         if (!metric) {
-            console.warn(`⚠️  No metric found for: ${name}`);
+            console.warn(`No metric found for: ${name}`);
             return 0;
         }
 
         metric.endTime = Date.now();
         metric.duration = metric.endTime - metric.startTime;
-        
+
         return metric.duration;
     }
 
@@ -46,35 +46,6 @@ export class PerformanceMonitor {
     static getDuration(name: string): number {
         const metric = this.metrics.get(name);
         return metric?.duration || 0;
-    }
-
-    /**
-     * Display performance summary
-     */
-    static showSummary(): void {
-        const totalDuration = Date.now() - this.globalStart;
-        
-        UI.section('⚡ Performance Summary');
-        
-        const metricsArray = Array.from(this.metrics.values())
-            .filter(m => m.duration !== undefined)
-            .sort((a, b) => (b.duration || 0) - (a.duration || 0));
-
-        if (metricsArray.length > 0) {
-            const data = metricsArray.map(m => ({
-                label: m.name,
-                value: `${UI.duration(m.duration || 0)}`
-            }));
-            
-            UI.table(data);
-            UI.divider();
-        }
-
-        UI.table([
-            { label: 'Total Time', value: UI.duration(totalDuration) }
-        ]);
-        
-        console.log('');
     }
 
     /**
@@ -90,11 +61,11 @@ export class PerformanceMonitor {
      */
     static estimateRemaining(completed: number, total: number, elapsedMs: number): string {
         if (completed === 0) return 'calculating...';
-        
+
         const avgTimePerItem = elapsedMs / completed;
         const remaining = total - completed;
         const estimatedMs = remaining * avgTimePerItem;
-        
+
         return UI.duration(estimatedMs);
     }
 }
@@ -110,7 +81,7 @@ export class SSHConnectionPool {
      */
     static async getConnection(host: string, config: any, createFn: () => Promise<any>): Promise<any> {
         const key = `${host}:${config.port}`;
-        
+
         if (this.connections.has(key)) {
             const conn = this.connections.get(key);
             // Check if connection is still alive
@@ -124,7 +95,7 @@ export class SSHConnectionPool {
         // Create new connection
         const connection = await createFn();
         this.connections.set(key, connection);
-        
+
         return connection;
     }
 
@@ -155,11 +126,11 @@ export class SSHConnectionPool {
     static async close(host: string, port: number): Promise<void> {
         const key = `${host}:${port}`;
         const conn = this.connections.get(key);
-        
+
         if (conn && typeof conn.dispose === 'function') {
             await conn.dispose().catch(() => {});
         }
-        
+
         this.connections.delete(key);
     }
 }
@@ -179,7 +150,7 @@ export function measure(metricName?: string) {
                 return result;
             } finally {
                 const duration = PerformanceMonitor.end(name);
-                console.log(`  ⏱️  ${name}: ${UI.duration(duration)}`);
+                console.log(`  [TIME] ${name}: ${UI.duration(duration)}`);
             }
         };
 

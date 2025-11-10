@@ -60,28 +60,28 @@ export class UI {
      * Show success message
      */
     static success(message: string): void {
-        console.log(chalk.green('✔') + ' ' + chalk.white(message));
+        console.log(chalk.green('[OK]') + ' ' + chalk.white(message));
     }
 
     /**
      * Show error message
      */
     static error(message: string): void {
-        console.log(chalk.red('✖') + ' ' + chalk.white(message));
+        console.log(chalk.red('[ERROR]') + ' ' + chalk.white(message));
     }
 
     /**
      * Show warning message
      */
     static warning(message: string): void {
-        console.log(chalk.yellow('⚠') + ' ' + chalk.white(message));
+        console.log(chalk.yellow('[WARNING]') + ' ' + chalk.white(message));
     }
 
     /**
      * Show info message
      */
     static info(message: string): void {
-        console.log(chalk.blue('ℹ') + ' ' + chalk.white(message));
+        console.log(chalk.blue('[INFO]') + ' ' + chalk.white(message));
     }
 
     /**

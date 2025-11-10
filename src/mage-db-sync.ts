@@ -65,7 +65,7 @@ async function main() {
         description += `• Issues: https://github.com/jellesiderius/mage-db-sync/issues`;
 
         if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
-            description += `\n\n${kleur.yellow('⬆️  Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}`;
+            description += `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}`;
         }
 
         description += `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))} ${kleur.bold('HYPR')} (https://www.hypershop.nl)`;

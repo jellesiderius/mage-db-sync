@@ -150,7 +150,7 @@ class ChecksTask {
         const totalDuration = Date.now() - startTime;
 
         if (failedChecks.length > 0) {
-            throw new Error(`\n${failedChecks.join('\n')}\n\n💡 Completed ${parallelChecks.length} checks in ${totalDuration}ms (parallel)`);
+            throw new Error(`\n${failedChecks.join('\n')}\n\n[TIP] Completed ${parallelChecks.length} checks in ${totalDuration}ms (parallel)`);
         }
     }
 
@@ -196,7 +196,7 @@ class ChecksTask {
                         throw new Error(
                             `Your current Magerun2 version (${installedMagerun2Version}) is too low. ` +
                             `Version ${config.requirements.magerun2Version} is required.\n` +
-                            `💡 Update with: magerun2 self-update`
+                            `[TIP] Update with: magerun2 self-update`
                         );
                     }
 
@@ -241,7 +241,7 @@ class ChecksTask {
                             `Database host is not configured correctly.\n` +
                             `Current value: ${envHost}\n` +
                             `Expected: localhost, 127.0.0.1, or db\n` +
-                            `💡 Check your env.php configuration`
+                            `[TIP] Check your env.php configuration`
                         );
                     }
                 });

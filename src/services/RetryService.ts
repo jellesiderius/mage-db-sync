@@ -169,7 +169,7 @@ export class RetryService {
                 'All configured authentication methods failed'
             ],
             onRetry: (error, attempt) => {
-                console.log(`⚠️  SSH connection failed (attempt ${attempt}/3). Retrying...`);
+                console.log(`SSH connection failed (attempt ${attempt}/3). Retrying...`);
             }
         });
     }
@@ -184,7 +184,7 @@ export class RetryService {
             timeout: 300000, // 5 minutes
             retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'socket hang up'],
             onRetry: (error, attempt) => {
-                console.log(`⚠️  Download interrupted (attempt ${attempt}/5). Resuming...`);
+                console.log(`Download interrupted (attempt ${attempt}/5). Resuming...`);
             }
         });
     }

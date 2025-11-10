@@ -7,7 +7,7 @@ import SelectDatabaseQuestion from '../questions/SelectDatabaseQuestion';
 import ConfigurationQuestions from '../questions/ConfigurationQuestions';
 import DownloadTypesQuestion from '../questions/DownloadTypesQuestion';
 import { UI } from '../utils/UI';
-import { PerformanceMonitor, SSHConnectionPool } from '../utils/Performance';
+import { SSHConnectionPool } from '../utils/Performance';
 import { TaskFactory } from '../core/TaskFactory';
 import { ServiceContainer } from '../core/ServiceContainer';
 import configFile from '../../config/settings.json';
@@ -56,7 +56,7 @@ class StartController extends MainController {
 
     private showTaskSummary(): void {
         console.log('');
-        UI.section('📋 Task Summary');
+        UI.section('Task Summary');
 
         const tasks = [];
 
@@ -93,8 +93,8 @@ class StartController extends MainController {
 
         console.log('');
         UI.box(
-            '💡 This may take a few minutes...\n' +
-            ' Grab some ☕ coffee while you wait!',
+            'This may take a few minutes...\n' +
+            ' Grab some coffee while you wait!',
             { type: 'info', title: 'Starting Operations' }
         );
     }
@@ -105,44 +105,41 @@ class StartController extends MainController {
         if (this.config.finalMessages.importDomain.length > 0) {
             const urls = this.config.finalMessages.domains;
             const message =
-                `✅ Magento successfully imported!\n\n` +
-                `🌐 Your project is available at:\n` +
+                `Magento successfully imported!\n\n` +
+                `Your project is available at:\n` +
                 urls.map((url: string) => `   ${url}`).join('\n') +
                 `\n\n` +
-                `🔐 Backend Credentials:\n` +
+                `Backend Credentials:\n` +
                 `   Username: ${configFile.magentoBackend.adminUsername}\n` +
                 `   Password: ${configFile.magentoBackend.adminPassword}\n\n` +
-                `👤 Customer Account (all websites):\n` +
+                `Customer Account (all websites):\n` +
                 `   Email: ${configFile.magentoBackend.adminEmailAddress}\n` +
                 `   Password: ${configFile.magentoBackend.adminPassword}`;
 
-            UI.box(message, { type: 'success', title: '🎉 Magento Import Complete' });
+            UI.box(message, { type: 'success', title: 'Magento Import Complete' });
         } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
-            let message = `✅ Downloaded Magento database to:\n   ${this.config.finalMessages.magentoDatabaseLocation}`;
+            let message = `Downloaded Magento database to:\n   ${this.config.finalMessages.magentoDatabaseLocation}`;
 
             if (
                 this.config.finalMessages.wordpressDatabaseLocation.length > 0 &&
                 this.config.settings.wordpressDownload === 'yes' &&
                 this.config.settings.wordpressImport !== 'yes'
             ) {
-                message += `\n\n✅ Downloaded WordPress database to:\n   ${this.config.finalMessages.wordpressDatabaseLocation}`;
+                message += `\n\nDownloaded WordPress database to:\n   ${this.config.finalMessages.wordpressDatabaseLocation}`;
             }
 
-            UI.box(message, { type: 'success', title: '📦 Download Complete' });
+            UI.box(message, { type: 'success', title: 'Download Complete' });
         }
 
         if (this.config.settings.wordpressImport === 'yes') {
             const message =
-                `✅ WordPress successfully imported!\n\n` +
-                `🔐 Backend Credentials:\n` +
+                `WordPress successfully imported!\n\n` +
+                `Backend Credentials:\n` +
                 `   Username: ${configFile.magentoBackend.adminEmailAddress}\n` +
                 `   Password: ${configFile.magentoBackend.adminPassword}`;
 
-            UI.box(message, { type: 'success', title: '📝 WordPress Import Complete' });
+            UI.box(message, { type: 'success', title: 'WordPress Import Complete' });
         }
-
-        // Show performance summary with speed improvements
-        PerformanceMonitor.showSummary();
 
         // Log completion
         const logger = this.services.getLogger();
