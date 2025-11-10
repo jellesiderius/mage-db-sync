@@ -42,7 +42,7 @@ class SelfUpdateController {
                 await consoleCommand(`cd ${config.npmPath}; npm install`, false);
 
                 success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
-                info('Please restart the tool to use the new version');
+                
                 process.exit();
             } catch (err) {
                 error(`Update failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
