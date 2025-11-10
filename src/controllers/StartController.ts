@@ -93,13 +93,8 @@ class StartController extends MainController {
 
         console.log('');
         UI.box(
-            '⚡ Speed Optimizations Active:\n' +
-            '  • SSH compression enabled\n' +
-            '  • Parallel validation checks\n' +
-            '  • Connection pooling & reuse\n' +
-            '  • Real-time progress tracking\n\n' +
             '💡 This may take a few minutes...\n' +
-            '   Grab some ☕ coffee while you wait!',
+            ' Grab some ☕ coffee while you wait!',
             { type: 'info', title: 'Starting Operations' }
         );
     }

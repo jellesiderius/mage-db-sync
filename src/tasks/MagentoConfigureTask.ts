@@ -45,6 +45,17 @@ class MagentoConfigureTask {
             }
         )
 
+        // IMPORTANT: Remove generated code FIRST before any configuration
+        this.configureTasks.push(
+            {
+                title: 'Removing generated code',
+                task: async (): Promise<void> => {
+                    // Remove generated code to prevent conflicts
+                    await localhostMagentoRootExec("rm -rf generated/code", config);
+                }
+            }
+        );
+
         this.configureTasks.push(
             {
                 title: "Replacing URL's and doing some preperation for development",
@@ -352,16 +363,6 @@ class MagentoConfigureTask {
                 }
             );
         }
-
-        this.configureTasks.push(
-            {
-                title: 'Removing generated code',
-                task: async (): Promise<void> => {
-                    // Remove generated code
-                    await localhostMagentoRootExec("rm -rf generated/code", config);
-                }
-            }
-        );
 
         this.configureTasks.push(
             {
