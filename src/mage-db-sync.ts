@@ -72,7 +72,7 @@ async function main() {
             description += `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}`;
         }
 
-        description += `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))} ${kleur.bold('HYPR')} (https://www.hypershop.nl)`;
+        description += `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))} ${kleur.bold('HYPER')} (https://www.hypershop.nl)`;
 
         // Setup CLI
         const program = new Command();
