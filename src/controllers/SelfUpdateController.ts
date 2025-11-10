@@ -1,8 +1,9 @@
-import {getInstalledPath} from 'get-installed-path';
-import {success, error} from "../utils/Console";
+import {success, error, info} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as semver from 'semver';
+import inquirer from 'inquirer';
 
 const execAsync = promisify(exec);
 
@@ -15,31 +16,57 @@ class SelfUpdateController {
     }
 
     executeStart = async (_serviceName: string | undefined): Promise<boolean> => {
-        await this.versionCheck.getToolVersions();
+        try {
+            // Fetch latest version from npm registry
+            await this.versionCheck.getToolVersions();
+        } catch (err) {
+            error(`Failed to check for updates: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            return false;
+        }
 
-        const config = {
-            'npmPath': '',
-            'currentVersion': this.versionCheck.config.currentVersion,
-            'latestVersion': this.versionCheck.config.latestVersion
-        };
+        const currentVersion = this.versionCheck.config.currentVersion;
+        const latestVersion = this.versionCheck.config.latestVersion;
 
-        await getInstalledPath('mage-db-sync').then((path: string) => {
-            config.npmPath = path;
-        });
+        // Validate versions
+        if (!semver.valid(currentVersion) || !semver.valid(latestVersion)) {
+            error('Invalid version format detected');
+            return false;
+        }
 
-        if (config.currentVersion < config.latestVersion) {
+        // Compare versions using semver
+        if (semver.gt(latestVersion, currentVersion)) {
+            info(`Current version: ${currentVersion}`);
+            info(`Latest version: ${latestVersion}`);
+
+            // Ask for confirmation before updating
+            const answers = await inquirer.prompt([
+                {
+                    type: 'confirm',
+                    name: 'confirmUpdate',
+                    message: `Do you want to update from ${currentVersion} to ${latestVersion}?`,
+                    default: true
+                }
+            ]);
+
+            if (!answers.confirmUpdate) {
+                info('Update cancelled');
+                return false;
+            }
+
             try {
-                // Use npm update which is secure and reliable
-                await execAsync('npm update -g mage-db-sync');
-                success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
+                info('Updating mage-db-sync...');
+                // Use npm install for explicit update
+                await execAsync('npm install -g mage-db-sync@latest');
+                success(`Successfully updated mage-db-sync from ${currentVersion} to ${latestVersion}`);
+                info('Please restart the tool to use the new version');
                 return true;
             } catch (err) {
                 error(`Failed to update: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                error(`Please run manually: npm update -g mage-db-sync`);
+                error(`Please try running manually: npm install -g mage-db-sync@latest`);
                 return false;
             }
         } else {
-            success(`mage-db-sync is already up to date`);
+            success(`mage-db-sync is already up to date (${currentVersion})`);
             return false;
         }
     }
