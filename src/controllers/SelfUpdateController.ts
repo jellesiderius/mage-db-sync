@@ -21,7 +21,7 @@ class SelfUpdateController {
             await this.versionCheck.getToolVersions();
         } catch (err) {
             error(`Failed to check for updates: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            return false;
+            process.exit();
         }
 
         const currentVersion = this.versionCheck.config.currentVersion;
@@ -30,7 +30,7 @@ class SelfUpdateController {
         // Validate versions
         if (!semver.valid(currentVersion) || !semver.valid(latestVersion)) {
             error('Invalid version format detected');
-            return false;
+            process.exit();
         }
 
         // Compare versions using semver
