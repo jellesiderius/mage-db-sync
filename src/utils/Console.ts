@@ -4,15 +4,17 @@ import {ExecException} from "child_process";
 
 const prefix = {
     verbose: kleur.gray(kleur.bold('[DEBUG] ')),
-    info: kleur.gray(kleur.bold('[INFO] ')),
-    success: kleur.gray(kleur.bold('[SUCCESS] ')),
-    warning: kleur.yellow(kleur.bold('Warning: ')),
-    error: kleur.red(kleur.bold('Error: ')),
+    info: kleur.cyan(kleur.bold('[INFO] ')),
+    success: kleur.green(kleur.bold('[SUCCESS] ')),
+    warning: kleur.yellow(kleur.bold('[WARNING] ')),
+    error: kleur.red(kleur.bold('[ERROR] ')),
 }
 
 const body = {
     default: kleur.white,
     verbose: kleur.gray,
+    info: kleur.cyan,
+    success: kleur.green,
     warning: kleur.yellow,
     error: kleur.red
 }
@@ -29,7 +31,7 @@ const verbose = (message: string): void => {
 }
 
 const info = (message: string): void => {
-    log(prefix.info, body.default(message))
+    log(prefix.info, body.info(message))
 }
 
 const warning = (message: string): void => {
@@ -41,7 +43,7 @@ const error = (message: string): void => {
 }
 
 const success = (message: string): void => {
-    log(prefix.success, body.default(message))
+    log(prefix.success, body.success(message))
 }
 
 const url = (url: string): string => {

@@ -50,7 +50,7 @@ class SelfUpdateController {
 
             if (!answers.confirmUpdate) {
                 info('Update cancelled');
-                return false;
+                process.exit();
             }
 
             try {
@@ -59,16 +59,15 @@ class SelfUpdateController {
                 await execAsync('npm install -g mage-db-sync@latest');
                 success(`Successfully updated mage-db-sync from ${currentVersion} to ${latestVersion}`);
                 info('Please restart the tool to use the new version');
-                return true;
             } catch (err) {
                 error(`Failed to update: ${err instanceof Error ? err.message : 'Unknown error'}`);
                 error(`Please try running manually: npm install -g mage-db-sync@latest`);
-                return false;
             }
         } else {
             success(`mage-db-sync is already up to date (${currentVersion})`);
-            return false;
         }
+
+        process.exit();
     }
 }
 
