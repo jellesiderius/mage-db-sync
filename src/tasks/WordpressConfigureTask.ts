@@ -181,74 +181,121 @@ class WordpressConfigureTask {
                         if (isMultisite) {
                             // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING
                             
-                            // Get all sites from database
-                            let sitesCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"""`;
-                            let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                            // Only process sites that are explicitly mapped
+                            const hasMappedSites = Object.keys(wordpressDomainMapping).length > 0;
                             
-                            // Parse sites
-                            let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
-                            if (sitesResult) {
-                                const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
-                                for (const line of lines) {
-                                    const parts = line.trim().split(/\s+/);
-                                    if (parts.length >= 3) {
-                                        const blog_id = parts[0];
-                                        const domain = parts[1];
-                                        const path = parts[2];
-                                        
-                                        // Determine new domain (custom mapping or default)
-                                        let newDomain = localDomain;
-                                        if (wordpressDomainMapping[blog_id]) {
-                                            newDomain = wordpressDomainMapping[blog_id];
-                                        } else if (multisiteType === 'subdomain') {
-                                            // For subdomain multisite, preserve subdomain structure if no custom mapping
-                                            newDomain = domain.replace(String(wordpressUrl), localDomain);
+                            if (hasMappedSites) {
+                                // Get all sites from database
+                                let sitesCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"""`;
+                                let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                                
+                                // Parse sites and filter to only mapped ones
+                                let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
+                                if (sitesResult) {
+                                    const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
+                                    for (const line of lines) {
+                                        const parts = line.trim().split(/\s+/);
+                                        if (parts.length >= 3) {
+                                            const blog_id = parts[0];
+                                            const domain = parts[1];
+                                            const path = parts[2];
+                                            
+                                            // Only process if this site is mapped
+                                            if (wordpressDomainMapping[blog_id]) {
+                                                const newDomain = wordpressDomainMapping[blog_id];
+                                                sites.push({ blog_id, domain, path, newDomain });
+                                            }
                                         }
-                                        
-                                        sites.push({ blog_id, domain, path, newDomain });
                                     }
                                 }
+                                
+                                // Update main network domain (only if blog_id 1 is mapped)
+                                if (wordpressDomainMapping['1']) {
+                                    const mainSiteDomain = wordpressDomainMapping['1'];
+                                    let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"""`;
+                                    await localhostMagentoRootExec(replaceCommandSite, config, true);
+                                }
+                                
+                                // Update each mapped site individually
+                                for (const site of sites) {
+                                    const blogId = site.blog_id;
+                                    const oldDomain = site.domain;
+                                    const newDomain = site.newDomain;
+                                    const protocol = config.settings.isDdevActive ? 'https://' : 'http://';
+                                    
+                                    // Update domain in wp_blogs
+                                    let updateBlogCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"""`;
+                                    await localhostMagentoRootExec(updateBlogCommand, config, true);
+                                    
+                                    // Get current siteurl and home to preserve paths
+                                    const optionsTable = blogId === '1' 
+                                        ? `${config.wordpressConfig.prefix}options`
+                                        : `${config.wordpressConfig.prefix}${blogId}_options`;
+                                    
+                                    // Get current URLs to extract paths
+                                    let getCurrentUrlsCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_name, option_value FROM ${optionsTable} WHERE option_name IN ('siteurl', 'home')"""`;
+                                    let currentUrls = await localhostMagentoRootExec(getCurrentUrlsCommand, config, true);
+                                    
+                                    // Parse current URLs to preserve paths
+                                    let siteurlPath = '';
+                                    let homePath = '';
+                                    if (currentUrls) {
+                                        const urlLines = String(currentUrls).split('\n').filter(l => l && !l.startsWith('option_name'));
+                                        for (const urlLine of urlLines) {
+                                            const urlParts = urlLine.trim().split(/\s+/);
+                                            if (urlParts.length >= 2) {
+                                                const optionName = urlParts[0];
+                                                const optionValue = urlParts.slice(1).join(' ');
+                                                
+                                                // Extract path from URL (everything after domain)
+                                                try {
+                                                    const url = new URL(optionValue);
+                                                    const urlPath = url.pathname;
+                                                    
+                                                    if (optionName === 'siteurl') {
+                                                        siteurlPath = urlPath;
+                                                    } else if (optionName === 'home') {
+                                                        homePath = urlPath;
+                                                    }
+                                                } catch (e) {
+                                                    // If URL parsing fails, use empty path
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Update siteurl and home, preserving paths
+                                    const newSiteurl = `${protocol}${newDomain}${siteurlPath}`;
+                                    const newHome = `${protocol}${newDomain}${homePath}`;
+                                    
+                                    let updateSiteurlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = '${newSiteurl}' WHERE option_name = 'siteurl'"""`;
+                                    await localhostMagentoRootExec(updateSiteurlCommand, config, true);
+                                    
+                                    let updateHomeCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = '${newHome}' WHERE option_name = 'home'"""`;
+                                    await localhostMagentoRootExec(updateHomeCommand, config, true);
+                                    
+                                    // Also do domain replacement in all option values (for serialized data, widgets, etc.)
+                                    // But preserve the paths by only replacing the domain part
+                                    let searchReplaceHttpsCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, 'https://${oldDomain}/', '${protocol}${newDomain}/')"""`;
+                                    await localhostMagentoRootExec(searchReplaceHttpsCommand, config, true);
+                                    
+                                    let searchReplaceHttpCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, 'http://${oldDomain}/', '${protocol}${newDomain}/')"""`;
+                                    await localhostMagentoRootExec(searchReplaceHttpCommand, config, true);
+                                }
+                                
+                                // Store configured domains for final message
+                                config.wordpressConfig.configuredSites = sites;
+                            } else {
+                                // No custom mapping - use default behavior (update all sites)
+                                let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"""`;
+                                await localhostMagentoRootExec(replaceCommandSite, config, true);
+                                
+                                let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${localDomain}')"""`;
+                                await localhostMagentoRootExec(replaceCommandBlogs, config, true);
+                                
+                                let replaceCommandOptions = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value, '${wordpressUrl}', '${localDomain}') WHERE option_name IN ('siteurl', 'home')"""`;
+                                await localhostMagentoRootExec(replaceCommandOptions, config, true);
                             }
-                            
-                            // Update main network domain (use blog_id 1 or fallback to localDomain)
-                            const mainSiteDomain = wordpressDomainMapping['1'] || localDomain;
-                            let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"""`;
-                            await localhostMagentoRootExec(replaceCommandSite, config, true);
-                            
-                            // Update each site individually with custom domains
-                            for (const site of sites) {
-                                const blogId = site.blog_id;
-                                const oldDomain = site.domain;
-                                const newDomain = site.newDomain;
-                                const protocol = config.settings.isDdevActive ? 'https://' : 'http://';
-                                
-                                // Update domain in wp_blogs
-                                let updateBlogCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"""`;
-                                await localhostMagentoRootExec(updateBlogCommand, config, true);
-                                
-                                // Update options table for this site
-                                const optionsTable = blogId === '1' 
-                                    ? `${config.wordpressConfig.prefix}options`
-                                    : `${config.wordpressConfig.prefix}${blogId}_options`;
-                                
-                                // Update siteurl and home for this specific site
-                                let updateOptionsCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = '${protocol}${newDomain}${site.path}' WHERE option_name IN ('siteurl', 'home')"""`;
-                                await localhostMagentoRootExec(updateOptionsCommand, config, true);
-                                
-                                // Also do a search-replace for serialized data in this site's options
-                                let searchReplaceOldUrl = `https://${oldDomain}${site.path}`;
-                                let searchReplaceNewUrl = `${protocol}${newDomain}${site.path}`;
-                                let searchReplaceCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, '${searchReplaceOldUrl}', '${searchReplaceNewUrl}')"""`;
-                                await localhostMagentoRootExec(searchReplaceCommand, config, true);
-                                
-                                // Also try with http
-                                searchReplaceOldUrl = `http://${oldDomain}${site.path}`;
-                                searchReplaceCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, '${searchReplaceOldUrl}', '${searchReplaceNewUrl}')"""`;
-                                await localhostMagentoRootExec(searchReplaceCommand, config, true);
-                            }
-                            
-                            // Store configured domains for final message
-                            config.wordpressConfig.configuredSites = sites;
                             
                             // Update domain mapping if domain mapping plugin is used
                             let checkDomainMappingCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SHOW TABLES LIKE '${config.wordpressConfig.prefix}domain_mapping'"""`;
@@ -271,62 +318,64 @@ class WordpressConfigureTask {
                         if (isMultisite) {
                             // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING (Non-DDEV)
                             
-                            // Get all sites from database  
-                            let sitesCommand = `cd wp; wp db query "SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"`;
-                            let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                            // Only process sites that are explicitly mapped
+                            const hasMappedSites = Object.keys(wordpressDomainMapping).length > 0;
                             
-                            // Parse sites
-                            let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
-                            if (sitesResult) {
-                                const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
-                                for (const line of lines) {
-                                    const parts = line.trim().split(/\s+/);
-                                    if (parts.length >= 3) {
-                                        const blog_id = parts[0];
-                                        const domain = parts[1];
-                                        const path = parts[2];
-                                        
-                                        // Determine new domain (custom mapping or default)
-                                        let newDomain = localDomain;
-                                        if (wordpressDomainMapping[blog_id]) {
-                                            newDomain = wordpressDomainMapping[blog_id];
-                                        } else if (multisiteType === 'subdomain') {
-                                            // For subdomain multisite, preserve subdomain structure if no custom mapping
-                                            newDomain = domain.replace(String(wordpressUrl), localDomain);
+                            if (hasMappedSites) {
+                                // Get all sites from database  
+                                let sitesCommand = `cd wp; wp db query "SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"`;
+                                let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                                
+                                // Parse sites and filter to only mapped ones
+                                let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
+                                if (sitesResult) {
+                                    const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
+                                    for (const line of lines) {
+                                        const parts = line.trim().split(/\s+/);
+                                        if (parts.length >= 3) {
+                                            const blog_id = parts[0];
+                                            const domain = parts[1];
+                                            const path = parts[2];
+                                            
+                                            // Only process if this site is mapped
+                                            if (wordpressDomainMapping[blog_id]) {
+                                                const newDomain = wordpressDomainMapping[blog_id];
+                                                sites.push({ blog_id, domain, path, newDomain });
+                                            }
                                         }
-                                        
-                                        sites.push({ blog_id, domain, path, newDomain });
                                     }
                                 }
+                                
+                                // Update main network domain (only if blog_id 1 is mapped)
+                                if (wordpressDomainMapping['1']) {
+                                    const mainSiteDomain = wordpressDomainMapping['1'];
+                                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"`, config);
+                                }
+                                
+                                // Update each mapped site individually
+                                for (const site of sites) {
+                                    const blogId = site.blog_id;
+                                    const oldDomain = site.domain;
+                                    const newDomain = site.newDomain;
+                                    
+                                    // Update domain in wp_blogs
+                                    await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"`, config);
+                                    
+                                    // Use WP-CLI search-replace for each site to preserve paths
+                                    // Replace domain only, keeping paths intact
+                                    await localhostMagentoRootExec(`cd wp; wp search-replace '://${oldDomain}/' '://${newDomain}/' --skip-columns=guid --skip-tables=wp_users`, config, true);
+                                }
+                                
+                                // Store configured domains for final message
+                                config.wordpressConfig.configuredSites = sites;
+                            } else {
+                                // No custom mapping - use default behavior (update all sites)
+                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"`, config);
+                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${localDomain}'"`, config);
+                                
+                                await localhostMagentoRootExec(`cd wp; wp search-replace 'https://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
+                                await localhostMagentoRootExec(`cd wp; wp search-replace 'http://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
                             }
-                            
-                            // Update main network domain
-                            const mainSiteDomain = wordpressDomainMapping['1'] || localDomain;
-                            await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"`, config);
-                            
-                            // Update each site individually
-                            for (const site of sites) {
-                                const blogId = site.blog_id;
-                                const oldDomain = site.domain;
-                                const newDomain = site.newDomain;
-                                
-                                // Update domain in wp_blogs
-                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"`, config);
-                                
-                                // Use WP-CLI search-replace for each site
-                                const oldUrlHttps = `https://${oldDomain}${site.path}`;
-                                const oldUrlHttp = `http://${oldDomain}${site.path}`;
-                                const newUrl = `http://${newDomain}${site.path}`;
-                                
-                                // Get table prefix for this site
-                                const urlArg = blogId === '1' ? `--url=${oldUrlHttps}` : `--url=${oldUrlHttps}`;
-                                
-                                await localhostMagentoRootExec(`cd wp; wp search-replace '${oldUrlHttps}' '${newUrl}' ${urlArg} --skip-columns=guid --skip-tables=wp_users`, config, true);
-                                await localhostMagentoRootExec(`cd wp; wp search-replace '${oldUrlHttp}' '${newUrl}' ${urlArg} --skip-columns=guid --skip-tables=wp_users`, config, true);
-                            }
-                            
-                            // Store configured domains for final message
-                            config.wordpressConfig.configuredSites = sites;
                             
                             // Clear domain mapping
                             let checkDM = await localhostMagentoRootExec(`cd wp; wp db query "SHOW TABLES LIKE '${config.wordpressConfig.prefix}domain_mapping'"`, config, true);
