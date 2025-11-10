@@ -118,14 +118,14 @@ class StartController extends MainController {
 
             UI.box(message, { type: 'success', title: 'Magento Import Complete' });
         } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
-            let message = `Downloaded Magento database to:\n   ${this.config.finalMessages.magentoDatabaseLocation}`;
+            let message = `Downloaded Magento database to:\n${this.config.finalMessages.magentoDatabaseLocation}`;
 
             if (
                 this.config.finalMessages.wordpressDatabaseLocation.length > 0 &&
                 this.config.settings.wordpressDownload === 'yes' &&
                 this.config.settings.wordpressImport !== 'yes'
             ) {
-                message += `\n\nDownloaded WordPress database to:\n   ${this.config.finalMessages.wordpressDatabaseLocation}`;
+                message += `\n\nDownloaded WordPress database to:\n${this.config.finalMessages.wordpressDatabaseLocation}`;
             }
 
             UI.box(message, { type: 'success', title: 'Download Complete' });
