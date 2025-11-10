@@ -21,7 +21,7 @@ export interface TableInfo {
 }
 
 export interface StreamOptions {
-    compression?: 'gzip' | 'zstd' | 'none';
+    compression?: 'gzip' | 'none';
     parallelTables?: number;
     stripOptions?: string;
     mysqlCommand?: string;
@@ -104,8 +104,6 @@ export class DatabaseStreamService {
             // Add compression based on type
             if (compression === 'gzip') {
                 dumpCommand += ' | gzip -c | base64';
-            } else if (compression === 'zstd') {
-                dumpCommand += ' | zstd -c | base64';
             } else {
                 dumpCommand += ' | base64';
             }
@@ -125,8 +123,6 @@ export class DatabaseStreamService {
             
             if (compression === 'gzip') {
                 importCommand = `gunzip -c | ${importCommand}`;
-            } else if (compression === 'zstd') {
-                importCommand = `zstd -d -c | ${importCommand}`;
             }
 
             // Spawn local import process
@@ -245,16 +241,12 @@ export class DatabaseStreamService {
             let fullDumpCommand = remoteDumpCommand;
             if (compression === 'gzip') {
                 fullDumpCommand += ' | gzip -c';
-            } else if (compression === 'zstd') {
-                fullDumpCommand += ' | zstd -c';
             }
 
             // Build full command pipeline
             let fullImportCommand = localImportCommand;
             if (compression === 'gzip') {
                 fullImportCommand = `gunzip -c | ${fullImportCommand}`;
-            } else if (compression === 'zstd') {
-                fullImportCommand = `zstd -d -c | ${fullImportCommand}`;
             }
 
             const fullCommand = `${sshCommand} "${fullDumpCommand}" | ${fullImportCommand}`;
@@ -336,7 +328,7 @@ export class DatabaseStreamService {
     /**
      * Check if compression is available
      */
-    public async checkCompression(type: 'gzip' | 'zstd'): Promise<boolean> {
+    public async checkCompression(type: 'gzip'): Promise<boolean> {
         try {
             const { spawn } = require('child_process');
             const proc = spawn(type, ['--version']);
