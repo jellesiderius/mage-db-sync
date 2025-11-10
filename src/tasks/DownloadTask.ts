@@ -115,7 +115,7 @@ class DownloadTask {
         });
 
         this.downloadTasks.push({
-            title: 'Connecting to server through SSH [FAST]',
+            title: 'Connecting to server through SSH',
             task: async (ctx: any, task: any): Promise<void> => {
                 PerformanceMonitor.start('ssh-connection');
                 const logger = this.services.getLogger();
@@ -202,7 +202,7 @@ class DownloadTask {
                     });
 
                 if (!magerunExists) {
-                    task.output = '[FAST] Uploading Magerun (0%)...';
+                    task.output = 'Uploading Magerun (0%)...';
                     logger.info('Uploading Magerun', { file: config.serverVariables.magerunFile });
 
                     await ssh.putFile(
@@ -332,7 +332,7 @@ class DownloadTask {
                         config
                     );
 
-                    task.output = '[FAST] Dumping database (this may take a minute)...';
+                    task.output = 'Dumping database (this may take a minute)...';
                     logger.info('Starting database dump', {
                         database: config.serverVariables.databaseName,
                         stripType
@@ -370,7 +370,6 @@ class DownloadTask {
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
 
-                    // [FAST] SPEED OPTIMIZED: Add compression to rsync
                     let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
@@ -391,7 +390,7 @@ class DownloadTask {
                         source: `${databaseServer}:${source}`
                     });
 
-                    task.output = '[FAST] Initializing download...';
+                    task.output = 'Initializing download...';
 
                     const rsync = require('child_process').exec(rsyncCommand);
 
@@ -436,7 +435,7 @@ class DownloadTask {
 
                                 // Show compression type
                                 if (compression.type !== 'none') {
-                                    displayText += ` ${chalk.yellow(`[FAST] ${compression.type}`)}`;
+                                    displayText += ` ${chalk.yellow(`${compression.type}`)}`;
                                 }
 
                                 task.output = displayText;
@@ -493,15 +492,15 @@ class DownloadTask {
                 title: 'Reading WordPress configuration from server',
                 task: async (ctx: any, task: any): Promise<void> => {
                     const logger = this.services.getLogger();
-                    
+
                     task.output = 'Reading wp-config.php...';
-                    
+
                     // Import wordpressReplaces and stripOutputString utilities
                     const { wordpressReplaces, stripOutputString, sshNavigateToMagentoRootCommand } = require('../utils/Console');
-                    
+
                     // Read WordPress config file from server (try wp folder first, fallback to blog/wordpress)
                     const wpConfigCommand = sshNavigateToMagentoRootCommand('cd wp && cat wp-config.php || cd blog && cat wp-config.php || cd wordpress && cat wp-config.php', config);
-                    
+
                     await ssh.execCommand(wpConfigCommand).then((result: any) => {
                         if (result && result.stdout) {
                             const string = stripOutputString(result.stdout);
@@ -539,24 +538,24 @@ class DownloadTask {
                             `Could not read wp-config.php from server\n[TIP] Make sure WordPress is installed in wp/, blog/, or wordpress/ folder\nError: ${error.message}`
                         );
                     });
-                    
+
                     if (!config.wordpressConfig.database) {
                         throw new Error(
                             `Could not parse WordPress database configuration from wp-config.php\n[TIP] Check if wp-config.php is properly formatted`
                         );
                     }
-                    
+
                     logger.info('WordPress configuration retrieved', {
                         database: config.wordpressConfig.database,
                         username: config.wordpressConfig.username,
                         host: config.wordpressConfig.host,
                         prefix: config.wordpressConfig.prefix
                     });
-                    
+
                     task.title = `Retrieved WordPress config (${config.wordpressConfig.database})`;
                 }
             });
-            
+
             this.downloadTasks.push({
                 title: 'Dumping WordPress database on server',
                 task: async (ctx: any, task: any): Promise<void> => {
@@ -820,7 +819,7 @@ class DownloadTask {
                                         const speedValue = parseFloat(speedMatch[1]);
                                         const unit = speedMatch[2];
 
-                                        const displayText = `${chalk.gray(folder)} ${chalk.green('[DOWN]')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('[FAST]')}`;
+                                        const displayText = `${chalk.gray(folder)} ${chalk.green('[DOWN]')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
 
                                         task.output = displayText;
                                         lastUpdate = now;
@@ -922,11 +921,11 @@ class DownloadTask {
                 if (config.serverVariables.databaseName) {
                     const compression = config.compressionInfo || { type: 'none', extension: '' };
                     const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
-                    
+
                     logger.info('Cleaning up database file on server', { file: databaseFileName });
                     await ssh.execCommand(`rm -f ~/${databaseFileName}`);
                 }
-                
+
                 // Clean up WordPress database if it was downloaded
                 if (config.wordpressDumpFile) {
                     logger.info('Cleaning up WordPress database file on server', { file: config.wordpressDumpFile });

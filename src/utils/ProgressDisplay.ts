@@ -1,6 +1,6 @@
 /**
  * ProgressDisplay - Enhanced progress visualization for speed improvements
- * 
+ *
  * Features:
  * - Multi-bar progress (parallel operations)
  * - Speed indicators with ETA
@@ -58,10 +58,10 @@ export class ProgressDisplay {
     public update(id: string, value: number, speed?: string): void {
         const bar = this.bars.get(id);
         if (bar) {
-            const updates: any = { 
+            const updates: any = {
                 percentage: Math.round((value / bar.getTotal()) * 100)
             };
-            
+
             if (speed) {
                 updates.speed = chalk.green(speed);
             }
@@ -144,12 +144,12 @@ export class ProgressDisplay {
         const { operation, duration, originalSize, compressedSize, parallelOps, speedBoost } = data;
 
         console.log('\n┌' + '─'.repeat(70) + '┐');
-        console.log('│ ' + chalk.bold.green(`[FAST] ${operation} Complete`) + ' '.repeat(70 - operation.length - 12) + '│');
+        console.log('│ ' + chalk.bold.green(`${operation} Complete`) + ' '.repeat(70 - operation.length - 12) + '│');
         console.log('├' + '─'.repeat(70) + '┤');
-        
+
         console.log('│  Duration:        ' + chalk.cyan(ProgressDisplay.formatDuration(duration)) + ' '.repeat(70 - 31 - ProgressDisplay.formatDuration(duration).length) + '│');
         console.log('│  Original Size:   ' + chalk.cyan(ProgressDisplay.formatBytes(originalSize)) + ' '.repeat(70 - 31 - ProgressDisplay.formatBytes(originalSize).length) + '│');
-        
+
         if (compressedSize) {
             const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
             console.log('│  Compressed:      ' + chalk.green(ProgressDisplay.formatBytes(compressedSize)) + ` (${ratio}% smaller)` + ' '.repeat(70 - 43 - ProgressDisplay.formatBytes(compressedSize).length - ratio.length) + '│');
@@ -165,7 +165,7 @@ export class ProgressDisplay {
 
         const avgSpeed = originalSize / (duration / 1000);
         console.log('│  Avg Speed:       ' + chalk.cyan(ProgressDisplay.formatSpeed(avgSpeed)) + ' '.repeat(70 - 31 - ProgressDisplay.formatSpeed(avgSpeed).length) + '│');
-        
+
         console.log('└' + '─'.repeat(70) + '┘\n');
     }
 }
