@@ -94,6 +94,7 @@ export interface AppConfig {
         import: string;
         wordpressImport: string;
         wordpressDownload: string;
+        wordpressUploadsSync?: string;
         currentFolderIsMagento: boolean;
         currentFolderhasWordpress: boolean;
         runCommands: boolean;

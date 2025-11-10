@@ -31,7 +31,12 @@ class ConfigurationQuestions {
                 }
 
                 // Set wordpress download value
-                config.settings.wordpressDownload = answers.wordpressDownload
+                config.settings.wordpressDownload = answers.wordpressDownload;
+                
+                // Set wordpress uploads sync value (only asked if Images is checked)
+                if (answers.wordpressUploadsSync) {
+                    config.settings.wordpressUploadsSync = answers.wordpressUploadsSync;
+                }
 
                 // Change location of database download depending on answer
                 if (config.settings.import == 'yes') {
@@ -137,6 +142,19 @@ class ConfigurationQuestions {
                     choices: ['yes', 'no']
                 }
             );
+            
+            // WordPress uploads sync - only show if Images is also checked
+            if (config.settings.syncTypes.includes('Images') && config.settings.rsyncInstalled) {
+                this.questionsOne.push(
+                    {
+                        type: 'list',
+                        name: 'wordpressUploadsSync',
+                        default: 'yes',
+                        message: 'Sync WordPress uploads (wp/wp-content/uploads)?',
+                        choices: ['yes', 'no']
+                    }
+                );
+            }
 
             if (config.settings.currentFolderhasWordpress) {
                 this.questionsTwo.push(

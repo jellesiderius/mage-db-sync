@@ -704,6 +704,125 @@ class DownloadTask {
             });
         }
 
+        // WordPress uploads sync task - only runs if wordpressUploadsSync is enabled
+        if (config.settings.wordpressUploadsSync === 'yes' && config.settings.rsyncInstalled) {
+            this.downloadTasks.push({
+                title: 'Synchronizing WordPress uploads to localhost',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    PerformanceMonitor.start('wordpress-uploads-sync');
+                    const logger = this.services.getLogger();
+
+                    task.output = 'Preparing WordPress uploads sync...';
+
+                    const databaseUsername = config.databases.databaseData.username;
+                    const databaseServer = config.databases.databaseData.server;
+                    const databasePort = config.databases.databaseData.port;
+                    const destination = config.settings.currentFolder;
+
+                    // WordPress uploads paths (check common locations)
+                    const wpUploadsPaths = [
+                        'wp/wp-content/uploads/',
+                        'blog/wp-content/uploads/',
+                        'wordpress/wp-content/uploads/'
+                    ];
+
+                    logger.info('Starting WordPress uploads sync', {
+                        destination
+                    });
+
+                    // Build SSH command
+                    let sshCommand = databasePort
+                        ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
+                        : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
+
+                    if (config.customConfig.sshKeyLocation) {
+                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                    }
+
+                    // Try each possible path
+                    let synced = false;
+                    for (const uploadsPath of wpUploadsPaths) {
+                        const source = `${config.serverVariables.magentoRoot}/${uploadsPath}`;
+                        const destFolder = `${destination}/${uploadsPath.replace(/\/$/, '')}`;
+
+                        task.output = `Checking ${uploadsPath}...`;
+
+                        // Check if remote folder exists
+                        const checkResult = await ssh.execCommand(`test -d ${source} && echo "EXISTS" || echo "MISSING"`);
+                        const folderExists = checkResult.stdout.trim() === 'EXISTS';
+
+                        if (!folderExists) {
+                            logger.info('Remote uploads folder does not exist, trying next path', { path: uploadsPath, source });
+                            continue;
+                        }
+
+                        // Found the uploads folder!
+                        task.output = `Syncing WordPress uploads from ${uploadsPath}...`;
+
+                        // Ensure destination directory exists
+                        if (!fs.existsSync(destFolder)) {
+                            fs.mkdirSync(destFolder, { recursive: true });
+                            logger.info('Created destination directory', { path: destFolder });
+                        }
+
+                        // Build rsync command
+                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destFolder}`;
+
+                        if (config.databases.databaseData.password) {
+                            rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                        }
+
+                        logger.info('Syncing WordPress uploads', { source, destination: destFolder, command: rsyncCommand });
+
+                        // Execute rsync
+                        try {
+                            await new Promise<void>((resolve, reject) => {
+                                const { spawn } = require('child_process');
+                                const rsyncParts = rsyncCommand.split(' ');
+                                const rsync = spawn(rsyncParts[0], rsyncParts.slice(1), { shell: true });
+
+                                rsync.on('close', function (code: number) {
+                                    if (code === 0) {
+                                        logger.info('WordPress uploads sync complete', { uploadsPath });
+                                        resolve();
+                                    } else {
+                                        const errorMsg = `Rsync failed with exit code ${code}`;
+                                        logger.error(errorMsg, new Error(errorMsg));
+                                        reject(new Error(errorMsg));
+                                    }
+                                });
+
+                                rsync.on('error', function (err: any) {
+                                    logger.error('Rsync process error', err);
+                                    reject(err);
+                                });
+                            });
+
+                            synced = true;
+                            break; // Successfully synced, stop trying other paths
+                        } catch (error) {
+                            const err = error as Error;
+                            logger.warn('WordPress uploads sync failed', { path: uploadsPath, error: err.message });
+                            task.output = `Failed to sync ${uploadsPath}: ${err.message}`;
+                        }
+                    }
+
+                    const duration = PerformanceMonitor.end('wordpress-uploads-sync');
+
+                    if (synced) {
+                        task.title = `WordPress uploads synced in ${ProgressDisplay.formatDuration(duration)}`;
+                    } else {
+                        task.title = `[WARNING] WordPress uploads folder not found on server`;
+                    }
+
+                    logger.info('WordPress uploads sync complete', {
+                        synced,
+                        duration
+                    });
+                }
+            });
+        }
+
         // Media sync task - only runs if syncImages is enabled
         if (config.settings.syncImages === 'yes' && config.settings.syncImageTypes && config.settings.syncImageTypes.length > 0) {
             this.downloadTasks.push({
