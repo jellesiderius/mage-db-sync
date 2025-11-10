@@ -1,7 +1,10 @@
 import download from 'download-git-repo';
 import {getInstalledPath} from 'get-installed-path';
-import {consoleCommand, success} from "../utils/Console";
+import {consoleCommand, success, error, info} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
+import { promisify } from 'util';
+
+const downloadAsync = promisify(download);
 
 class SelfUpdateController {
     private versionCheck = new VersionCheck();
@@ -24,17 +27,31 @@ class SelfUpdateController {
         });
 
         if (config.currentVersion < config.latestVersion) {
-            await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
+            try {
+                info(`Updating from ${config.currentVersion} to ${config.latestVersion}...`);
 
-            download('jellesiderius/mage-db-sync#master', config.npmPath, async function () {
+                // Remove old dist folder
+                await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, false);
+
+                // Download the latest version from GitHub
+                info('Downloading latest version from GitHub...');
+                await downloadAsync('jellesiderius/mage-db-sync#master', config.npmPath);
+
+                // Install dependencies
+                info('Installing dependencies...');
                 await consoleCommand(`cd ${config.npmPath}; npm install`, false);
+
                 success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
-            });
+                info('Please restart the tool to use the new version');
+                process.exit();
+            } catch (err) {
+                error(`Update failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                process.exit();
+            }
         } else {
             success(`mage-db-sync is already up to date`);
+            process.exit();
         }
-
-        process.exit();
     }
 }
 
