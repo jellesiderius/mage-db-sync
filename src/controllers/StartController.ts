@@ -94,7 +94,7 @@ class StartController extends MainController {
         console.log('');
         UI.box(
             'This may take a few minutes...\n' +
-            ' Grab some coffee while you wait!',
+            'Grab some coffee while you wait!',
             { type: 'info', title: 'Starting Operations' }
         );
     }
