@@ -15,6 +15,7 @@ import { StartController } from './controllers/StartController';
 import { OpenFolderController } from './controllers/OpenFolderController';
 import { SelfUpdateController } from './controllers/SelfUpdateController';
 import { ServiceContainer } from './core/ServiceContainer';
+import { ConfigInitializer } from './utils/ConfigInitializer';
 
 // Remove warning listeners
 process.removeAllListeners('warning');
@@ -30,6 +31,9 @@ async function main() {
 
         // Get npm installation path
         const npmPath = await getInstalledPath('mage-db-sync');
+
+        // Initialize config files from samples if they don't exist
+        ConfigInitializer.initialize(npmPath);
 
         // Check for required files
         let missingFiles = false;

@@ -13,6 +13,7 @@
     "scripts": {
         "build": "tsc",
         "prepare": "npm run build",
+        "postinstall": "node scripts/postinstall.js",
         "dev": "ts-node src/mage-db-sync.ts",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix"
@@ -42,6 +43,7 @@
         "command-exists": "^1.2.9",
         "commander": "^14.0.2",
         "dotenv": "^17.2.3",
+        "download-git-repo": "^3.0.2",
         "execa": "^9.6.0",
         "figlet": "^1.9.0",
         "get-installed-path": "^4.0.8",
@@ -62,5 +64,15 @@
     },
     "engines": {
         "node": ">=16.0.0"
-    }
+    },
+    "files": [
+        "bin/",
+        "dist/",
+        "config/**/*.sample",
+        "config/static-settings.json",
+        "files/",
+        "scripts/",
+        "LICENSE.md",
+        "README.md"
+    ]
 }
