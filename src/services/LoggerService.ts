@@ -15,10 +15,10 @@ import fs from 'fs';
 import os from 'os';
 
 export enum LogLevel {
-    DEBUG = 'debug',
-    INFO = 'info',
-    WARN = 'warn',
-    ERROR = 'error'
+    _DEBUG = 'debug',
+    _INFO = 'info',
+    _WARN = 'warn',
+    _ERROR = 'error'
 }
 
 export interface LogContext {

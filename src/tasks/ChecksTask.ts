@@ -14,6 +14,7 @@ interface CheckResult {
 
 interface TaskItem {
     title: string;
+    /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
     task: (ctx?: any, task?: any) => Promise<void | boolean>;
     skip?: string | (() => boolean);
 }
@@ -154,7 +155,7 @@ class ChecksTask {
     }
 
     // Add tasks
-    addTasks = async (list: any, config: any, ssh: any) => {
+    addTasks = async (list: any, config: any, _ssh: any) => {
         list.add({
             title: 'Running parallel validation checks',
             task: (ctx: any, task: any): Listr =>
@@ -167,7 +168,7 @@ class ChecksTask {
             task: async (ctx: any, task: any): Promise<void> => {
                 task.output = 'Running parallel checks (0%)...';
                 await this.runParallelChecks(config);
-                const duration = Date.now() - Date.now();
+                const _duration = Date.now() - Date.now();
                 task.title = `File system & configuration checks`;
             }
         });

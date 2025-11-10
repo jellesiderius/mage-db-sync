@@ -117,7 +117,7 @@ export class FileSystemService {
                 if (this.fileExists(filePath)) {
                     this.deleteFile(filePath);
                 }
-            } catch (error) {
+            } catch (_error) {
                 // Continue even if deletion fails
                 console.warn(`Warning: Could not delete ${filePath}`);
             }

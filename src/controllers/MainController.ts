@@ -5,7 +5,7 @@ import * as os from 'os'
 import * as path from 'path'
 import { Listr } from 'listr2';
 import CommandExists from 'command-exists';
-import inquirer from 'inquirer'
+// inquirer is registered in SelectDatabaseQuestion
 
 
 class MainController {
@@ -91,7 +91,7 @@ class MainController {
 
         // Check if rsync is installed locally
         await CommandExists('rsync')
-            .then((command) =>{
+            .then(() =>{
                 this.config.settings.rsyncInstalled = true;
             }).catch(function(){});
 

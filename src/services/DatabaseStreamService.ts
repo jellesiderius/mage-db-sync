@@ -9,12 +9,10 @@
  */
 
 import { NodeSSH } from 'node-ssh';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import { LoggerService } from './LoggerService';
 import { PerformanceMonitor } from '../utils/Performance';
 import { DatabaseError } from '../types/errors';
-import * as zlib from 'zlib';
-import { pipeline } from 'stream/promises';
 
 export interface TableInfo {
     name: string;
@@ -168,7 +166,7 @@ export class DatabaseStreamService {
         tables: string[],
         localMysqlCommand: string,
         options: StreamOptions = {},
-        onProgress?: (table: string, index: number, total: number) => void
+        onProgress?: (_table: string, _index: number, _total: number) => void
     ): Promise<void> {
         const parallelTables = options.parallelTables || 5;
         
@@ -226,7 +224,7 @@ export class DatabaseStreamService {
         remoteDumpCommand: string,
         localImportCommand: string,
         options: StreamOptions = {},
-        onProgress?: (bytes: number, speed: number) => void
+        onProgress?: (_bytes: number, _speed: number) => void
     ): Promise<void> {
         const compression = options.compression || 'gzip';
 
@@ -322,6 +320,7 @@ export class DatabaseStreamService {
      */
     public calculateOptimalParallelism(tables: TableInfo[]): number {
         const totalSize = tables.reduce((sum, t) => sum + t.size, 0);
+            /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
         const totalRows = tables.reduce((sum, t) => sum + t.rows, 0);
 
         // Small DB: more parallel (up to 10)

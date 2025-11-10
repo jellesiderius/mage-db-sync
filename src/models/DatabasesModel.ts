@@ -26,13 +26,13 @@ class DatabasesModel {
     // Collect databases | collect single database
     collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
         let databases: Record<string, any> = stagingDatabases.databases;
-        let databaseDataType = this.databaseData;
+        const databaseDataType = this.databaseData;
 
         if (databaseType == 'production') {
             databases = productionDatabases.databases as Record<string, any>;
         }
 
-        for (let [key, db] of Object.entries(databases)) {
+        for (const [key, db] of Object.entries(databases)) {
             const database = db as any; // Database entries have dynamic structure
 
             if (databaseKey == key) {
@@ -57,25 +57,25 @@ class DatabasesModel {
                 if (database.commandsFolder) {
                     databaseDataType.commandsFolder = database.commandsFolder;
 
-                    let projectDatabasesRoot = path.join(__dirname, '../../config/databases');
-                    let commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
+                    const projectDatabasesRoot = path.join(__dirname, '../../config/databases');
+                    const commandsPath = path.join(projectDatabasesRoot, databaseDataType.commandsFolder);
 
                     if (fs.existsSync(commandsPath)) {
-                        let filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath + '/' + file).isFile());
+                        const filesArray = fs.readdirSync(commandsPath).filter(file => fs.lstatSync(commandsPath + '/' + file).isFile());
                         if (filesArray.length > 0) {
                             for (const file of filesArray) {
-                                let filePath = commandsPath + '/' + file;
+                                const filePath = commandsPath + '/' + file;
 
                                 if (file == 'database.txt') {
-                                    let data = fs.readFileSync(filePath, 'utf8');
-                                    let dataString = data.toString().split('\n').join('');
+                                    const data = fs.readFileSync(filePath, 'utf8');
+                                    const dataString = data.toString().split('\n').join('');
 
                                     config.settings.databaseCommand = dataString;
                                 }
 
                                 if (file == 'magerun2.txt') {
-                                    let data = fs.readFileSync(filePath, 'utf8');
-                                    let dataString = data.toString().split('\n').join('');
+                                    const data = fs.readFileSync(filePath, 'utf8');
+                                    const dataString = data.toString().split('\n').join('');
 
                                     config.settings.magerun2Command = dataString;
                                 }

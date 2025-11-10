@@ -1,5 +1,5 @@
 import {getInstalledPath} from 'get-installed-path';
-import {consoleCommand, success, error} from "../utils/Console";
+import {success, error} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -17,7 +17,7 @@ class SelfUpdateController {
     executeStart = async (_serviceName: string | undefined): Promise<boolean> => {
         await this.versionCheck.getToolVersions();
 
-        let config = {
+        const config = {
             'npmPath': '',
             'currentVersion': this.versionCheck.config.currentVersion,
             'latestVersion': this.versionCheck.config.latestVersion

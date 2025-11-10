@@ -159,17 +159,17 @@ class StartController extends MainController {
     askQuestions = async () => {
         UI.section('Configuration');
 
-        let databaseTypeQuestion = await new DatabaseTypeQuestion();
+        const databaseTypeQuestion = await new DatabaseTypeQuestion();
         await databaseTypeQuestion.configure(this.config);
 
-        let selectDatabaseQuestion = await new SelectDatabaseQuestion();
+        const selectDatabaseQuestion = await new SelectDatabaseQuestion();
         await selectDatabaseQuestion.configure(this.config);
 
 
-        let downloadTypesQuestion = await new DownloadTypesQuestion();
+        const downloadTypesQuestion = await new DownloadTypesQuestion();
         await downloadTypesQuestion.configure(this.config);
 
-        let configurationQuestions = await new ConfigurationQuestions();
+        const configurationQuestions = await new ConfigurationQuestions();
         await configurationQuestions.configure(this.config);
     };
 

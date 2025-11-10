@@ -18,9 +18,9 @@ class SelectDatabaseQuestion {
         .prompt(this.questions)
         .then(async (answers) => {
             // Get database key to get database settings
-            let keyRegex = /\((.*)\)/i;
-            let selectedDatabase = answers.database;
-            let databaseKey = selectedDatabase.match(keyRegex)[1];
+            const keyRegex = /\((.*)\)/i;
+            const selectedDatabase = answers.database;
+            const databaseKey = selectedDatabase.match(keyRegex)[1];
 
             // Collects database data based on key
             this.databasesModel.collectDatabaseData(databaseKey, config.databases.databaseType, false, config);
@@ -51,7 +51,7 @@ class SelectDatabaseQuestion {
             if (config.settings.currentFolderIsMagento) {
                 if (fs.existsSync(config.settings.currentFolder + '/.ddev/config.yaml')) {
                     // Check if ddev is installed locally
-                    await CommandExists('ddev').then((command) => {
+                    await CommandExists('ddev').then(() => {
                         config.settings.isDdevActive = true;
                         config.settings.magerun2CommandLocal = "ddev magerun2";
                     }).catch(function () {});

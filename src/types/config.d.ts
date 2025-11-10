@@ -100,6 +100,6 @@ declare module '../../package.json' {
 }
 
 declare module 'download-git-repo' {
-    function download(repo: string, dest: string, callback: (err?: Error) => void): void;
+    function download(_repo: string, _dest: string, _callback: (_err?: Error) => void): void;
     export default download;
 }

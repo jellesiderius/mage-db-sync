@@ -30,7 +30,7 @@ export class VersionCheckService {
             const response = await fetch('https://api.github.com/repos/jellesiderius/mage-db-sync/releases/latest');
             const data: any = await response.json();
             this.latestVersion = data.tag_name || this.currentVersion;
-        } catch (error) {
+        } catch (_error) {
             // If fetch fails, use current version
             this.latestVersion = this.currentVersion;
         }

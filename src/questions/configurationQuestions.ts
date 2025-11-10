@@ -83,10 +83,7 @@ class ConfigurationQuestions {
                     name: 'strip',
                     default: 'stripped',
                     message: 'Does the Magento database need to be stripped, keep customer data or have a full database?',
-                    choices: ['stripped', 'keep customer data', 'full', 'full and human readable'],
-                    validate: (input: string) => {
-                        return input !== ''
-                    }
+                    choices: ['stripped', 'keep customer data', 'full', 'full and human readable']
                 }
             );
         }
@@ -99,10 +96,7 @@ class ConfigurationQuestions {
                     name: 'import',
                     default: 'yes',
                     message: 'Import Magento database?',
-                    choices: ['yes', 'no'],
-                    validate: (input: string) => {
-                        return false;
-                    },
+                    choices: ['yes', 'no']
                 }
             );
         }
@@ -115,10 +109,7 @@ class ConfigurationQuestions {
                         name: 'syncImages',
                         default: 'no',
                         message: 'Synchronize Magento media images?',
-                        choices: ['yes', 'no'],
-                        validate: (input: string) => {
-                            return false;
-                        },
+                        choices: ['yes', 'no']
                     }
                 );
             }
@@ -131,10 +122,7 @@ class ConfigurationQuestions {
                     name: 'runCommands',
                     default: 'yes',
                     message: 'Run project commands?',
-                    choices: ['yes', 'no'],
-                    validate: (input: string) => {
-                        return false;
-                    },
+                    choices: ['yes', 'no']
                 }
             );
         }
@@ -146,10 +134,7 @@ class ConfigurationQuestions {
                     name: 'wordpressDownload',
                     default: 'no',
                     message: 'Download wordpress database?',
-                    choices: ['yes', 'no'],
-                    validate: (input: string) => {
-                        return input !== ''
-                    }
+                    choices: ['yes', 'no']
                 }
             );
 
@@ -160,10 +145,7 @@ class ConfigurationQuestions {
                         name: 'wordpressImport',
                         default: 'no',
                         message: '[EXPERIMENTAL]: Import and configure WordPress database?',
-                        choices: ['yes', 'no'],
-                        validate: (input: string) => {
-                            return false;
-                        },
+                        choices: ['yes', 'no']
                     }
                 );
             }

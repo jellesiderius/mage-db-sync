@@ -28,17 +28,14 @@ class DatabaseTypeQuestion {
     }
 
     // Add questions
-    addQuestions = async (config: any) => {
+    addQuestions = async (_config: any) => {
         this.questions.push(
             {
                 type: 'list',
                 name: 'databaseType',
                 message: 'Set database type',
                 default: 'staging',
-                choices: ['staging', 'production'],
-                validate: (input: string) => {
-                    return input !== ''
-                }
+                choices: ['staging', 'production']
             }
         )
     }

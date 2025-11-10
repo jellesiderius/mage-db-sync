@@ -9,6 +9,6 @@ declare module 'boxen' {
         titleAlignment?: 'left' | 'center' | 'right';
     }
 
-    function boxen(text: string, options?: Options): string;
+    function boxen(_text: string, _options?: Options): string;
     export default boxen;
 }

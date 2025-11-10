@@ -67,7 +67,7 @@ export class CommandService {
     /**
      * Check for magerun2 installation
      */
-    public async checkMagerun2(version: string = '7.4.0'): Promise<boolean> {
+    public async checkMagerun2(_version: string = '7.4.0'): Promise<boolean> {
         const exists = await this.commandExists('magerun2');
         return exists;
     }

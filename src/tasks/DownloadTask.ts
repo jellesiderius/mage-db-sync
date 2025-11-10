@@ -18,6 +18,7 @@ import chalk from 'chalk';
 
 interface TaskItem {
     title: string;
+    /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
     task: (ctx?: any, task?: any) => Promise<void | boolean>;
     skip?: string | (() => boolean);
 }
@@ -50,7 +51,7 @@ class DownloadTask {
                 logger.info('Using gzip compression', { level: '-6' });
                 return { type: 'gzip', level: '-6', extension: '.gz' };
             }
-        } catch (e) {
+        } catch (_e) {
             // gzip not available
         }
 
@@ -107,7 +108,7 @@ class DownloadTask {
         }
     }
 
-    addTasks = async (list: any, config: any, ssh: any, sshSecondDatabase: any) => {
+    addTasks = async (list: any, config: any, ssh: any, _sshSecondDatabase: any) => {
         list.add({
             title: `Downloading from server (${config.databases.databaseData.username} | ${config.databases.databaseType})`,
             task: (ctx: any, task: any): Listr => task.newListr(this.downloadTasks)
@@ -125,7 +126,7 @@ class DownloadTask {
                 await this.connectSSH(ssh, config, false);
                 task.output = 'SSH connection established';
 
-                const duration = PerformanceMonitor.end('ssh-connection');
+                const _duration = PerformanceMonitor.end('ssh-connection');
                 task.title = `Connected to server through SSH`;
             }
         });
@@ -147,8 +148,8 @@ class DownloadTask {
                     )
                     .then((result: any) => {
                         if (result) {
-                            let string = stripOutputString(result.stdout);
-                            let serverValues = string.split('\n');
+                            const string = stripOutputString(result.stdout);
+                            const serverValues = string.split('\n');
                             config.serverVariables.magentoVersion = parseInt(serverValues[0]);
                             config.serverVariables.magentoRoot = serverValues[1];
                             config.serverVariables.externalPhpPath = serverValues[2];
@@ -175,7 +176,7 @@ class DownloadTask {
                     config.serverVariables.magerunFile = 'n98-magerun-1.98.0.phar';
                 }
 
-                const duration = PerformanceMonitor.end('server-settings');
+                const _duration = PerformanceMonitor.end('server-settings');
                 task.title = `Retrieved server settings`;
             }
         });
@@ -188,7 +189,7 @@ class DownloadTask {
 
                 task.output = EnhancedProgress.step(3, 6, 'Checking if Magerun exists...');
 
-                let magerunExists = await ssh
+                const magerunExists = await ssh
                     .execCommand(
                         sshNavigateToMagentoRootCommand(
                             'test -e ' + config.serverVariables.magerunFile + ' && echo "EXISTS"',
@@ -196,7 +197,7 @@ class DownloadTask {
                         )
                     )
                     .then(function (result: any) {
-                        let string = stripOutputString(result.stdout);
+                        const string = stripOutputString(result.stdout);
                         return string.includes('EXISTS');
                     });
 
@@ -215,7 +216,7 @@ class DownloadTask {
                     task.skip('Magerun already exists on server');
                 }
 
-                const duration = PerformanceMonitor.end('magerun-download');
+                const _duration = PerformanceMonitor.end('magerun-download');
                 if (!magerunExists) {
                     task.title = `Downloaded Magerun to server`;
                 }
@@ -236,7 +237,7 @@ class DownloadTask {
                             const output = stripOutputString(result.stdout);
 
                             try {
-                                let jsonResult = JSON.parse(output);
+                                const jsonResult = JSON.parse(output);
 
                                 for (const key in jsonResult) {
                                     if (jsonResult[key].Name && jsonResult[key].Name.toLowerCase() === 'dbname') {
@@ -253,7 +254,7 @@ class DownloadTask {
                                 logger.info('Database name retrieved', {
                                     database: config.serverVariables.databaseName
                                 });
-                            } catch (e) {
+                            } catch (_e) {
                                 throw new Error(
                                     `Could not retrieve database name from server.\n` +
                                     `Magerun output: ${output}\n` +
@@ -392,13 +393,13 @@ class DownloadTask {
 
                     task.output = '⚡ Initializing download...';
 
-                    let rsync = require('child_process').exec(rsyncCommand);
+                    const rsync = require('child_process').exec(rsyncCommand);
 
                     let lastUpdate = Date.now();
-                    let startTime = Date.now();
+                    const _startTime = Date.now();
                     let bytesTransferred = 0;
-                    let lastBytes = 0;
-                    let totalBytes = 0;
+                    const _lastBytes = 0;
+                    const _totalBytes = 0;
 
                     // Capture both stdout and stderr (rsync sends progress to stderr on some systems)
                     const handleRsyncData = function (data: any) {
@@ -503,8 +504,8 @@ class DownloadTask {
                     
                     await ssh.execCommand(wpConfigCommand).then((result: any) => {
                         if (result && result.stdout) {
-                            let string = stripOutputString(result.stdout);
-                            let resultValues = string.split("\n");
+                            const string = stripOutputString(result.stdout);
+                            const resultValues = string.split("\n");
 
                             resultValues.forEach((entry: any) => {
                                 // Get DB name from config file
@@ -819,7 +820,7 @@ class DownloadTask {
                                         const speedValue = parseFloat(speedMatch[1]);
                                         const unit = speedMatch[2];
 
-                                        let displayText = `${chalk.gray(folder)} ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('⚡')}`;
+                                        const displayText = `${chalk.gray(folder)} ${chalk.green('↓')} ${chalk.cyan(speedValue + ' ' + unit + '/s')} ${chalk.yellow('⚡')}`;
 
                                         task.output = displayText;
                                         lastUpdate = now;

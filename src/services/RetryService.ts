@@ -17,7 +17,7 @@ export interface RetryOptions {
     backoffMultiplier?: number;
     timeout?: number;
     retryableErrors?: string[];
-    onRetry?: (error: Error, attempt: number) => void;
+    onRetry?: (_error: Error, _attempt: number) => void;
 }
 
 const DEFAULT_OPTIONS: Required<Omit<RetryOptions, 'onRetry' | 'retryableErrors'>> = {

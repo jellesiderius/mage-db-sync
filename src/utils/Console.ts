@@ -61,11 +61,10 @@ const clearConsole = (): void => {
 
 const consoleCommand = (cmd: string, skipErrors: boolean) => {
     const exec = require('child_process').exec;
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
             if (error && !skipErrors) {
-                throw new Error(String(error))
-                process.exit();
+                throw new Error(String(error));
             }
             resolve(stdout ? stdout : stderr);
         });
@@ -73,8 +72,8 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
 }
 
 // Navigate to Magento root folder
-const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
-    let databaseData = config.databases.databaseData;
+const sshNavigateToMagentoRootCommand = (command: string, config: any, _useSecondDatabase: boolean = false, log: boolean = false) => {
+    const databaseData = config.databases.databaseData;
 
     let returnString = '';
 
@@ -99,14 +98,14 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, useSecond
 
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderPhpCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
-    let phpPath = config.serverVariables.externalPhpPath;
+    const phpPath = config.serverVariables.externalPhpPath;
 
     return sshNavigateToMagentoRootCommand(phpPath + ' ' + command, config, useSecondDatabase, log);
 }
 
 // Execute a PHP script in the root of magento
 const sshMagentoRootFolderMagerunCommand = (command: string, config: any, useSecondDatabase: boolean = false, log: boolean = false) => {
-    let magerunFile = config.serverVariables.magerunFile;
+    const magerunFile = config.serverVariables.magerunFile;
 
     return sshMagentoRootFolderPhpCommand(magerunFile + ' ' + command, config, useSecondDatabase, log);
 }
@@ -132,13 +131,14 @@ const localhostWpRootExec = (command: string, config: any, skipErrors: boolean =
     return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
 }
 
-const localhostRsyncDownloadCommand = (source: string, destination: string, config: any, useSecondDatabase: boolean = false) => {
-    let sshCommand: string,
-        databaseUsername = config.databases.databaseData.username,
-        databaseServer = config.databases.databaseData.server,
-        databasePort = config.databases.databaseData.port;
+const localhostRsyncDownloadCommand = (source: string, destination: string, config: any, _useSecondDatabase: boolean = false) => {
+    const databaseUsername = config.databases.databaseData.username;
+    const databaseServer = config.databases.databaseData.server;
+    const databasePort = config.databases.databaseData.port;
 
-    config.databases.databaseData.port ? sshCommand = `ssh -p ${databasePort} -o StrictHostKeyChecking=no` : sshCommand = `ssh -o StrictHostKeyChecking=no`;
+    let sshCommand = config.databases.databaseData.port 
+        ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no` 
+        : `ssh -o StrictHostKeyChecking=no`;
 
     if (config.customConfig.sshKeyLocation) {
         sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
@@ -155,23 +155,23 @@ const localhostRsyncDownloadCommand = (source: string, destination: string, conf
 }
 
 const wordpressReplaces = (entry: string, text: string) => {
-    var replacedText = entry.replace(text, ''),
-        replacedText = replacedText.replace(`,`, ''),
-        replacedText = replacedText.replace(`DEFINE`, ''),
-        replacedText = replacedText.replace(`define`, ''),
-        replacedText = replacedText.replace(`(`, ''),
-        replacedText = replacedText.replace(` `, ''),
-        replacedText = replacedText.replace(`;`, ''),
-        replacedText = replacedText.replace(`$`, ''),
-        replacedText = replacedText.replace(`)`, ''),
-        replacedText = replacedText.replace(`=`, ''),
-        replacedText = replacedText.replace("'", '').replace(/'/g,'');
+    let replacedText = entry.replace(text, '');
+    replacedText = replacedText.replace(`,`, '');
+    replacedText = replacedText.replace(`DEFINE`, '');
+    replacedText = replacedText.replace(`define`, '');
+    replacedText = replacedText.replace(`(`, '');
+    replacedText = replacedText.replace(` `, '');
+    replacedText = replacedText.replace(`;`, '');
+    replacedText = replacedText.replace(`$`, '');
+    replacedText = replacedText.replace(`)`, '');
+    replacedText = replacedText.replace(`=`, '');
+    replacedText = replacedText.replace("'", '').replace(/'/g,'');
 
     return replacedText.trim();
 }
 
 const stripOutputString = (string: string) => {
-    let magerunRootWarning = "It's not recommended to run n98-magerun as root user";
+    const magerunRootWarning = "It's not recommended to run n98-magerun as root user";
     return string.replace(magerunRootWarning, '');
 }
 

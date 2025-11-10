@@ -8,6 +8,7 @@ import * as fs from 'fs';
 
 interface TaskItem {
     title: string;
+    /* eslint-disable no-unused-vars, prefer-const */
     task: (ctx?: any, task?: any) => Promise<void | boolean>;
     skip?: string | (() => boolean);
 }

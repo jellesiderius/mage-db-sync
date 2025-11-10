@@ -22,8 +22,8 @@ class DownloadTypesQuestion {
 
     // Add questions
     addQuestions = async (config: any) => {
-        let choices = ['Magento database'];
-        let defaultChoices = ['Magento database'];
+        const choices = ['Magento database'];
+        const defaultChoices = ['Magento database'];
 
         if (config.databases.databaseData.wordpress) {
             choices.push('Wordpress database')

@@ -5,6 +5,7 @@ import fs from "fs";
 
 interface TaskItem {
     title: string;
+    /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
     task: (ctx?: any, task?: any) => Promise<void | boolean>;
     skip?: string | (() => boolean);
 }
@@ -48,58 +49,58 @@ class MagentoConfigureTask {
             {
                 title: "Replacing URL's and doing some preperation for development",
                 task: async (): Promise<void> => {
-                    var dbQuery = '';
+                    let dbQuery = '';
                     // Delete queries
-                    var dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/css/merge_css_files';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/js/minify_files';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/css/minify_files';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'dev/js/enable_js_bundling';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%smtp%';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'msp_devtools/general/enabled';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE 'system/security/max_session_size_admin';",
-                        dbQueryRemove = dbQueryRemove + "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
+                    let dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'dev/static/sign';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'dev/css/merge_css_files';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'dev/js/minify_files';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'dev/css/minify_files';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'dev/js/enable_js_bundling';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE '%smtp%';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'admin/url/use_custom_path';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_static_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_media_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_link_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/unsecure/base_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_static_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_media_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_link_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'web/secure/base_url';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'msp_devtools/general/enabled';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE 'system/security/max_session_size_admin';";
+                    dbQueryRemove += "DELETE FROM core_config_data WHERE path LIKE '%ceyenne%';";
 
                     // Update queries
-                    var dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';",
-                        dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
+                    let dbQueryUpdate = "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_frontend';";
+                    dbQueryUpdate += "UPDATE core_config_data SET value = '0' WHERE path = 'web/secure/use_in_adminhtml';"
 
                     let baseUrl = 'http://' + config.settings.magentoLocalhostDomainName + '/';
 
                     if (config.settings.isDdevActive) {
-                        dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';",
-                        dbQueryUpdate = dbQueryUpdate + "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';"
+                        dbQueryUpdate = "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_frontend';";
+                        dbQueryUpdate += "UPDATE core_config_data SET value = '1' WHERE path = 'web/secure/use_in_adminhtml';"
 
                         baseUrl = 'https://' + config.settings.magentoLocalhostDomainName + '/';
                     }
 
                     // Insert queries
-                    var dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'msp_devtools/general/enabled', '1');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/css/merge_css_files', '0');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/js/minify_files', '0');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/css/minify_files', '0');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/js/enable_js_bundling', '0');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'system/security/max_session_size_admin', '1024000');",
-                        dbQueryInsert = dbQueryInsert + "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '0');";
+                    let dbQueryInsert = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_static_url', '{{unsecure_base_url}}static/');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_media_url', '{{unsecure_base_url}}media/');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_link_url', '{{unsecure_base_url}}');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_static_url', '{{secure_base_url}}static/');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_media_url', '{{secure_base_url}}media/');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_link_url', '{{secure_base_url}}');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/unsecure/base_url', '" + baseUrl + "');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'web/secure/base_url', '" + baseUrl + "');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'msp_devtools/general/enabled', '1');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/css/merge_css_files', '0');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/js/minify_files', '0');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/css/minify_files', '0');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/js/enable_js_bundling', '0');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'system/security/max_session_size_admin', '1024000');";
+                    dbQueryInsert += "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', '0', 'dev/static/sign', '0');";
 
                     // Build up query
                     dbQuery = dbQuery + dbQueryRemove + dbQueryUpdate + dbQueryInsert;
@@ -109,7 +110,7 @@ class MagentoConfigureTask {
 
                     await this.executeQuery(dbQuery, config);
 
-                    let allUrlsJson = sshMagentoRootFolderMagerunCommand('config:store:get "web/secure/base_url" --format=json', config, false);
+                    const allUrlsJson = sshMagentoRootFolderMagerunCommand('config:store:get "web/secure/base_url" --format=json', config, false);
 
                     if (allUrlsJson.length > 0) {
                         try {
@@ -120,7 +121,7 @@ class MagentoConfigureTask {
                                 //process.exit();
                                 //objValue = JSON.parse(engineCheck)[0].Value;
                             }
-                        } catch (err) {}
+                        } catch (_err) {}
                     }
                 }
             }
@@ -302,7 +303,7 @@ class MagentoConfigureTask {
 
                         // Database queries
                         if (config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
-                            let dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
+                            const dbQuery = config.settings.databaseCommand.replace(/'/g, '"');
                             await this.executeQuery(dbQuery, config);
                         }
                     }
@@ -316,27 +317,27 @@ class MagentoConfigureTask {
                 {
                     title: 'Setting core_config_data configurations through .mage-db-sync-config.json',
                     task: async (): Promise<void> => {
-                        let jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
-                        let coreConfigData = jsonData.core_config_data;
+                        const jsonData = require(config.settings.currentFolder + '/.mage-db-sync-config.json');
+                        const coreConfigData = jsonData.core_config_data;
 
                         if (coreConfigData) {
-                            var dbQuery = '';
+                            let dbQuery = '';
 
                             Object.keys(coreConfigData).forEach(key => {
-                                let storeId = key,
-                                    values = jsonData.core_config_data[key];
+                                const storeId = key;
+                                let values = jsonData.core_config_data[key];
 
                                 values = Object.entries(values);
 
                                 values.map(async (entry: any) => {
                                     const [path, value] = entry;
-                                    var scope = 'default';
+                                    let scope = 'default';
                                     if (Number(storeId) !== 0) {
                                         scope = 'stores';
                                     }
 
-                                    var dbQueryRemove = `DELETE FROM core_config_data WHERE path = '${path}' AND scope_id = '${storeId}';`;
-                                    var dbQueryInsert = `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${scope}', '${storeId}', '${path}', '${value}');`;
+                                    const dbQueryRemove = `DELETE FROM core_config_data WHERE path = '${path}' AND scope_id = '${storeId}';`;
+                                    const dbQueryInsert = `INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('${scope}', '${storeId}', '${path}', '${value}');`;
 
                                     // Build up query
                                     dbQuery = dbQuery + dbQueryRemove + dbQueryInsert;
@@ -372,7 +373,7 @@ class MagentoConfigureTask {
                         if (config.settings.isDdevActive) {
                             try {
                                 await localhostMagentoRootExec(`ddev exec curl -X DELETE 'http://elasticsearch:9200/_all'`, config, true);
-                            } catch (e) {
+                            } catch (_e) {
                                 // Ignore errors - index might not exist yet
                             }
                         }
@@ -447,8 +448,8 @@ class MagentoConfigureTask {
                     // Gather all urls
                     let urls = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:store:config:base-url:list --format=json`, config);
                     urls = JSON.parse(<string>urls);
-                    for (const [key, value] of Object.entries(urls as Record<string, any>)) {
-                        let url = (value as any).secure_baseurl;
+                    for (const [_key, value] of Object.entries(urls as Record<string, any>)) {
+                        const url = (value as any).secure_baseurl;
                         if (!config.finalMessages.domains.includes(url)) {
                             config.finalMessages.domains.push(url);
                         }

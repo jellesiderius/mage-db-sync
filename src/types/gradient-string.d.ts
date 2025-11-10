@@ -1,7 +1,7 @@
 declare module 'gradient-string' {
     export interface Gradient {
-        (text: string): string;
-        multiline(text: string): string;
+        (_text: string): string;
+        multiline(_text: string): string;
     }
 
     export const pastel: Gradient;
@@ -18,8 +18,7 @@ declare module 'gradient-string' {
     export const summer: Gradient;
     export const atlas: Gradient;
 
-    function gradient(colors: string[]): Gradient;
-    function gradient(...colors: string[]): Gradient;
+    function gradient(..._colors: string[]): Gradient;
 
     export default gradient;
 }

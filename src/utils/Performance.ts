@@ -140,7 +140,7 @@ export class SSHConnectionPool {
                     return disposeResult && typeof disposeResult.catch === 'function'
                         ? disposeResult.catch(() => {})
                         : Promise.resolve();
-                } catch (e) {
+                } catch (_e) {
                     return Promise.resolve();
                 }
             });
