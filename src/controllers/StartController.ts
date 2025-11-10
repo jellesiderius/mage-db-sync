@@ -116,7 +116,7 @@ class StartController extends MainController {
                 `   Email: ${configFile.magentoBackend.adminEmailAddress}\n` +
                 `   Password: ${configFile.magentoBackend.adminPassword}`;
 
-            UI.box(message, { type: 'success', title: '🎉 Import Complete' });
+            UI.box(message, { type: 'success', title: '🎉 Magento Import Complete' });
         } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
             let message = `✅ Downloaded Magento database to:\n   ${this.config.finalMessages.magentoDatabaseLocation}`;
 
