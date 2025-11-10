@@ -155,6 +155,23 @@ class WordpressConfigureTask {
                     const multisiteType = config.wordpressConfig.multisiteType;
                     const localDomain = config.settings.magentoLocalhostDomainName;
                     
+                    // Load custom WordPress domain mapping from .mage-db-sync-config.json
+                    const fs = require('fs');
+                    let wordpressDomainMapping: Record<string, string> = {};
+                    const configPath = `${config.settings.currentFolder}/.mage-db-sync-config.json`;
+                    
+                    if (fs.existsSync(configPath)) {
+                        try {
+                            const jsonData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                            if (jsonData.wordpress_domains) {
+                                wordpressDomainMapping = jsonData.wordpress_domains;
+                                task.output = `Loaded custom WordPress domain mapping for ${Object.keys(wordpressDomainMapping).length} site(s)`;
+                            }
+                        } catch (err) {
+                            // Ignore parsing errors, use default mapping
+                        }
+                    }
+                    
                     if (config.settings.isDdevActive) {
                         // Retrieve current site URL from database
                         let wordpressUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"""`;
@@ -162,47 +179,76 @@ class WordpressConfigureTask {
                         wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
 
                         if (isMultisite) {
-                            // MULTISITE CONFIGURATION
-                            if (multisiteType === 'subdomain') {
-                                // Subdomain multisite: replace all domains with local subdomains
-                                // Get all sites
-                                let sitesCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"""`;
-                                let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
-                                
-                                // Update main network domain
-                                let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"""`;
-                                await localhostMagentoRootExec(replaceCommandSite, config, true);
-                                
-                                // Update all site domains - replace full domain with local domain
-                                let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${localDomain}')"""`;
-                                await localhostMagentoRootExec(replaceCommandBlogs, config, true);
-                                
-                                // Update siteurl and home in all site options tables
-                                let replaceCommandOptions = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value, '${wordpressUrl}', '${localDomain}') WHERE option_name IN ('siteurl', 'home')"""`;
-                                await localhostMagentoRootExec(replaceCommandOptions, config, true);
-                                
-                                // Also update for subsites (wp_2_options, wp_3_options, etc.)
-                                let updateSubsitesCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT CONCAT('UPDATE ', table_name, ' SET option_value = REPLACE(option_value, \\\\'${wordpressUrl}\\\\', \\\\'${localDomain}\\\\') WHERE option_name IN (\\\\'siteurl\\\\', \\\\'home\\\\');') FROM information_schema.tables WHERE table_schema = 'db_wp' AND table_name LIKE '${config.wordpressConfig.prefix}%_options'"""`;
-                                let subsiteQueries = await localhostMagentoRootExec(updateSubsitesCommand, config, true);
-                                
-                                if (subsiteQueries) {
-                                    // Execute each update query
-                                    let queries = String(subsiteQueries).split('\n').filter((q: string) => q.startsWith('UPDATE'));
-                                    for (const query of queries) {
-                                        await localhostMagentoRootExec(`ddev mysql -uroot -proot -hdb -e "USE db_wp; ${query}"`, config, true);
+                            // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING
+                            
+                            // Get all sites from database
+                            let sitesCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"""`;
+                            let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                            
+                            // Parse sites
+                            let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
+                            if (sitesResult) {
+                                const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
+                                for (const line of lines) {
+                                    const parts = line.trim().split(/\s+/);
+                                    if (parts.length >= 3) {
+                                        const blog_id = parts[0];
+                                        const domain = parts[1];
+                                        const path = parts[2];
+                                        
+                                        // Determine new domain (custom mapping or default)
+                                        let newDomain = localDomain;
+                                        if (wordpressDomainMapping[blog_id]) {
+                                            newDomain = wordpressDomainMapping[blog_id];
+                                        } else if (multisiteType === 'subdomain') {
+                                            // For subdomain multisite, preserve subdomain structure if no custom mapping
+                                            newDomain = domain.replace(String(wordpressUrl), localDomain);
+                                        }
+                                        
+                                        sites.push({ blog_id, domain, path, newDomain });
                                     }
                                 }
-                            } else {
-                                // Subdirectory multisite: simpler, just replace main domain
-                                let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"""`;
-                                await localhostMagentoRootExec(replaceCommandSite, config, true);
-                                
-                                let replaceCommandBlogs = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${localDomain}'"""`;
-                                await localhostMagentoRootExec(replaceCommandBlogs, config, true);
-                                
-                                let replaceCommandOptions = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}options SET option_value = REPLACE(option_value, '${wordpressUrl}', '${localDomain}') WHERE option_name IN ('siteurl', 'home')"""`;
-                                await localhostMagentoRootExec(replaceCommandOptions, config, true);
                             }
+                            
+                            // Update main network domain (use blog_id 1 or fallback to localDomain)
+                            const mainSiteDomain = wordpressDomainMapping['1'] || localDomain;
+                            let replaceCommandSite = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"""`;
+                            await localhostMagentoRootExec(replaceCommandSite, config, true);
+                            
+                            // Update each site individually with custom domains
+                            for (const site of sites) {
+                                const blogId = site.blog_id;
+                                const oldDomain = site.domain;
+                                const newDomain = site.newDomain;
+                                const protocol = config.settings.isDdevActive ? 'https://' : 'http://';
+                                
+                                // Update domain in wp_blogs
+                                let updateBlogCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"""`;
+                                await localhostMagentoRootExec(updateBlogCommand, config, true);
+                                
+                                // Update options table for this site
+                                const optionsTable = blogId === '1' 
+                                    ? `${config.wordpressConfig.prefix}options`
+                                    : `${config.wordpressConfig.prefix}${blogId}_options`;
+                                
+                                // Update siteurl and home for this specific site
+                                let updateOptionsCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = '${protocol}${newDomain}${site.path}' WHERE option_name IN ('siteurl', 'home')"""`;
+                                await localhostMagentoRootExec(updateOptionsCommand, config, true);
+                                
+                                // Also do a search-replace for serialized data in this site's options
+                                let searchReplaceOldUrl = `https://${oldDomain}${site.path}`;
+                                let searchReplaceNewUrl = `${protocol}${newDomain}${site.path}`;
+                                let searchReplaceCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, '${searchReplaceOldUrl}', '${searchReplaceNewUrl}')"""`;
+                                await localhostMagentoRootExec(searchReplaceCommand, config, true);
+                                
+                                // Also try with http
+                                searchReplaceOldUrl = `http://${oldDomain}${site.path}`;
+                                searchReplaceCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; UPDATE ${optionsTable} SET option_value = REPLACE(option_value, '${searchReplaceOldUrl}', '${searchReplaceNewUrl}')"""`;
+                                await localhostMagentoRootExec(searchReplaceCommand, config, true);
+                            }
+                            
+                            // Store configured domains for final message
+                            config.wordpressConfig.configuredSites = sites;
                             
                             // Update domain mapping if domain mapping plugin is used
                             let checkDomainMappingCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SHOW TABLES LIKE '${config.wordpressConfig.prefix}domain_mapping'"""`;
@@ -223,25 +269,64 @@ class WordpressConfigureTask {
                         wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
                         
                         if (isMultisite) {
-                            // MULTISITE CONFIGURATION
-                            if (multisiteType === 'subdomain') {
-                                // Update network domain
-                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"`, config);
-                                
-                                // Update all blog domains
-                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = REPLACE(domain, '${wordpressUrl}', '${localDomain}')"`, config);
-                                
-                                // Use WP-CLI search-replace for all subsites (most reliable)
-                                await localhostMagentoRootExec(`cd wp; wp search-replace 'https://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
-                                await localhostMagentoRootExec(`cd wp; wp search-replace 'http://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
-                            } else {
-                                // Subdirectory multisite
-                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${localDomain}'"`, config);
-                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${localDomain}'"`, config);
-                                
-                                await localhostMagentoRootExec(`cd wp; wp search-replace 'https://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
-                                await localhostMagentoRootExec(`cd wp; wp search-replace 'http://${wordpressUrl}' 'http://${localDomain}' --network --skip-columns=guid`, config, true);
+                            // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING (Non-DDEV)
+                            
+                            // Get all sites from database  
+                            let sitesCommand = `cd wp; wp db query "SELECT blog_id, domain, path FROM ${config.wordpressConfig.prefix}blogs"`;
+                            let sitesResult = await localhostMagentoRootExec(sitesCommand, config, true);
+                            
+                            // Parse sites
+                            let sites: Array<{blog_id: string, domain: string, path: string, newDomain: string}> = [];
+                            if (sitesResult) {
+                                const lines = String(sitesResult).split('\n').filter(l => l && !l.startsWith('blog_id'));
+                                for (const line of lines) {
+                                    const parts = line.trim().split(/\s+/);
+                                    if (parts.length >= 3) {
+                                        const blog_id = parts[0];
+                                        const domain = parts[1];
+                                        const path = parts[2];
+                                        
+                                        // Determine new domain (custom mapping or default)
+                                        let newDomain = localDomain;
+                                        if (wordpressDomainMapping[blog_id]) {
+                                            newDomain = wordpressDomainMapping[blog_id];
+                                        } else if (multisiteType === 'subdomain') {
+                                            // For subdomain multisite, preserve subdomain structure if no custom mapping
+                                            newDomain = domain.replace(String(wordpressUrl), localDomain);
+                                        }
+                                        
+                                        sites.push({ blog_id, domain, path, newDomain });
+                                    }
+                                }
                             }
+                            
+                            // Update main network domain
+                            const mainSiteDomain = wordpressDomainMapping['1'] || localDomain;
+                            await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}site SET domain = '${mainSiteDomain}'"`, config);
+                            
+                            // Update each site individually
+                            for (const site of sites) {
+                                const blogId = site.blog_id;
+                                const oldDomain = site.domain;
+                                const newDomain = site.newDomain;
+                                
+                                // Update domain in wp_blogs
+                                await localhostMagentoRootExec(`cd wp; wp db query "UPDATE ${config.wordpressConfig.prefix}blogs SET domain = '${newDomain}' WHERE blog_id = ${blogId}"`, config);
+                                
+                                // Use WP-CLI search-replace for each site
+                                const oldUrlHttps = `https://${oldDomain}${site.path}`;
+                                const oldUrlHttp = `http://${oldDomain}${site.path}`;
+                                const newUrl = `http://${newDomain}${site.path}`;
+                                
+                                // Get table prefix for this site
+                                const urlArg = blogId === '1' ? `--url=${oldUrlHttps}` : `--url=${oldUrlHttps}`;
+                                
+                                await localhostMagentoRootExec(`cd wp; wp search-replace '${oldUrlHttps}' '${newUrl}' ${urlArg} --skip-columns=guid --skip-tables=wp_users`, config, true);
+                                await localhostMagentoRootExec(`cd wp; wp search-replace '${oldUrlHttp}' '${newUrl}' ${urlArg} --skip-columns=guid --skip-tables=wp_users`, config, true);
+                            }
+                            
+                            // Store configured domains for final message
+                            config.wordpressConfig.configuredSites = sites;
                             
                             // Clear domain mapping
                             let checkDM = await localhostMagentoRootExec(`cd wp; wp db query "SHOW TABLES LIKE '${config.wordpressConfig.prefix}domain_mapping'"`, config, true);
@@ -255,9 +340,21 @@ class WordpressConfigureTask {
                         }
                     }
                     
-                    task.title = isMultisite 
-                        ? `Configured all sites for ${multisiteType} multisite`
-                        : `Configured single site URLs`;
+                    // Update task title with configured domains count
+                    if (isMultisite && config.wordpressConfig.configuredSites) {
+                        const siteCount = config.wordpressConfig.configuredSites.length;
+                        const customMappingCount = Object.keys(wordpressDomainMapping).length;
+                        
+                        if (customMappingCount > 0) {
+                            task.title = `Configured ${siteCount} sites (${customMappingCount} with custom domains)`;
+                        } else {
+                            task.title = `Configured ${siteCount} sites for ${multisiteType} multisite`;
+                        }
+                    } else {
+                        task.title = isMultisite 
+                            ? `Configured all sites for ${multisiteType} multisite`
+                            : `Configured single site URLs`;
+                    }
                 }
             }
         );

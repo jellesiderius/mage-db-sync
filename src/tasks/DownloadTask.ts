@@ -915,9 +915,22 @@ class DownloadTask {
             title: 'Cleaning up and closing SSH connection',
             task: async (): Promise<void> => {
                 PerformanceMonitor.start('cleanup');
+                const logger = this.services.getLogger();
 
-                const databaseFileName = `${config.serverVariables.databaseName}.sql`;
-                await ssh.execCommand(`rm -f ~/${databaseFileName}`);
+                // Clean up Magento database (use the actual filename with compression extension)
+                if (config.serverVariables.databaseName) {
+                    const compression = config.compressionInfo || { type: 'none', extension: '' };
+                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
+                    
+                    logger.info('Cleaning up database file on server', { file: databaseFileName });
+                    await ssh.execCommand(`rm -f ~/${databaseFileName}`);
+                }
+                
+                // Clean up WordPress database if it was downloaded
+                if (config.wordpressDumpFile) {
+                    logger.info('Cleaning up WordPress database file on server', { file: config.wordpressDumpFile });
+                    await ssh.execCommand(`rm -f ~/${config.wordpressDumpFile}`);
+                }
 
                 PerformanceMonitor.end('cleanup');
             }

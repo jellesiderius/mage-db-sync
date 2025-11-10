@@ -57,6 +57,7 @@ export interface ProjectConfig {
     core_config_data?: Record<string, Record<string, string | number>>;
     databaseStripDevelopment?: string;
     databaseStripFull?: string;
+    wordpress_domains?: Record<string, string>;  // blog_id -> local domain
 }
 
 export interface AppConfig {
@@ -124,6 +125,7 @@ export interface AppConfig {
         database: string;
         isMultisite?: boolean;
         multisiteType?: 'subdomain' | 'subdirectory';
+        configuredSites?: Array<{blog_id: string, domain: string, path: string, newDomain: string}>;
     };
 }
 
