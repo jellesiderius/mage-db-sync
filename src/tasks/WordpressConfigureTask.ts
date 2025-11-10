@@ -161,6 +161,7 @@ class WordpressConfigureTask {
                     let wordpressDomainMapping: Record<string, string> = {};
                     const configPath = `${config.settings.currentFolder}/.mage-db-sync-config.json`;
                     
+                    // Try to load from config file first
                     if (fs.existsSync(configPath)) {
                         try {
                             const jsonData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -169,7 +170,27 @@ class WordpressConfigureTask {
                                 task.output = `Loaded custom WordPress domain mapping for ${Object.keys(wordpressDomainMapping).length} site(s)`;
                             }
                         } catch (_err) {
-                            // Ignore parsing errors, use default mapping
+                            // Ignore parsing errors, continue to fallback
+                        }
+                    }
+                    
+                    // FALLBACK: If no mapping found in config and this is Magento+WordPress, 
+                    // try to fetch from wordpress/multisite/blog_id in Magento database
+                    if (Object.keys(wordpressDomainMapping).length === 0 && config.settings.currentFolderIsMagento) {
+                        try {
+                            const { WordpressMultisiteMapper } = require('../services/WordpressMultisiteMapper');
+                            const mapper = new WordpressMultisiteMapper();
+                            
+                            task.output = 'No config found, checking Magento database for wordpress/multisite/blog_id...';
+                            const magentoBlogMappings = await mapper.fetchMagentoBlogIdMappings(config);
+                            
+                            if (Object.keys(magentoBlogMappings).length > 0) {
+                                wordpressDomainMapping = mapper.convertToWordpressDomainMapping(magentoBlogMappings);
+                                task.output = `Found ${Object.keys(wordpressDomainMapping).length} blog ID mapping(s) from Magento database`;
+                            }
+                        } catch (err) {
+                            // Fallback failed, will use default behavior
+                            task.output = 'Could not fetch blog ID mappings from Magento, using default mapping';
                         }
                     }
                     
@@ -229,6 +250,9 @@ class WordpressConfigureTask {
                                     await localhostMagentoRootExec(updateBlogCommand, config, true);
                                     
                                     // Get current siteurl and home to preserve paths
+                                    // WordPress multisite table naming:
+                                    // - Blog ID 1: wp_options, wp_posts, wp_postmeta, etc. (no number suffix)
+                                    // - Blog ID 2+: wp_2_options, wp_2_posts, wp_2_postmeta, etc. (has number suffix)
                                     const optionsTable = blogId === '1' 
                                         ? `${config.wordpressConfig.prefix}options`
                                         : `${config.wordpressConfig.prefix}${blogId}_options`;
