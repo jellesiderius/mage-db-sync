@@ -932,6 +932,17 @@ class DownloadTask {
                     await ssh.execCommand(`rm -f ~/${config.wordpressDumpFile}`);
                 }
 
+                // Clean up uploaded Magerun file
+                if (config.serverVariables.magerunFile) {
+                    logger.info('Cleaning up Magerun file on server', { file: config.serverVariables.magerunFile });
+                    await ssh.execCommand(
+                        sshNavigateToMagentoRootCommand(
+                            `rm -f ${config.serverVariables.magerunFile}`,
+                            config
+                        )
+                    );
+                }
+
                 PerformanceMonitor.end('cleanup');
             }
         });
