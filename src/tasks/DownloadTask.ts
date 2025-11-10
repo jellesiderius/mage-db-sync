@@ -485,6 +485,225 @@ class DownloadTask {
             });
         }
 
+        // WordPress database download - only runs if wordpressDownload is enabled
+        if (config.databases.databaseData.wordpress && config.settings.wordpressDownload === 'yes') {
+            // First, retrieve WordPress config from server
+            this.downloadTasks.push({
+                title: 'Reading WordPress configuration from server',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    const logger = this.services.getLogger();
+                    
+                    task.output = 'Reading wp-config.php...';
+                    
+                    // Import wordpressReplaces and stripOutputString utilities
+                    const { wordpressReplaces, stripOutputString, sshNavigateToMagentoRootCommand } = require('../utils/Console');
+                    
+                    // Read WordPress config file from server (try wp folder first, fallback to blog/wordpress)
+                    const wpConfigCommand = sshNavigateToMagentoRootCommand('cd wp && cat wp-config.php || cd blog && cat wp-config.php || cd wordpress && cat wp-config.php', config);
+                    
+                    await ssh.execCommand(wpConfigCommand).then((result: any) => {
+                        if (result && result.stdout) {
+                            let string = stripOutputString(result.stdout);
+                            let resultValues = string.split("\n");
+
+                            resultValues.forEach((entry: any) => {
+                                // Get DB name from config file
+                                if (entry.includes('DB_NAME')) {
+                                    config.wordpressConfig.database = wordpressReplaces(entry, `DB_NAME`);
+                                }
+
+                                // Get DB user from config file
+                                if (entry.includes('DB_USER')) {
+                                    config.wordpressConfig.username = wordpressReplaces(entry, `DB_USER`);
+                                }
+
+                                // Get DB password from config file
+                                if (entry.includes('DB_PASSWORD')) {
+                                    config.wordpressConfig.password = wordpressReplaces(entry, `DB_PASSWORD`);
+                                }
+
+                                // Get DB host from config file
+                                if (entry.includes('DB_HOST')) {
+                                    config.wordpressConfig.host = wordpressReplaces(entry, `DB_HOST`);
+                                }
+
+                                // Get table prefix from config file
+                                if (entry.includes('table_prefix')) {
+                                    config.wordpressConfig.prefix = wordpressReplaces(entry, `table_prefix`);
+                                }
+                            });
+                        }
+                    }).catch((error: any) => {
+                        throw new Error(
+                            `Could not read wp-config.php from server\n💡 Make sure WordPress is installed in wp/, blog/, or wordpress/ folder\nError: ${error.message}`
+                        );
+                    });
+                    
+                    if (!config.wordpressConfig.database) {
+                        throw new Error(
+                            `Could not parse WordPress database configuration from wp-config.php\n💡 Check if wp-config.php is properly formatted`
+                        );
+                    }
+                    
+                    logger.info('WordPress configuration retrieved', {
+                        database: config.wordpressConfig.database,
+                        username: config.wordpressConfig.username,
+                        host: config.wordpressConfig.host,
+                        prefix: config.wordpressConfig.prefix
+                    });
+                    
+                    task.title = `Retrieved WordPress config (${config.wordpressConfig.database})`;
+                }
+            });
+            
+            this.downloadTasks.push({
+                title: 'Dumping WordPress database on server',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    PerformanceMonitor.start('wordpress-dump');
+                    const logger = this.services.getLogger();
+
+                    task.output = 'Creating WordPress database dump...';
+
+                    const wpDatabase = config.wordpressConfig.database;
+                    const wpUsername = config.wordpressConfig.username;
+                    const wpPassword = config.wordpressConfig.password;
+                    const wpHost = config.wordpressConfig.host;
+                    const databaseFileName = `${wpDatabase}.sql`;
+
+                    // Detect compression
+                    const compression = await this.detectCompression(ssh);
+                    const compressedFileName = `${wpDatabase}.sql${compression.extension}`;
+
+                    // Build mysqldump command for WordPress database
+                    let dumpCommand: string;
+                    if (compression.type === 'gzip') {
+                        dumpCommand = `mysqldump -h ${wpHost} -u ${wpUsername} -p'${wpPassword}' ${wpDatabase} | gzip ${compression.level} > ~/${compressedFileName}`;
+                    } else {
+                        dumpCommand = `mysqldump -h ${wpHost} -u ${wpUsername} -p'${wpPassword}' ${wpDatabase} > ~/${databaseFileName}`;
+                    }
+
+                    logger.info('Starting WordPress database dump', {
+                        database: wpDatabase,
+                        compression: compression.type
+                    });
+
+                    await ssh.execCommand(dumpCommand).then(function (result: any) {
+                        if (result.code && result.code !== 0) {
+                            throw new Error(
+                                `WordPress database dump failed\n💡 Check WordPress database credentials and permissions\nError: ${result.stderr}`
+                            );
+                        }
+                        task.output = '✓ WordPress database dump completed';
+                    });
+
+                    // Store the filename for download task
+                    config.wordpressDumpFile = compression.type === 'gzip' ? compressedFileName : databaseFileName;
+                    config.wordpressCompression = compression;
+
+                    const duration = PerformanceMonitor.end('wordpress-dump');
+                    logger.info('WordPress database dump complete', { duration });
+                    task.title = `Dumped WordPress database`;
+                }
+            });
+
+            this.downloadTasks.push({
+                title: 'Downloading WordPress database to localhost',
+                task: async (ctx: any, task: any): Promise<void> => {
+                    PerformanceMonitor.start('wordpress-download');
+                    const logger = this.services.getLogger();
+                    EnhancedProgress.resetDownload();
+
+                    const databaseUsername = config.databases.databaseData.username;
+                    const databaseServer = config.databases.databaseData.server;
+                    const databasePort = config.databases.databaseData.port;
+
+                    const databaseFileName = config.wordpressDumpFile;
+                    const source = `~/${databaseFileName}`;
+                    const destination = config.settings.currentFolder;
+
+                    let sshCommand = databasePort
+                        ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
+                        : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
+
+                    if (config.customConfig.sshKeyLocation) {
+                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                    }
+
+                    let rsyncCommand = `rsync -avz --compress-level=6 --progress -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
+
+                    if (config.databases.databaseData.password) {
+                        rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                    }
+
+                    logger.info('Starting WordPress database download', {
+                        source,
+                        destination
+                    });
+
+                    const spawn = require('child_process').spawn;
+                    const rsync = spawn('sh', ['-c', rsyncCommand]);
+
+                    let lastUpdate = 0;
+                    const updateInterval = 100;
+
+                    await new Promise<void>((resolve, reject) => {
+                        rsync.stdout.on('data', function(data: any) {
+                            const now = Date.now();
+                            if (now - lastUpdate < updateInterval) return;
+
+                            const output = data.toString();
+                            const sizeMatch = output.match(/(\d+(?:,\d+)*)\s+(\d+)%\s+([\d.]+[KMG]B\/s)/);
+
+                            if (sizeMatch) {
+                                const percent = parseInt(sizeMatch[2]);
+                                const speed = sizeMatch[3];
+                                task.output = `${EnhancedProgress.createProgressBar(percent, 20)} ${chalk.bold.cyan(percent + '%')} ${chalk.gray(speed)}`;
+                                lastUpdate = now;
+                            }
+                        });
+
+                        rsync.stderr.on('data', function(data: any) {
+                            // rsync outputs progress to stderr
+                        });
+
+                        rsync.on('exit', function (code: any) {
+                            if (code === 0) {
+                                resolve();
+                            } else {
+                                reject(new Error(`Rsync failed with exit code ${code}`));
+                            }
+                        });
+
+                        rsync.on('error', function (err: any) {
+                            logger.error('Rsync process error', err);
+                            reject(err);
+                        });
+                    });
+
+                    const downloadedFile = `${destination}/${databaseFileName}`;
+                    const duration = PerformanceMonitor.end('wordpress-download');
+
+                    task.title = `Downloaded WordPress database`;
+                    logger.info('WordPress database download complete', {
+                        file: downloadedFile,
+                        compression: config.wordpressCompression.type,
+                        duration
+                    });
+
+                    config.finalMessages.wordpressDatabaseLocation = downloadedFile;
+                }
+            });
+
+            // Clean up WordPress dump on server
+            this.downloadTasks.push({
+                title: 'Cleaning up WordPress dump on server',
+                task: async (): Promise<void> => {
+                    const databaseFileName = config.wordpressDumpFile;
+                    await ssh.execCommand(`rm -f ~/${databaseFileName}`);
+                }
+            });
+        }
+
         // Media sync task - only runs if syncImages is enabled
         if (config.settings.syncImages === 'yes' && config.settings.syncImageTypes && config.settings.syncImageTypes.length > 0) {
             this.downloadTasks.push({

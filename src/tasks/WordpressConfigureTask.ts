@@ -32,15 +32,39 @@ class WordpressConfigureTask {
             {
                 title: 'Importing database',
                 task: async (): Promise<void> => {
+                    // Determine the actual filename (might be compressed)
+                    const baseFileName = config.wordpressConfig.database;
+                    let sqlFileName = `${baseFileName}.sql`;
+                    
+                    // Check if file is compressed
+                    const fs = require('fs');
+                    const path = require('path');
+                    const currentFolder = config.settings.currentFolder;
+                    
+                    let isCompressed = false;
+                    let compressedFile = '';
+                    
+                    if (fs.existsSync(path.join(currentFolder, `${baseFileName}.sql.gz`))) {
+                        isCompressed = true;
+                        compressedFile = `${baseFileName}.sql.gz`;
+                        sqlFileName = `${baseFileName}.sql`;
+                    }
+                    
                     if (config.settings.isDdevActive) {
-                        await localhostMagentoRootExec(`mv ${config.wordpressConfig.database}.sql wp`, config, false);
+                        // Decompress if needed
+                        if (isCompressed) {
+                            await localhostMagentoRootExec(`gunzip -f ${compressedFile}`, config, false);
+                        }
+                        
+                        // Move SQL file to wp directory
+                        await localhostMagentoRootExec(`mv ${sqlFileName} wp/`, config, false);
 
                         let grantCommand1 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'localhost';"""`
                         let grantCommand2 = `ddev mysql -uroot -proot -hdb -e "GRANT ALL PRIVILEGES ON *.* TO 'db'@'%';"""`
                         let dropCommand = `db drop --yes`;
                         let grantCommand3 = `ddev mysql -uroot -proot -hdb -e "CREATE DATABASE IF NOT EXISTS db_wp; GRANT ALL ON db_wp.* TO 'db'@'%';"""`;
                         let createCommand = `db create`;
-                        let importCommand = `db import ${config.wordpressConfig.database}.sql`;
+                        let importCommand = `db import ${sqlFileName}`;
 
                         // Import SQL file to database
                         await localhostMagentoRootExec(grantCommand1, config, true);
@@ -50,7 +74,21 @@ class WordpressConfigureTask {
                         await localhostWpRootExec(createCommand, config, true);
                         await localhostWpRootExec(importCommand, config, true);
                     } else {
-                        let command = `mv ${config.wordpressConfig.database}.sql wp; ${config.settings.wpCommandLocal} db drop --yes;${config.settings.wpCommandLocal} db create; ${config.settings.wpCommandLocal} db import ${config.wordpressConfig.database}.sql`;
+                        // Decompress if needed, then move and import
+                        let commands = [];
+                        
+                        if (isCompressed) {
+                            commands.push(`gunzip -f ${compressedFile}`);
+                        }
+                        
+                        commands.push(`mv ${sqlFileName} wp/`);
+                        commands.push(`cd wp`);
+                        commands.push(`${config.settings.wpCommandLocal} db drop --yes`);
+                        commands.push(`${config.settings.wpCommandLocal} db create`);
+                        commands.push(`${config.settings.wpCommandLocal} db import ${sqlFileName}`);
+                        
+                        let command = commands.join('; ');
+                        
                         // Import SQL file to database
                         await localhostMagentoRootExec(command, config, true);
                     }
@@ -110,8 +148,9 @@ class WordpressConfigureTask {
             {
                 title: 'Cleaning up',
                 task: async (): Promise<void> => {
-                    // Remove wordpress database from localhost
-                    await localhostMagentoRootExec(`cd wp; rm ${config.wordpressConfig.database}.sql`, config, true);
+                    // Remove wordpress database from wp folder
+                    const sqlFileName = `${config.wordpressConfig.database}.sql`;
+                    await localhostMagentoRootExec(`cd wp; rm -f ${sqlFileName}`, config, true);
                 }
             }
         );
