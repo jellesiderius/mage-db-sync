@@ -16,6 +16,7 @@ import { OpenFolderController } from './controllers/OpenFolderController';
 import { SelfUpdateController } from './controllers/SelfUpdateController';
 import { ServiceContainer } from './core/ServiceContainer';
 import { ConfigInitializer } from './utils/ConfigInitializer';
+import {UI} from "./utils/UI";
 
 // Remove warning listeners
 process.removeAllListeners('warning');
@@ -55,6 +56,9 @@ async function main() {
         if (missingFiles) {
             return;
         }
+
+        UI.showBanner();
+        console.log('');
 
         // Get package version
         const packageJson = require('../package.json');

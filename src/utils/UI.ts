@@ -21,7 +21,7 @@ export class UI {
         });
         const gradient = gradientString.cristal;
         console.log(gradient.multiline(banner));
-        console.log(chalk.gray(' Database synchronizer for Magento & WordPress - V2'));
+        console.log(chalk.gray(' Database synchronizer for Magento & WordPress'));
     }
 
     /**

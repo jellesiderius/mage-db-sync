@@ -27,8 +27,6 @@ class StartController extends MainController {
 
     executeStart = async (): Promise<void> => {
         try {
-            UI.showBanner();
-
             await this.askQuestions();
             await this.prepareTasks();
 
@@ -134,7 +132,7 @@ class StartController extends MainController {
         if (this.config.settings.wordpressImport === 'yes') {
             let message =
                 `WordPress successfully imported!\n\n`;
-            
+
             // Add blog URLs if available
             if (this.config.finalMessages.wordpressBlogUrls && this.config.finalMessages.wordpressBlogUrls.length > 0) {
                 message += `Your WordPress sites are available at:\n`;
@@ -143,7 +141,7 @@ class StartController extends MainController {
                     .join('\n');
                 message += `\n\n`;
             }
-            
+
             message +=
                 `Backend Credentials:\n` +
                 `   Username: ${configFile.magentoBackend.adminEmailAddress}\n` +
