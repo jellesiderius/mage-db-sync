@@ -7,6 +7,7 @@ import path from 'path';
 import { getInstalledPath } from 'get-installed-path';
 import { SettingsConfig, StaticSettings, ProjectConfig, AppConfig, DatabaseConfig } from '../types';
 import { ConfigurationError } from '../types/errors';
+import { ConfigPathResolver } from '../utils/ConfigPathResolver';
 
 export class ConfigService {
     private static instance: ConfigService;
@@ -31,6 +32,10 @@ export class ConfigService {
         // Get npm installation path
         this.npmPath = await getInstalledPath('mage-db-sync');
 
+        // Initialize config path resolver
+        ConfigPathResolver.setPackageConfigDir(this.npmPath);
+        ConfigPathResolver.ensureUserConfigDir();
+
         // Load all configuration files
         await this.loadConfigurations();
     }
@@ -40,6 +45,27 @@ export class ConfigService {
      */
     public getNpmPath(): string {
         return this.npmPath;
+    }
+
+    /**
+     * Get the active config location for a specific file
+     */
+    public getConfigLocation(relativePath: string): 'user' | 'package' | null {
+        return ConfigPathResolver.getConfigLocation(relativePath);
+    }
+
+    /**
+     * Get user config directory path
+     */
+    public getUserConfigDir(): string {
+        return ConfigPathResolver.getUserConfigDir();
+    }
+
+    /**
+     * Get package config directory path
+     */
+    public getPackageConfigDir(): string {
+        return ConfigPathResolver.getPackageConfigDir();
     }
 
     /**
@@ -67,12 +93,9 @@ export class ConfigService {
      * Load database configuration
      */
     public loadDatabaseConfig(type: 'staging' | 'production', databaseKey: string): DatabaseConfig {
-        const filePath = path.join(this.npmPath, `config/databases/${type}.json`);
+        const relativePath = `databases/${type}.json`;
+        const filePath = ConfigPathResolver.resolveConfigPathOrThrow(relativePath);
         
-        if (!fs.existsSync(filePath)) {
-            throw new ConfigurationError(`Database config file not found: ${filePath}`);
-        }
-
         try {
             const config = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
             const database = config.databases[databaseKey];
@@ -166,14 +189,11 @@ export class ConfigService {
      * Load all configuration files
      */
     private async loadConfigurations(): Promise<void> {
-        // Load settings.json
-        const settingsPath = path.join(this.npmPath, 'config/settings.json');
-        if (!fs.existsSync(settingsPath)) {
-            throw new ConfigurationError(`Settings file not found: ${settingsPath}`);
-        }
+        // Load settings.json with fallback
+        const settingsPath = ConfigPathResolver.resolveConfigPathOrThrow('settings.json');
         this.settingsConfig = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
 
-        // Load static-settings.json
+        // Load static-settings.json (always from package, no user override needed)
         const staticSettingsPath = path.join(this.npmPath, 'config/static-settings.json');
         if (!fs.existsSync(staticSettingsPath)) {
             throw new ConfigurationError(`Static settings file not found: ${staticSettingsPath}`);

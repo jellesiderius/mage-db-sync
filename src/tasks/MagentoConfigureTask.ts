@@ -1,7 +1,7 @@
 import {localhostMagentoRootExec, sshMagentoRootFolderMagerunCommand} from '../utils/Console';
 import { Listr } from 'listr2';
-import configFile from '../../config/settings.json'
 import fs from "fs";
+import { ServiceContainer } from '../core/ServiceContainer';
 
 interface TaskItem {
     title: string;
@@ -12,6 +12,11 @@ interface TaskItem {
 
 class MagentoConfigureTask {
     private configureTasks: TaskItem[] = [];
+    private services: ServiceContainer;
+
+    constructor() {
+        this.services = ServiceContainer.getInstance();
+    }
 
     configure = async (list: any, config: any) => {
         await this.addTasks(list, config);
@@ -257,9 +262,10 @@ class MagentoConfigureTask {
                     ]);
 
                     // Create a new admin user
+                    const settingsConfig = this.services.getConfig().getSettingsConfig();
                     const createUserCmd = config.settings.isDdevActive
-                        ? `ddev exec bin/magento admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`
-                        : `${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${configFile.magentoBackend.adminUsername} --admin-password=${configFile.magentoBackend.adminPassword} --admin-email=${configFile.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`;
+                        ? `ddev exec bin/magento admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`
+                        : `${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`;
                     
                     await localhostMagentoRootExec(createUserCmd, config);
                 }
@@ -319,10 +325,11 @@ class MagentoConfigureTask {
                     allWebsites = JSON.parse(<string>allWebsites);
 
                     // Create customers in parallel instead of sequentially
+                    const settingsConfig = this.services.getConfig().getSettingsConfig();
                     const customerPromises = Object.entries(allWebsites as Record<string, any>).map(([key, value]) => {
                         const code = (value as any).code;
                         return localhostMagentoRootExec(
-                            `${config.settings.magerun2CommandLocal} customer:create ${configFile.magentoBackend.adminEmailAddress} ${configFile.magentoBackend.adminPassword} Firstname Lastname ${code}`, 
+                            `${config.settings.magerun2CommandLocal} customer:create ${settingsConfig.magentoBackend.adminEmailAddress} ${settingsConfig.magentoBackend.adminPassword} Firstname Lastname ${code}`, 
                             config, 
                             true
                         );

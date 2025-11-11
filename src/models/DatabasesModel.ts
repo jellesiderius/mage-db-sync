@@ -1,8 +1,7 @@
-import stagingDatabases from "../../config/databases/staging.json";
-import productionDatabases from "../../config/databases/production.json";
 import path from "path";
 import fs from "fs";
 import os from "os";
+import { ConfigPathResolver } from "../utils/ConfigPathResolver";
 
 class DatabasesModel {
     public databasesList: { [k: string]: any } = [];
@@ -25,12 +24,13 @@ class DatabasesModel {
 
     // Collect databases | collect single database
     collectDatabaseData = async (databaseKey: string | void, databaseType: string | void, collectStaging: boolean | void, config: any | void) => {
-        let databases: Record<string, any> = stagingDatabases.databases;
+        // Load databases with fallback mechanism
+        const dbType = (databaseType == 'production') ? 'production' : 'staging';
+        const dbFilePath = ConfigPathResolver.resolveConfigPathOrThrow(`databases/${dbType}.json`);
+        const dbConfig = JSON.parse(fs.readFileSync(dbFilePath, 'utf-8'));
+        
+        let databases: Record<string, any> = dbConfig.databases;
         const databaseDataType = this.databaseData;
-
-        if (databaseType == 'production') {
-            databases = productionDatabases.databases as Record<string, any>;
-        }
 
         for (const [key, db] of Object.entries(databases)) {
             const database = db as any; // Database entries have dynamic structure

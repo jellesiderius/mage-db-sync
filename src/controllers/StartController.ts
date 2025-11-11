@@ -10,16 +10,14 @@ import { UI } from '../utils/UI';
 import { SSHConnectionPool } from '../utils/Performance';
 import { TaskFactory } from '../core/TaskFactory';
 import { ServiceContainer } from '../core/ServiceContainer';
-import configFile from '../../config/settings.json';
 
 class StartController extends MainController {
     private taskFactory: TaskFactory;
-    private services: ServiceContainer;
 
     constructor() {
         super();
+        super.init(); // Initialize parent config
         this.taskFactory = TaskFactory.getInstance();
-        this.services = ServiceContainer.getInstance();
     }
     public async execute(): Promise<void> {
         return this.executeStart();
@@ -101,6 +99,8 @@ class StartController extends MainController {
         console.log('\n');
 
         if (this.config.finalMessages.importDomain.length > 0) {
+            const configService = this.services.getConfig();
+            const settingsConfig = configService.getSettingsConfig();
             const urls = this.config.finalMessages.domains;
             const message =
                 `Magento successfully imported!\n\n` +
@@ -108,11 +108,11 @@ class StartController extends MainController {
                 urls.map((url: string) => `   ${url}`).join('\n') +
                 `\n\n` +
                 `Backend Credentials:\n` +
-                `   Username: ${configFile.magentoBackend.adminUsername}\n` +
-                `   Password: ${configFile.magentoBackend.adminPassword}\n\n` +
+                `   Username: ${settingsConfig.magentoBackend.adminUsername}\n` +
+                `   Password: ${settingsConfig.magentoBackend.adminPassword}\n\n` +
                 `Customer Account (all websites):\n` +
-                `   Email: ${configFile.magentoBackend.adminEmailAddress}\n` +
-                `   Password: ${configFile.magentoBackend.adminPassword}`;
+                `   Email: ${settingsConfig.magentoBackend.adminEmailAddress}\n` +
+                `   Password: ${settingsConfig.magentoBackend.adminPassword}`;
 
             UI.box(message, { type: 'success', title: 'Magento Import Complete' });
         } else if (this.config.finalMessages.magentoDatabaseLocation.length > 0) {
@@ -130,6 +130,8 @@ class StartController extends MainController {
         }
 
         if (this.config.settings.wordpressImport === 'yes') {
+            const configService = this.services.getConfig();
+            const settingsConfig = configService.getSettingsConfig();
             let message =
                 `WordPress successfully imported!\n\n`;
 
@@ -144,8 +146,8 @@ class StartController extends MainController {
 
             message +=
                 `Backend Credentials:\n` +
-                `   Username: ${configFile.magentoBackend.adminEmailAddress}\n` +
-                `   Password: ${configFile.magentoBackend.adminPassword}`;
+                `   Username: ${settingsConfig.magentoBackend.adminEmailAddress}\n` +
+                `   Password: ${settingsConfig.magentoBackend.adminPassword}`;
 
             UI.box(message, { type: 'success', title: 'WordPress Import Complete' });
         }
