@@ -48,8 +48,6 @@ export interface StaticSettings {
     settings: {
         databaseStripDevelopment: string;
         databaseStripKeepCustomerData: string;
-        databaseStripStaging: string;
-        databaseIncludeStaging: string;
     };
 }
 

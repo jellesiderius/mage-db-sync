@@ -28,8 +28,6 @@ declare module '../../config/static-settings.json' {
         settings: {
             databaseStripDevelopment: string;
             databaseStripKeepCustomerData: string;
-            databaseStripStaging: string;
-            databaseIncludeStaging: string;
         };
     }
     const value: StaticSettingsJson;
