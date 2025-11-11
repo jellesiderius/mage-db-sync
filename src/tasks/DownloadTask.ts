@@ -12,7 +12,6 @@ import { UI } from '../utils/UI';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
 import { EnhancedProgress } from '../utils/EnhancedProgress';
-import staticConfigFile from '../../config/static-settings.json';
 import fs from 'fs';
 import chalk from 'chalk';
 
@@ -353,17 +352,21 @@ class DownloadTask {
                             stripCommand: customStripString
                         });
                     } else if (config.settings.strip === 'keep customer data') {
-                        const keepCustomerOptions = (staticConfigFile as any).settings?.databaseStripKeepCustomerData || '';
+                        const staticSettings = this.services.getConfig().getStaticSettings();
+                        const keepCustomerOptions = staticSettings.settings?.databaseStripKeepCustomerData || '';
                         stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
                     } else if (config.settings.strip === 'full and human readable') {
-                        const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
+                        const staticSettings = this.services.getConfig().getStaticSettings();
+                        const fullStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
                         stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
                         humanReadable = '--human-readable';
                     } else if (config.settings.strip === 'full') {
-                        const fullStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
+                        const staticSettings = this.services.getConfig().getStaticSettings();
+                        const fullStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
                         stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
                     } else {
-                        const developmentStripOptions = (staticConfigFile as any).settings?.databaseStripDevelopment || '';
+                        const staticSettings = this.services.getConfig().getStaticSettings();
+                        const developmentStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
                         stripOptions = developmentStripOptions ? `--strip="${developmentStripOptions}"` : '';
                     }
 

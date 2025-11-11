@@ -3,10 +3,10 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 import { DatabaseListItem, DatabaseConfig } from '../types';
 import { ConfigService } from './ConfigService';
 import { DatabaseError } from '../types/errors';
+import { ConfigPathResolver } from '../utils/ConfigPathResolver';
 
 export class DatabaseService {
     private static instance: DatabaseService;
@@ -27,12 +27,8 @@ export class DatabaseService {
      * Get list of databases for a given type
      */
     public getDatabaseList(type: 'staging' | 'production'): DatabaseListItem[] {
-        const npmPath = this.configService.getNpmPath();
-        const filePath = path.join(npmPath, `config/databases/${type}.json`);
-
-        if (!fs.existsSync(filePath)) {
-            throw new DatabaseError(`Database config file not found: ${filePath}`);
-        }
+        const relativePath = `databases/${type}.json`;
+        const filePath = ConfigPathResolver.resolveConfigPathOrThrow(relativePath);
 
         try {
             const config = JSON.parse(fs.readFileSync(filePath, 'utf-8'));

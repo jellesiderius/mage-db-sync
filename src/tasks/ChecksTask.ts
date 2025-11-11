@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
-import configFile from '../../config/settings.json';
+import { ServiceContainer } from '../core/ServiceContainer';
 
 interface CheckResult {
     success: boolean;
@@ -21,6 +21,11 @@ interface TaskItem {
 
 class ChecksTask {
     private checkTasks: TaskItem[] = [];
+    private services: ServiceContainer;
+
+    constructor() {
+        this.services = ServiceContainer.getInstance();
+    }
 
     configure = async (list: any, config: any, ssh: any) => {
         await this.addTasks(list, config, ssh);
@@ -68,20 +73,21 @@ class ChecksTask {
                 name: 'Configuration validation',
                 check: async () => {
                     const errors: string[] = [];
+                    const settingsConfig = this.services.getConfig().getSettingsConfig();
 
-                    if (!configFile.magentoBackend.adminUsername) {
+                    if (!settingsConfig.magentoBackend.adminUsername) {
                         errors.push('Admin username is missing');
                     }
-                    if (!configFile.magentoBackend.adminPassword) {
+                    if (!settingsConfig.magentoBackend.adminPassword) {
                         errors.push('Admin password is missing');
                     }
-                    if (!configFile.magentoBackend.adminEmailAddress) {
+                    if (!settingsConfig.magentoBackend.adminEmailAddress) {
                         errors.push('Admin email address is missing');
                     }
-                    if (!configFile.general.localDomainExtension) {
+                    if (!settingsConfig.general.localDomainExtension) {
                         errors.push('Local domain extension is missing');
                     }
-                    if (!configFile.general.elasticsearchPort) {
+                    if (!settingsConfig.general.elasticsearchPort) {
                         errors.push('ElasticSearch port is missing');
                     }
 

@@ -1,6 +1,6 @@
 import {localhostMagentoRootExec, localhostWpRootExec, wordpressReplaces} from '../utils/Console';
 import { Listr } from 'listr2';
-import configFile from '../../config/settings.json'
+import { ServiceContainer } from '../core/ServiceContainer';
 
 interface TaskItem {
     title: string;
@@ -11,6 +11,11 @@ interface TaskItem {
 
 class WordpressConfigureTask {
     private configureTasks: TaskItem[] = [];
+    private services: ServiceContainer;
+
+    constructor() {
+        this.services = ServiceContainer.getInstance();
+    }
 
     configure = async (list: any, config: any) => {
         await this.addTasks(list, config);
@@ -523,12 +528,13 @@ class WordpressConfigureTask {
             {
                 title: `Creating admin user`,
                 task: async (): Promise<void> => {
+                    const settingsConfig = this.services.getConfig().getSettingsConfig();
                     if (config.settings.isDdevActive) {
                         // Retrieve current site URL from database
-                        await localhostWpRootExec(`user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role=administrator --user_pass=${configFile.magentoBackend.adminPassword}`, config, true);
+                        await localhostWpRootExec(`user create developmentadmin ${settingsConfig.magentoBackend.adminEmailAddress} --role=administrator --user_pass=${settingsConfig.magentoBackend.adminPassword}`, config, true);
                     } else {
                         // Retrieve current site URL from database
-                        await localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${configFile.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${configFile.magentoBackend.adminPassword}"`, config);
+                        await localhostMagentoRootExec(`cd wp; wp user create developmentadmin ${settingsConfig.magentoBackend.adminEmailAddress} --role="administrator" --user_pass="${settingsConfig.magentoBackend.adminPassword}"`, config);
                     }
                 }
             }

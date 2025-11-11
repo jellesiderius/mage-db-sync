@@ -1,22 +1,37 @@
-import configFile from '../../config/settings.json'
 import {NodeSSH} from 'node-ssh'
 import DatabasesModel from "../models/DatabasesModel";
 import * as os from 'os'
 import * as path from 'path'
 import { Listr } from 'listr2';
 import CommandExists from 'command-exists';
+import { ServiceContainer } from '../core/ServiceContainer';
 // inquirer is registered in SelectDatabaseQuestion
 
 
 class MainController {
-    public config = {
-        'customConfig': {
-            'sshKeyLocation': configFile.ssh.keyLocation,
-            'sshPassphrase': configFile.ssh.passphrase,
-            'localDatabaseFolderLocation': configFile.general.databaseLocation,
-            'localDomainExtension': configFile.general.localDomainExtension
-        },
-        'requirements': {
+    public config: any;
+    protected services: ServiceContainer;
+    public list = new Listr(
+        [],
+        {concurrent: false}
+    );
+    public ssh = new NodeSSH();
+    public sshSecondDatabase = new NodeSSH();
+    public databases = new DatabasesModel();
+
+    constructor() {
+        this.services = ServiceContainer.getInstance();
+        const configService = this.services.getConfig();
+        const settingsConfig = configService.getSettingsConfig();
+        
+        this.config = {
+            'customConfig': {
+                'sshKeyLocation': settingsConfig.ssh.keyLocation,
+                'sshPassphrase': settingsConfig.ssh.passphrase,
+                'localDatabaseFolderLocation': settingsConfig.general.databaseLocation,
+                'localDomainExtension': settingsConfig.general.localDomainExtension
+            },
+            'requirements': {
             'magerun2Version': '7.4.0'
         },
         'serverVariables': {
@@ -71,16 +86,10 @@ class MainController {
             'host': '',
             'database': ''
         }
-    };
-    public list = new Listr(
-        [],
-        {concurrent: false}
-    );
-    public ssh = new NodeSSH();
-    public sshSecondDatabase = new NodeSSH();
-    public databases = new DatabasesModel();
+        };
+    }
 
-    constructor() {
+    init() {
         this.configureConfig().then();
     }
 

@@ -16,6 +16,7 @@ import { OpenFolderController } from './controllers/OpenFolderController';
 import { SelfUpdateController } from './controllers/SelfUpdateController';
 import { ServiceContainer } from './core/ServiceContainer';
 import { ConfigInitializer } from './utils/ConfigInitializer';
+import { ConfigPathResolver } from './utils/ConfigPathResolver';
 import {UI} from "./utils/UI";
 
 // Remove warning listeners
@@ -33,21 +34,44 @@ async function main() {
         // Get npm installation path
         const npmPath = await getInstalledPath('mage-db-sync');
 
+        // Initialize config path resolver
+        ConfigPathResolver.setPackageConfigDir(npmPath);
+        ConfigPathResolver.ensureUserConfigDir();
+
         // Initialize config files from samples if they don't exist
         ConfigInitializer.initialize(npmPath);
 
-        // Check for required files
+        // Check for required files (with fallback support)
         let missingFiles = false;
         const requiredFiles = [
-            'config/static-settings.json',
-            'config/settings.json',
-            'config/databases/staging.json',
-            'config/databases/production.json'
+            'static-settings.json',  // Always from package
+            'settings.json',
+            'databases/staging.json',
+            'databases/production.json'
         ];
 
-        for (const filePath of requiredFiles) {
-            if (!fs.existsSync(`${npmPath}/${filePath}`)) {
-                error(`${filePath} was not found. Make sure this file exists (${npmPath}/${filePath})`);
+        for (const relativePath of requiredFiles) {
+            // static-settings.json is always from package directory
+            if (relativePath === 'static-settings.json') {
+                const packagePath = `${npmPath}/config/${relativePath}`;
+                if (!fs.existsSync(packagePath)) {
+                    error(`${relativePath} was not found in package: ${packagePath}`);
+                    missingFiles = true;
+                }
+                continue;
+            }
+
+            // Other files use fallback mechanism
+            const resolvedPath = ConfigPathResolver.resolveConfigPath(relativePath);
+            if (!resolvedPath) {
+                const userPath = ConfigPathResolver.getUserConfigDir();
+                const packagePath = `${npmPath}/config`;
+                error(
+                    `${relativePath} was not found.\n` +
+                    `  Checked: ${userPath}/${relativePath}\n` +
+                    `  Checked: ${packagePath}/${relativePath}\n` +
+                    `  Please create this file in one of these locations.`
+                );
                 missingFiles = true;
             }
         }
@@ -58,6 +82,17 @@ async function main() {
         }
 
         UI.showBanner();
+        console.log('');
+
+        // Show config location info
+        const userConfigDir = ConfigPathResolver.getUserConfigDir();
+        const settingsLocation = ConfigPathResolver.getConfigLocation('settings.json');
+        if (settingsLocation === 'user') {
+            console.log(kleur.gray(`Using config from: ${userConfigDir}`));
+        } else {
+            console.log(kleur.gray(`Using config from: ${npmPath}/config`));
+            console.log(kleur.dim(`(You can override by creating configs in: ${userConfigDir})`));
+        }
         console.log('');
 
         // Get package version
