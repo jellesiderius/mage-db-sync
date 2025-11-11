@@ -9,7 +9,6 @@ import DownloadTypesQuestion from '../questions/DownloadTypesQuestion';
 import { UI } from '../utils/UI';
 import { SSHConnectionPool } from '../utils/Performance';
 import { TaskFactory } from '../core/TaskFactory';
-import { ServiceContainer } from '../core/ServiceContainer';
 
 class StartController extends MainController {
     private taskFactory: TaskFactory;

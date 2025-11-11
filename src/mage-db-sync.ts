@@ -93,7 +93,6 @@ async function main() {
             console.log(kleur.gray(`Using config from: ${npmPath}/config`));
             console.log(kleur.dim(`(You can override by creating configs in: ${userConfigDir})`));
         }
-        console.log('');
 
         // Get package version
         const packageJson = require('../package.json');

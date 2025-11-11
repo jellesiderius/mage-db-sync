@@ -29,7 +29,7 @@ class DatabasesModel {
         const dbFilePath = ConfigPathResolver.resolveConfigPathOrThrow(`databases/${dbType}.json`);
         const dbConfig = JSON.parse(fs.readFileSync(dbFilePath, 'utf-8'));
         
-        let databases: Record<string, any> = dbConfig.databases;
+        const databases: Record<string, any> = dbConfig.databases;
         const databaseDataType = this.databaseData;
 
         for (const [key, db] of Object.entries(databases)) {

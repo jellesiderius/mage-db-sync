@@ -1,6 +1,6 @@
 {
     "name": "mage-db-sync",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "description": "Database synchronizer for Magento, based on Magerun",
     "author": {
         "name": "Jelle Siderius"
@@ -44,7 +44,6 @@
         "command-exists": "^1.2.9",
         "commander": "^14.0.2",
         "dotenv": "^17.2.3",
-        "download-git-repo": "^3.0.2",
         "execa": "^9.6.0",
         "figlet": "^1.9.0",
         "get-installed-path": "^4.0.8",

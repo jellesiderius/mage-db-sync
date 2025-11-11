@@ -1,10 +1,10 @@
-import download from 'download-git-repo';
 import {getInstalledPath} from 'get-installed-path';
-import {consoleCommand, success, error, info} from "../utils/Console";
+import { success, error, info, warning} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
+import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const downloadAsync = promisify(download);
+const execAsync = promisify(exec);
 
 class SelfUpdateController {
     private versionCheck = new VersionCheck();
@@ -26,31 +26,32 @@ class SelfUpdateController {
             config.npmPath = path;
         });
 
+        info(`Current version: ${config.currentVersion}`);
+        info(`Latest version: ${config.latestVersion}`);
+
         if (config.currentVersion < config.latestVersion) {
             try {
-                info(`Updating from ${config.currentVersion} to ${config.latestVersion}...`);
+                info(`\nUpdating mage-db-sync from ${config.currentVersion} to ${config.latestVersion}...`);
+                info('This may take a minute...\n');
 
-                // Remove old dist folder
-                await consoleCommand(`cd ${config.npmPath}; rm -rf dist`, true);
+                // Update via npm
+                info('Installing latest version from npm...');
+                await execAsync('npm install -g mage-db-sync@latest', {
+                    env: { ...process.env, NODE_ENV: 'production' }
+                });
 
-                // Download the latest version from GitHub
-                info('Downloading latest version from GitHub...');
-                await downloadAsync('jellesiderius/mage-db-sync#master', config.npmPath);
+                success(`\n✓ Successfully updated mage-db-sync to ${config.latestVersion}!`);
+                info('\n💡 Your configuration files in ~/.mage-db-sync/config remain unchanged.\n');
 
-                // Install dependencies
-                info('Installing dependencies...');
-                await consoleCommand(`cd ${config.npmPath}; npm install`, true);
-
-                success(`Updated mage-db-sync from ${config.currentVersion} to ${config.latestVersion}`);
-
-                process.exit();
+                process.exit(0);
             } catch (err) {
-                error(`Update failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                process.exit();
+                error(`\n✗ Update failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                warning('\nYou can manually update by running: npm install -g mage-db-sync@latest\n');
+                process.exit(1);
             }
         } else {
-            success(`mage-db-sync is already up to date`);
-            process.exit();
+            success(`\n✓ mage-db-sync is already up to date (v${config.currentVersion})\n`);
+            process.exit(0);
         }
     }
 }

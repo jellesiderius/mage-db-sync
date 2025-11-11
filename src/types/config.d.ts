@@ -98,8 +98,3 @@ declare module '../../package.json' {
     const value: PackageJson;
     export default value;
 }
-
-declare module 'download-git-repo' {
-    function download(_repo: string, _dest: string, _callback: (_err?: Error) => void): void;
-    export default download;
-}
