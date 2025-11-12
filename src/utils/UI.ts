@@ -1,6 +1,3 @@
-/**
- * V2 Enhanced UI utilities for beautiful CLI output
- */
 import chalk from 'chalk';
 import boxen from 'boxen';
 import figlet from 'figlet';

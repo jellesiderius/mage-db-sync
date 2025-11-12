@@ -1,9 +1,3 @@
-/**
- * mage-db-sync v2 - Main entry point
- *
- * Clean V2 architecture with services and dependency injection
- */
-
 import { Command } from 'commander';
 import kleur from 'kleur';
 import process from 'process';

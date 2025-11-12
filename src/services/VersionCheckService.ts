@@ -1,7 +1,3 @@
-/**
- * VersionCheckService - Version management
- */
-
 import fetch from 'node-fetch';
 
 export class VersionCheckService {

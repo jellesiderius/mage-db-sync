@@ -1,14 +1,3 @@
-/**
- * EnhancedProgress - Rich progress feedback for all operations
- * 
- * Features:
- * - Detailed percentage tracking
- * - Step indicators (Step X/Y)
- * - Live status updates
- * - Speed and ETA calculations
- * - Beautiful formatting
- */
-
 import chalk from 'chalk';
 import { ProgressDisplay } from './ProgressDisplay';
 
@@ -35,7 +24,7 @@ export class EnhancedProgress {
     ): string {
         const percentage = Math.round((current / total) * 100);
         const progressBar = this.createProgressBar(percentage);
-        
+
         let output = `${progressBar} ${chalk.cyan(percentage + '%')}`;
 
         // Add step indicator if provided
@@ -52,10 +41,10 @@ export class EnhancedProgress {
     public static createProgressBar(percentage: number, width: number = 20): string {
         const filled = Math.round((percentage / 100) * width);
         const empty = width - filled;
-        
+
         const filledBar = chalk.green('█'.repeat(filled));
         const emptyBar = chalk.gray('░'.repeat(empty));
-        
+
         return `${filledBar}${emptyBar}`;
     }
 
@@ -68,7 +57,7 @@ export class EnhancedProgress {
         options: { step?: number; totalSteps?: number } = {}
     ): string {
         const now = Date.now();
-        
+
         if (this.startTime === 0) {
             this.startTime = now;
             this.lastBytes = 0;
@@ -81,9 +70,9 @@ export class EnhancedProgress {
             const timeDiff = (now - this.lastUpdate) / 1000; // seconds
             const bytesDiff = bytesReceived - this.lastBytes;
             const speed = bytesDiff / timeDiff;
-            
+
             speedText = ` ${chalk.green('[DOWN]')} ${chalk.cyan(ProgressDisplay.formatSpeed(speed))}`;
-            
+
             this.lastBytes = bytesReceived;
             this.lastUpdate = now;
         }
@@ -98,7 +87,7 @@ export class EnhancedProgress {
         // Format sizes
         const receivedText = ProgressDisplay.formatBytes(bytesReceived);
         const totalText = ProgressDisplay.formatBytes(totalBytes);
-        
+
         // Build output
         const percentage = Math.round((bytesReceived / totalBytes) * 100);
         const progressBar = this.createProgressBar(percentage, 25);
@@ -128,14 +117,14 @@ export class EnhancedProgress {
         if (seconds < 60) {
             return `${seconds}s`;
         }
-        
+
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
-        
+
         if (minutes < 60) {
             return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
         }
-        
+
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
         return `${hours}h ${remainingMinutes}m`;
@@ -185,24 +174,24 @@ export class EnhancedProgress {
         progress?: number;
     }): void {
         const width = 60;
-        
+
         console.log('\n┌' + '─'.repeat(width) + '┐');
         console.log('│ ' + chalk.bold.cyan(data.operation.padEnd(width - 2)) + ' │');
-        
+
         if (data.progress !== undefined) {
             const bar = this.createProgressBar(data.progress, width - 10);
             console.log('│ ' + bar + ' ' + chalk.cyan(data.progress + '%').padStart(6) + ' │');
         }
-        
+
         console.log('│ ' + chalk.gray(data.status.padEnd(width - 2)) + ' │');
-        
+
         if (data.details && data.details.length > 0) {
             console.log('├' + '─'.repeat(width) + '┤');
             data.details.forEach(detail => {
                 console.log('│ ' + detail.padEnd(width - 2) + ' │');
             });
         }
-        
+
         console.log('└' + '─'.repeat(width) + '┘\n');
     }
 
@@ -210,13 +199,13 @@ export class EnhancedProgress {
      * Show live activity feed
      */
     public static activity(message: string, icon: string = '•'): void {
-        const timestamp = new Date().toLocaleTimeString('en-US', { 
+        const timestamp = new Date().toLocaleTimeString('en-US', {
             hour12: false,
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
         });
-        
+
         console.log(`${chalk.gray(timestamp)} ${chalk.cyan(icon)} ${message}`);
     }
 

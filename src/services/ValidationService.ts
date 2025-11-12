@@ -1,13 +1,3 @@
-/**
- * ValidationService - Zod-based validation for configuration and inputs
- * 
- * Features:
- * - Type-safe validation
- * - Clear error messages
- * - Schema composition
- * - Runtime type checking
- */
-
 import { z } from 'zod';
 import { ValidationError } from '../types/errors';
 import { LoggerService } from './LoggerService';
@@ -126,14 +116,14 @@ export class ValidationService {
             return schema.parse(data);
         } catch (error) {
             if (error instanceof z.ZodError) {
-                const issues = error.issues.map(issue => 
+                const issues = error.issues.map(issue =>
                     `${issue.path.join('.')}: ${issue.message}`
                 ).join(', ');
-                
-                const message = context 
+
+                const message = context
                     ? `Validation failed for ${context}: ${issues}`
                     : `Validation failed: ${issues}`;
-                
+
                 this.logger.error(message, error);
                 throw new ValidationError(message);
             }
@@ -156,13 +146,13 @@ export class ValidationService {
     }
 
     /**
-     * Validate settings configuration  
+     * Validate settings configuration
      */
     public validateSettingsConfig(config: unknown): any {
         // Use safeParse to handle optional passphrase
         const result = ValidationSchemas.settingsConfig.safeParse(config);
         if (!result.success) {
-            const issues = result.error.issues.map(issue => 
+            const issues = result.error.issues.map(issue =>
                 `${issue.path.join('.')}: ${issue.message}`
             ).join(', ');
             throw new ValidationError(`Settings configuration validation failed: ${issues}`);
@@ -221,17 +211,17 @@ export class ValidationService {
     /**
      * Safe parse - returns success/error object instead of throwing
      */
-    public safeParse<T>(schema: z.ZodSchema<T>, data: unknown): { 
-        success: boolean; 
-        data?: T; 
-        error?: string 
+    public safeParse<T>(schema: z.ZodSchema<T>, data: unknown): {
+        success: boolean;
+        data?: T;
+        error?: string
     } {
         try {
             const result = schema.parse(data);
             return { success: true, data: result };
         } catch (error) {
             if (error instanceof z.ZodError) {
-                const issues = error.issues.map(issue => 
+                const issues = error.issues.map(issue =>
                     `${issue.path.join('.')}: ${issue.message}`
                 ).join(', ');
                 return { success: false, error: issues };

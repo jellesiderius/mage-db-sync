@@ -1,13 +1,3 @@
-/**
- * ProgressDisplay - Enhanced progress visualization for speed improvements
- *
- * Features:
- * - Multi-bar progress (parallel operations)
- * - Speed indicators with ETA
- * - Live throughput display
- * - Compression ratio tracking
- */
-
 import cliProgress from 'cli-progress';
 import chalk from 'chalk';
 

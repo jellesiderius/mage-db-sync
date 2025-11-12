@@ -1,6 +1,3 @@
-/**
- * V2 Performance monitoring and optimization utilities
- */
 import { UI } from './UI';
 
 export interface PerformanceMetric {
