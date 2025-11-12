@@ -1,4 +1,4 @@
-import { localhostMagentoRootExec } from '../utils/Console';
+import { localhostMagentoRootExec, shellEscape } from '../utils/Console';
 import { Listr } from 'listr2';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
@@ -45,8 +45,10 @@ class ImportTask {
             compressionType
         });
         
-        // Estimate import duration (~10MB/s for compressed, ~5MB/s for uncompressed)
-        const speed = isCompressed ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+        // More conservative speed estimates based on database write operations
+        // Compressed: ~3-5MB/s (decompression + write overhead)
+        // Uncompressed: ~2-3MB/s (raw SQL parsing and execution)
+        const speed = isCompressed ? 4 * 1024 * 1024 : 2.5 * 1024 * 1024;
         const estimatedDuration = sqlFileSize > 0 ? (sqlFileSize / speed) * 1000 : 60000;
         
         // Show file info
@@ -57,10 +59,26 @@ class ImportTask {
         // Start progress estimation
         let progressInterval: NodeJS.Timeout;
         let lastPercentage = 0;
+        let isInFinalPhase = false;
         
         progressInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
-            let percentage = Math.min(95, Math.round((elapsed / estimatedDuration) * 100));
+            let percentage = Math.round((elapsed / estimatedDuration) * 100);
+            
+            // More realistic progress stages:
+            // 0-80%: Normal progression based on estimate
+            // 80-90%: Slow down (database operations are slower near end)
+            // 90%+: Final phase - show elapsed time instead
+            if (percentage <= 80) {
+                // Normal progression
+            } else if (percentage <= 90) {
+                // Slow down between 80-90%
+                percentage = 80 + Math.min(10, (percentage - 80) * 0.5);
+            } else {
+                // After 90%, don't show percentage, show elapsed time
+                percentage = 90;
+                isInFinalPhase = true;
+            }
             
             // Avoid going backwards
             if (percentage > lastPercentage) {
@@ -73,8 +91,18 @@ class ImportTask {
             const estimatedBytes = Math.min(sqlFileSize, (percentage / 100) * sqlFileSize);
             const avgSpeed = elapsed > 0 ? (estimatedBytes / (elapsed / 1000)) : 0;
             
-            const statusText = percentage >= 90 ? chalk.yellow('(finishing...)') : '';
-            task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + sizeInfo)}${compressionInfo} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(avgSpeed))} ${statusText}`;
+            // Show different status based on phase
+            let statusText = '';
+            if (isInFinalPhase) {
+                const elapsedSeconds = Math.floor(elapsed / 1000);
+                statusText = chalk.yellow(`(finalizing database... ${elapsedSeconds}s elapsed)`);
+                task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${statusText}`;
+            } else if (percentage >= 80) {
+                statusText = chalk.yellow('(processing indexes and constraints...)');
+                task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + sizeInfo)}${compressionInfo} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(avgSpeed))} ${statusText}`;
+            } else {
+                task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + sizeInfo)}${compressionInfo} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(avgSpeed))}`;
+            }
         }, 1000);
         
         try {
@@ -96,8 +124,8 @@ class ImportTask {
             
             importCommand += ` --drop` +  // Drop and recreate database
                            ` --force` + // Continue on SQL errors
-                           ` --skip-authorization-entry-creation` + // We'll add them later
-                           ` -q`; // Quiet mode
+                           ` --skip-authorization-entry-creation`; // We'll add them later
+            // NOTE: Removed -q flag to allow magerun2's progress output
             
             logger.info('Executing magerun2 db:import', { 
                 command: importCommand,
@@ -106,7 +134,62 @@ class ImportTask {
                 hasOptimize: !isCompressed // Only optimize uncompressed files
             });
             
-            await localhostMagentoRootExec(importCommand, config);
+            // Execute with streaming output to capture real progress
+            const { spawn } = require('child_process');
+            const escapedFolder = shellEscape(config.settings.currentFolder);
+            
+            await new Promise<void>((resolve, reject) => {
+                // Use shell to execute the cd + command
+                const proc = spawn('sh', ['-c', `cd ${escapedFolder} && ${importCommand}`]);
+                
+                let lastOutput = '';
+                
+                // Capture stdout for progress
+                proc.stdout.on('data', (data: Buffer) => {
+                    const output = data.toString();
+                    
+                    // Check if magerun2 is showing progress (it uses \r for updates)
+                    if (output.includes('\r') || output.includes('%')) {
+                        clearInterval(progressInterval);
+                        
+                        // Parse magerun2's progress output
+                        // magerun2 typically outputs: "Importing... XX%" or progress bars
+                        const lines = output.split('\r').filter(l => l.trim());
+                        if (lines.length > 0) {
+                            lastOutput = lines[lines.length - 1].trim();
+                            
+                            // Try to extract percentage from magerun2 output
+                            const percentMatch = lastOutput.match(/(\d+)%/);
+                            if (percentMatch) {
+                                const realPercentage = parseInt(percentMatch[1]);
+                                const progressBar = EnhancedProgress.createProgressBar(realPercentage, 20);
+                                task.output = `${progressBar} ${chalk.bold.cyan(realPercentage + '%')} ${chalk.gray(sizeInfo)}${compressionInfo} ${chalk.green('[magerun2]')}`;
+                            } else {
+                                // Show raw magerun2 output if no percentage found
+                                task.output = lastOutput;
+                            }
+                        }
+                    }
+                });
+                
+                // Capture stderr (magerun2 might output there too)
+                proc.stderr.on('data', (data: Buffer) => {
+                    const output = data.toString();
+                    logger.debug('magerun2 stderr', { output });
+                });
+                
+                proc.on('close', (code: number) => {
+                    if (code === 0) {
+                        resolve();
+                    } else {
+                        reject(new Error(`magerun2 db:import failed with code ${code}`));
+                    }
+                });
+                
+                proc.on('error', (err: Error) => {
+                    reject(err);
+                });
+            });
             
             clearInterval(progressInterval);
             

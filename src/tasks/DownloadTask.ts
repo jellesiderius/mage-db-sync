@@ -302,7 +302,7 @@ class DownloadTask {
                         // Uses official magerun2 table groups: https://github.com/netz98/n98-magerun2
                         const customStripParts: string[] = [];
                         const keepOptions = config.settings.stripOptions || [];
-                        
+
                         // Always strip these for development (safe to remove)
                         customStripParts.push(
                             '@log',              // Log tables
@@ -312,41 +312,41 @@ class DownloadTask {
                             '@replica',          // Replica tables
                             '@newrelic_reporting' // New Relic tables
                         );
-                        
+
                         // Strip based on what user wants to KEEP (unchecked = strip)
                         if (!keepOptions.includes('customers')) {
                             customStripParts.push('@customers');
                         }
-                        
+
                         if (!keepOptions.includes('admin')) {
                             customStripParts.push('@admin', '@oauth', '@2fa');
                         }
-                        
+
                         if (!keepOptions.includes('sales')) {
                             customStripParts.push('@sales');
                         }
-                        
+
                         if (!keepOptions.includes('quotes')) {
                             customStripParts.push('@quotes');
                         }
-                        
+
                         if (!keepOptions.includes('search')) {
                             customStripParts.push('@search', '@idx');
                         }
-                        
+
                         if (!keepOptions.includes('dotmailer')) {
                             customStripParts.push('@dotmailer', '@mailchimp');
                         }
-                        
+
                         // Note: We don't strip config even if unchecked, as it would break the database
                         // Configuration data (core_config_data) is not in any strip group - it's always kept
                         if (!keepOptions.includes('config')) {
                             logger.warn('Configuration settings are always kept as they are required for Magento to function');
                         }
-                        
+
                         const customStripString = customStripParts.join(' ');
                         stripOptions = customStripString ? `--strip="${customStripString}"` : '';
-                        
+
                         logger.info('Using custom strip configuration', {
                             keepOptions,
                             stripGroups: customStripParts,
@@ -357,26 +357,30 @@ class DownloadTask {
                         const keepCustomerOptions = staticSettings.settings?.databaseStripKeepCustomerData || '';
                         stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
                     } else if (config.settings.strip === 'full and human readable') {
-                        const staticSettings = this.services.getConfig().getStaticSettings();
-                        const fullStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
-                        stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
+                        // FULL dump with human-readable format - NO stripping
+                        stripOptions = '';
                         humanReadable = '--human-readable';
+                        logger.info('Using full database dump with human-readable format (no stripping)');
                     } else if (config.settings.strip === 'full') {
-                        const staticSettings = this.services.getConfig().getStaticSettings();
-                        const fullStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
-                        stripOptions = fullStripOptions ? `--strip="${fullStripOptions}"` : '';
+                        // FULL dump - NO stripping
+                        stripOptions = '';
+                        logger.info('Using full database dump (no stripping)');
                     } else {
+                        // Default: apply development strip options
                         const staticSettings = this.services.getConfig().getStaticSettings();
                         const developmentStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
                         stripOptions = developmentStripOptions ? `--strip="${developmentStripOptions}"` : '';
                     }
 
+                    // Escape filename for shell usage
+                    const escapedFileName = shellEscape(databaseFileName);
+
                     // Build compression command based on what's available
                     if (compression.type === 'gzip') {
-                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | gzip ${compression.level} > ${databaseFileName}`;
+                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} | gzip ${compression.level} > ${escapedFileName}`;
                     } else {
                         // No compression - just dump to file
-                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} > ${databaseFileName}`;
+                        dumpCommand = `db:dump --stdout -n --no-tablespaces ${humanReadable} ${stripOptions} > ${escapedFileName}`;
                     }
 
                     logger.info('Using compression for database dump', {
@@ -387,27 +391,80 @@ class DownloadTask {
                     });
 
                     const fullCommand = sshMagentoRootFolderMagerunCommand(
-                        `${dumpCommand}; mv ${databaseFileName} ~`,
+                        `${dumpCommand}; mv ${escapedFileName} ~`,
                         config
                     );
 
-                    task.output = 'Dumping database (this may take a minute)...';
+                    task.output = 'Starting database dump...';
                     logger.info('Starting database dump', {
                         database: config.serverVariables.databaseName,
                         stripType
                     });
 
-                    await ssh.execCommand(fullCommand).then(function (result: any) {
+                    // Start the dump command (non-blocking)
+                    const dumpPromise = ssh.execCommand(fullCommand);
+
+                    // Monitor file size in real-time
+                    const startTime = Date.now();
+                    let lastSize = 0;
+                    let lastSizeTime = Date.now();
+
+                    const sizeCheckInterval = setInterval(async () => {
+                        try {
+                            // Check file size on server (in Magento root first, then home)
+                            const sizeCommand = sshMagentoRootFolderMagerunCommand(
+                                `stat -f%z ${escapedFileName} 2>/dev/null || stat -c%s ${escapedFileName} 2>/dev/null || echo "0"`,
+                                config
+                            );
+
+                            const sizeResult = await ssh.execCommand(sizeCommand);
+                            const currentSize = parseInt(sizeResult.stdout.trim() || '0');
+
+                            if (currentSize > 0) {
+                                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                                const elapsedMinutes = Math.floor(elapsed / 60);
+                                const elapsedSeconds = elapsed % 60;
+                                const timeStr = elapsedMinutes > 0
+                                    ? `${elapsedMinutes}m ${elapsedSeconds}s`
+                                    : `${elapsedSeconds}s`;
+
+                                // Calculate speed since last check
+                                const timeDiff = (Date.now() - lastSizeTime) / 1000;
+                                const sizeDiff = currentSize - lastSize;
+                                const speed = timeDiff > 0 ? sizeDiff / timeDiff : 0;
+
+                                lastSize = currentSize;
+                                lastSizeTime = Date.now();
+
+                                const sizeStr = ProgressDisplay.formatBytes(currentSize);
+                                const speedStr = speed > 0 ? ` ${chalk.cyan('~' + ProgressDisplay.formatSpeed(speed))}` : '';
+
+                                task.output = `Dumping database... ${chalk.bold.cyan(sizeStr)}${speedStr} ${chalk.gray(`(${timeStr} elapsed)`)}`;
+                            }
+                        } catch (err) {
+                            // Ignore errors during size check (file might not exist yet)
+                        }
+                    }, 2000); // Check every 2 seconds
+
+                    await dumpPromise.then(function (result: any) {
+                        clearInterval(sizeCheckInterval);
+
                         if (result.code && result.code !== 0) {
                             throw new Error(
                                 `Database dump failed\n[TIP] Check database permissions and disk space\nError: ${result.stderr}`
                             );
                         }
-                        task.output = '✓ Database dump completed';
+
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        const finalSizeStr = lastSize > 0 ? ` (${ProgressDisplay.formatBytes(lastSize)})` : '';
+                        task.output = `✓ Database dump completed${finalSizeStr} in ${elapsed}s`;
+                    }).catch((err: Error) => {
+                        clearInterval(sizeCheckInterval);
+                        throw err;
                     });
 
                     const duration = PerformanceMonitor.end('database-dump');
-                    logger.info('Database dump complete', { duration });
+                    logger.info('Database dump complete', { duration, finalSize: lastSize });
                     task.title = `Dumped database`;
                 }
             });
