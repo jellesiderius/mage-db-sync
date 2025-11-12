@@ -11,10 +11,10 @@ class VersionCheck {
     getToolVersions = async (): Promise<void> => {
         try {
             this.config.latestVersion = await latestVersion('mage-db-sync');
-        } catch (err) {
+        } catch (_err) {
             // If fetch fails, set latestVersion to currentVersion to prevent errors
+            // This is non-critical, so we don't throw
             this.config.latestVersion = this.config.currentVersion;
-            throw new Error(`Failed to fetch latest version: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     }
 }

@@ -90,21 +90,34 @@ async function main() {
 
         // Get package version
         const packageJson = require('../package.json');
+        
+        // Start version check in background (non-blocking)
         const versionCheck = new VersionCheck();
-        await versionCheck.getToolVersions();
+        const versionCheckPromise = versionCheck.getToolVersions().catch(() => {
+            // Silently fail - not critical for operation
+        });
 
-        // Build description
+        // Build description (without update message initially)
         let description = `mage-db-sync - Magento Database Synchronizer - ${packageJson.version}\n\n`;
         description += `${kleur.gray('Resources:')}\n`;
         description += `• Github: https://github.com/jellesiderius/mage-db-sync\n`;
         description += `• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n`;
         description += `• Issues: https://github.com/jellesiderius/mage-db-sync/issues`;
-
-        if (versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
-            description += `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}`;
-        }
-
         description += `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))} ${kleur.bold('HYPER')} (https://www.hypershop.nl)`;
+        
+        // Wait up to 1.5 seconds for version check (reasonable timeout)
+        const raceResult = await Promise.race([
+            versionCheckPromise.then(() => 'completed'),
+            new Promise(resolve => setTimeout(() => resolve('timeout'), 1500))
+        ]);
+        
+        // If version check completed, add update message
+        if (raceResult === 'completed' && versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
+            description = description.replace(
+                `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))}`,
+                `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))}`
+            );
+        }
 
         // Setup CLI
         const program = new Command();
