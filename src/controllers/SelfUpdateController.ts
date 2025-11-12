@@ -3,6 +3,7 @@ import { success, error, info, warning} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import semver from 'semver';
 
 const execAsync = promisify(exec);
 
@@ -26,10 +27,12 @@ class SelfUpdateController {
             config.npmPath = path;
         });
 
+        console.log('');
+
         info(`Current version: ${config.currentVersion}`);
         info(`Latest version: ${config.latestVersion}`);
 
-        if (config.currentVersion < config.latestVersion) {
+        if (semver.lt(config.currentVersion, config.latestVersion)) {
             try {
                 info(`\nUpdating mage-db-sync from ${config.currentVersion} to ${config.latestVersion}...`);
                 info('This may take a minute...\n');
@@ -50,7 +53,8 @@ class SelfUpdateController {
                 process.exit(1);
             }
         } else {
-            success(`\n✓ mage-db-sync is already up to date (v${config.currentVersion})\n`);
+            console.log('');
+            success(`\nmage-db-sync is already up to date (v${config.currentVersion})\n`);
             process.exit(0);
         }
     }
