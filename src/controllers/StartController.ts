@@ -50,7 +50,6 @@ class StartController extends MainController {
     };
 
     private showTaskSummary(): void {
-        console.log('');
         UI.section('Task Summary');
 
         const tasks = [];

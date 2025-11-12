@@ -30,7 +30,9 @@ class MagentoConfigureTask {
     private async executeQuery(query: string, config: any): Promise<void> {
         if (config.settings.isDdevActive) {
             // Direct MySQL for DDEV - much faster!
-            const escapedQuery = query.replace(/"/g, '\\"');
+            const escapedQuery = query
+                .replace(/\\/g, '\\\\')  // Escape backslashes first
+                .replace(/"/g, '\\"');    // Then escape double quotes
             await localhostMagentoRootExec(`ddev mysql -e "${escapedQuery}"`, config);
         } else {
             // Standard environment uses magerun2

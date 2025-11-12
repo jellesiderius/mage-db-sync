@@ -61,6 +61,16 @@ const clearConsole = (): void => {
     readline.clearScreenDown(process.stdout)
 }
 
+/**
+ * Escapes a string for safe use in shell commands
+ * Wraps the value in single quotes and escapes any single quotes within it
+ */
+const shellEscape = (arg: string): string => {
+    if (!arg) return "''";
+    // Replace single quotes with '\'' (end quote, escaped quote, start quote)
+    return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
 const consoleCommand = (cmd: string, skipErrors: boolean) => {
     const exec = require('child_process').exec;
     return new Promise((resolve, _reject) => {
@@ -81,10 +91,12 @@ const sshNavigateToMagentoRootCommand = (command: string, config: any, _useSecon
 
     // See if external project folder is filled in, otherwise try default path
     if (databaseData.externalProjectFolder && databaseData.externalProjectFolder.length > 0) {
-        returnString = `cd ${databaseData.externalProjectFolder} > /dev/null 2>&1; ${command}`;
+        const escapedFolder = shellEscape(databaseData.externalProjectFolder);
+        returnString = `cd ${escapedFolder} > /dev/null 2>&1; ${command}`;
     } else {
+        const escapedDomainFolder = shellEscape(databaseData.domainFolder);
         returnString = 'cd domains > /dev/null 2>&1;' +
-            'cd ' + databaseData.domainFolder + ' > /dev/null 2>&1;' +
+            'cd ' + escapedDomainFolder + ' > /dev/null 2>&1;' +
             'cd application > /dev/null 2>&1;' +
             'cd public_html > /dev/null 2>&1;' +
             'cd current > /dev/null 2>&1;' + command;
@@ -113,68 +125,74 @@ const sshMagentoRootFolderMagerunCommand = (command: string, config: any, useSec
 }
 
 const localhostMagentoRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {
+    const escapedFolder = shellEscape(config.settings.currentFolder);
     if (!removeQuote) {
-        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+        return consoleCommand(`cd ${escapedFolder}; ${command};`, skipErrors);
     }
 
-    return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
+    return consoleCommand(`cd ${escapedFolder}; ${command}`, skipErrors);
 }
 
 const localhostWpRootExec = (command: string, config: any, skipErrors: boolean = false, removeQuote = false) => {
+    const escapedFolder = shellEscape(config.settings.currentFolder);
     if (config.settings.isDdevActive) {
         command = `ddev exec "cd wp; wp ${command}"`;
-        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+        return consoleCommand(`cd ${escapedFolder}; ${command};`, skipErrors);
     }
 
     if (!removeQuote) {
-        return consoleCommand(`cd ${config.settings.currentFolder}; ${command};`, skipErrors);
+        return consoleCommand(`cd ${escapedFolder}; ${command};`, skipErrors);
     }
 
-    return consoleCommand(`cd ${config.settings.currentFolder}; ${command}`, skipErrors);
+    return consoleCommand(`cd ${escapedFolder}; ${command}`, skipErrors);
 }
 
 const localhostRsyncDownloadCommand = (source: string, destination: string, config: any, _useSecondDatabase: boolean = false) => {
-    const databaseUsername = config.databases.databaseData.username;
-    const databaseServer = config.databases.databaseData.server;
+    const databaseUsername = shellEscape(config.databases.databaseData.username);
+    const databaseServer = shellEscape(config.databases.databaseData.server);
     const databasePort = config.databases.databaseData.port;
+    const escapedSource = shellEscape(source);
+    const escapedDestination = shellEscape(destination);
 
     let sshCommand = config.databases.databaseData.port 
         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no` 
         : `ssh -o StrictHostKeyChecking=no`;
 
     if (config.customConfig.sshKeyLocation) {
-        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+        const escapedKeyLocation = shellEscape(config.customConfig.sshKeyLocation);
+        sshCommand = `${sshCommand} -i ${escapedKeyLocation}`;
     }
 
-    let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
+    let totalRsyncCommand = `rsync -avz -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestination}`;
 
     // If password is set, use sshpass
     if (config.databases.databaseData.password) {
-        totalRsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + totalRsyncCommand;
+        const escapedPassword = shellEscape(config.databases.databaseData.password);
+        totalRsyncCommand = `sshpass -p ${escapedPassword} ` + totalRsyncCommand;
     }
 
     return consoleCommand(totalRsyncCommand, false)
 }
 
 const wordpressReplaces = (entry: string, text: string) => {
-    let replacedText = entry.replace(text, '');
-    replacedText = replacedText.replace(`,`, '');
-    replacedText = replacedText.replace(`DEFINE`, '');
-    replacedText = replacedText.replace(`define`, '');
-    replacedText = replacedText.replace(`(`, '');
-    replacedText = replacedText.replace(` `, '');
-    replacedText = replacedText.replace(`;`, '');
-    replacedText = replacedText.replace(`$`, '');
-    replacedText = replacedText.replace(`)`, '');
-    replacedText = replacedText.replace(`=`, '');
-    replacedText = replacedText.replace("'", '').replace(/'/g,'');
+    let replacedText = entry.replace(new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
+    replacedText = replacedText.replace(/,/g, '');
+    replacedText = replacedText.replace(/DEFINE/g, '');
+    replacedText = replacedText.replace(/define/g, '');
+    replacedText = replacedText.replace(/\(/g, '');
+    replacedText = replacedText.replace(/ /g, '');
+    replacedText = replacedText.replace(/;/g, '');
+    replacedText = replacedText.replace(/\$/g, '');
+    replacedText = replacedText.replace(/\)/g, '');
+    replacedText = replacedText.replace(/=/g, '');
+    replacedText = replacedText.replace(/'/g, '');
 
     return replacedText.trim();
 }
 
 const stripOutputString = (string: string) => {
     const magerunRootWarning = "It's not recommended to run n98-magerun as root user";
-    return string.replace(magerunRootWarning, '');
+    return string.replace(new RegExp(magerunRootWarning.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
 }
 
 export {
@@ -186,6 +204,7 @@ export {
     url,
     emptyLine,
     clearConsole,
+    shellEscape,
     consoleCommand,
     sshNavigateToMagentoRootCommand,
     sshMagentoRootFolderPhpCommand,

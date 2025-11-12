@@ -4,7 +4,8 @@
 import {
     sshMagentoRootFolderMagerunCommand,
     sshNavigateToMagentoRootCommand,
-    stripOutputString
+    stripOutputString,
+    shellEscape
 } from '../utils/Console';
 import { Listr } from 'listr2';
 import { SSHConnectionPool, PerformanceMonitor } from '../utils/Performance';
@@ -418,8 +419,8 @@ class DownloadTask {
                     const logger = this.services.getLogger();
                     EnhancedProgress.resetDownload();
 
-                    const databaseUsername = config.databases.databaseData.username;
-                    const databaseServer = config.databases.databaseData.server;
+                    const databaseUsername = shellEscape(config.databases.databaseData.username);
+                    const databaseServer = shellEscape(config.databases.databaseData.server);
                     const databasePort = config.databases.databaseData.port;
 
                     // Use the compression info determined during dump
@@ -427,20 +428,24 @@ class DownloadTask {
                     const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
+                    const escapedSource = shellEscape(source);
+                    const escapedDestination = shellEscape(destination);
 
                     let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
 
                     if (config.customConfig.sshKeyLocation) {
-                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                        const escapedKeyLocation = shellEscape(config.customConfig.sshKeyLocation);
+                        sshCommand = `${sshCommand} -i ${escapedKeyLocation}`;
                     }
 
                     // Use rsync with compression flag for 20-30% faster transfers
-                    let rsyncCommand = `rsync -avz --compress-level=6 --progress -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
+                    let rsyncCommand = `rsync -avz --compress-level=6 --progress -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestination}`;
 
                     if (config.databases.databaseData.password) {
-                        rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                        const escapedPassword = shellEscape(config.databases.databaseData.password);
+                        rsyncCommand = `sshpass -p ${escapedPassword} ` + rsyncCommand;
                     }
 
                     logger.info('Starting compressed download', {
@@ -671,26 +676,30 @@ class DownloadTask {
                     const logger = this.services.getLogger();
                     EnhancedProgress.resetDownload();
 
-                    const databaseUsername = config.databases.databaseData.username;
-                    const databaseServer = config.databases.databaseData.server;
+                    const databaseUsername = shellEscape(config.databases.databaseData.username);
+                    const databaseServer = shellEscape(config.databases.databaseData.server);
                     const databasePort = config.databases.databaseData.port;
 
                     const databaseFileName = config.wordpressDumpFile;
                     const source = `~/${databaseFileName}`;
                     const destination = config.settings.currentFolder;
+                    const escapedSource = shellEscape(source);
+                    const escapedDestination = shellEscape(destination);
 
                     let sshCommand = databasePort
                         ? `ssh -p ${databasePort} -o StrictHostKeyChecking=no -o Compression=yes`
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
 
                     if (config.customConfig.sshKeyLocation) {
-                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                        const escapedKeyLocation = shellEscape(config.customConfig.sshKeyLocation);
+                        sshCommand = `${sshCommand} -i ${escapedKeyLocation}`;
                     }
 
-                    let rsyncCommand = `rsync -avz --compress-level=6 --progress -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destination}`;
+                    let rsyncCommand = `rsync -avz --compress-level=6 --progress -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestination}`;
 
                     if (config.databases.databaseData.password) {
-                        rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                        const escapedPassword = shellEscape(config.databases.databaseData.password);
+                        rsyncCommand = `sshpass -p ${escapedPassword} ` + rsyncCommand;
                     }
 
                     logger.info('Starting WordPress database download', {
@@ -772,8 +781,8 @@ class DownloadTask {
 
                     task.output = 'Preparing WordPress uploads sync...';
 
-                    const databaseUsername = config.databases.databaseData.username;
-                    const databaseServer = config.databases.databaseData.server;
+                    const databaseUsername = shellEscape(config.databases.databaseData.username);
+                    const databaseServer = shellEscape(config.databases.databaseData.server);
                     const databasePort = config.databases.databaseData.port;
                     const destination = config.settings.currentFolder;
 
@@ -794,19 +803,22 @@ class DownloadTask {
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
 
                     if (config.customConfig.sshKeyLocation) {
-                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                        const escapedKeyLocation = shellEscape(config.customConfig.sshKeyLocation);
+                        sshCommand = `${sshCommand} -i ${escapedKeyLocation}`;
                     }
 
                     // Try each possible path
                     let synced = false;
                     for (const uploadsPath of wpUploadsPaths) {
                         const source = `${config.serverVariables.magentoRoot}/${uploadsPath}`;
+                        const escapedSource = shellEscape(source);
                         const destFolder = `${destination}/${uploadsPath.replace(/\/$/, '')}`;
+                        const escapedDestFolder = shellEscape(destFolder);
 
                         task.output = `Checking ${uploadsPath}...`;
 
-                        // Check if remote folder exists
-                        const checkResult = await ssh.execCommand(`test -d ${source} && echo "EXISTS" || echo "MISSING"`);
+                        // Check if remote folder exists (using escaped source for shell command)
+                        const checkResult = await ssh.execCommand(`test -d ${escapedSource} && echo "EXISTS" || echo "MISSING"`);
                         const folderExists = checkResult.stdout.trim() === 'EXISTS';
 
                         if (!folderExists) {
@@ -824,10 +836,11 @@ class DownloadTask {
                         }
 
                         // Build rsync command
-                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destFolder}`;
+                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
 
                         if (config.databases.databaseData.password) {
-                            rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                            const escapedPassword = shellEscape(config.databases.databaseData.password);
+                            rsyncCommand = `sshpass -p ${escapedPassword} ` + rsyncCommand;
                         }
 
                         logger.info('Syncing WordPress uploads', { source, destination: destFolder, command: rsyncCommand });
@@ -891,8 +904,8 @@ class DownloadTask {
 
                     task.output = EnhancedProgress.step(1, 4, 'Preparing media sync...');
 
-                    const databaseUsername = config.databases.databaseData.username;
-                    const databaseServer = config.databases.databaseData.server;
+                    const databaseUsername = shellEscape(config.databases.databaseData.username);
+                    const databaseServer = shellEscape(config.databases.databaseData.server);
                     const databasePort = config.databases.databaseData.port;
                     const destination = config.settings.currentFolder;
 
@@ -931,7 +944,8 @@ class DownloadTask {
                         : `ssh -o StrictHostKeyChecking=no -o Compression=yes`;
 
                     if (config.customConfig.sshKeyLocation) {
-                        sshCommand = `${sshCommand} -i ${config.customConfig.sshKeyLocation}`;
+                        const escapedKeyLocation = shellEscape(config.customConfig.sshKeyLocation);
+                        sshCommand = `${sshCommand} -i ${escapedKeyLocation}`;
                     }
 
                     // Sync each folder
@@ -941,15 +955,17 @@ class DownloadTask {
                     for (const folder of foldersToSync) {
                         folderIndex++;
                         const source = `${config.serverVariables.magentoRoot}/${folder}`;
+                        const escapedSource = shellEscape(source);
 
                         // Remove trailing slash from folder for destination
                         const folderPath = folder.endsWith('/') ? folder.slice(0, -1) : folder;
                         const destFolder = `${destination}/${folderPath}`;
+                        const escapedDestFolder = shellEscape(destFolder);
 
                         task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Checking ${folder}...`);
 
-                        // Check if remote folder exists
-                        const checkResult = await ssh.execCommand(`test -d ${source} && echo "EXISTS" || echo "MISSING"`);
+                        // Check if remote folder exists (using escaped source for shell command)
+                        const checkResult = await ssh.execCommand(`test -d ${escapedSource} && echo "EXISTS" || echo "MISSING"`);
                         const folderExists = checkResult.stdout.trim() === 'EXISTS';
 
                         if (!folderExists) {
@@ -970,10 +986,11 @@ class DownloadTask {
                         // Build rsync command with compression
                         // Note: Using trailing slash on source to sync contents, not the folder itself
                         // Using --partial to keep partially transferred files, --ignore-errors to continue on errors
-                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${source} ${destFolder}`;
+                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
 
                         if (config.databases.databaseData.password) {
-                            rsyncCommand = `sshpass -p "${config.databases.databaseData.password}" ` + rsyncCommand;
+                            const escapedPassword = shellEscape(config.databases.databaseData.password);
+                            rsyncCommand = `sshpass -p ${escapedPassword} ` + rsyncCommand;
                         }
 
                         logger.info('Syncing folder', { folder, source, destination: destFolder, command: rsyncCommand });

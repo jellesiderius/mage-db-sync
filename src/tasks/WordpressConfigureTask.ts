@@ -243,7 +243,7 @@ class WordpressConfigureTask {
                         // Retrieve current site URL from database
                         const wordpressUrlCommand = `ddev mysql -uroot -proot -hdb -e "USE db_wp; SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"""`;
                         let wordpressUrl = await localhostMagentoRootExec(wordpressUrlCommand, config, true);
-                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
+                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace(/option_value/g, '').trim(), 'https://').split('/')[0];
 
                         if (isMultisite) {
                             // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING
@@ -406,7 +406,7 @@ class WordpressConfigureTask {
                     } else {
                         // Non-DDEV environment
                         let wordpressUrl = await localhostMagentoRootExec(`cd wp; wp db query "SELECT option_value FROM ${config.wordpressConfig.prefix}options WHERE option_name = 'siteurl'"`, config);
-                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace('option_value', '').trim(), 'https://').split('/')[0];
+                        wordpressUrl = wordpressReplaces(String(wordpressUrl).replace(/option_value/g, '').trim(), 'https://').split('/')[0];
                         
                         if (isMultisite) {
                             // MULTISITE CONFIGURATION WITH CUSTOM DOMAIN MAPPING (Non-DDEV)
