@@ -275,8 +275,23 @@ class DownloadTask {
 
         if (config.settings.syncTypes && config.settings.syncTypes.includes('Magento database')) {
             const stripType = config.settings.strip || 'full';
+
+            // Check if project-specific strip tables exist and import is enabled
+            const projectConfig = this.services.getConfig().getProjectConfig();
+            const hasProjectStripTables = projectConfig?.databaseStripDevelopment ? true : false;
+            const isImporting = config.settings.import === 'yes';
+
+            // Build title with custom strip info if applicable
+            let taskTitle = `Dumping Magento database and moving it to server root (${stripType})`;
+            if (stripType === 'custom' && config.settings.stripOptions) {
+                const keepOptions = config.settings.stripOptions.join(', ');
+                taskTitle = `Dumping Magento database and moving it to server root (custom: keeping ${keepOptions})`;
+            } else if ((stripType === 'stripped' || stripType === 'keep customer data') && hasProjectStripTables && isImporting) {
+                taskTitle = `Dumping Magento database and moving it to server root (${stripType} + project tables)`;
+            }
+
             this.downloadTasks.push({
-                title: `Dumping Magento database and moving it to server root (${stripType})`,
+                title: taskTitle,
                 task: async (ctx: any, task: any): Promise<void> => {
                     PerformanceMonitor.start('database-dump');
                     const logger = this.services.getLogger();
@@ -285,7 +300,15 @@ class DownloadTask {
                     task.output = EnhancedProgress.step(5, 6, `Detecting compression...`);
                     const compression = await this.detectCompression(ssh);
 
-                    task.output = EnhancedProgress.step(5, 6, `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump...`);
+                    // Build output message with custom strip info if applicable
+                    let dumpMessage = `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump...`;
+                    if (stripType === 'custom' && config.settings.stripOptions) {
+                        const keepOptions = config.settings.stripOptions.join(', ');
+                        dumpMessage = `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} custom database dump (keeping ${keepOptions})...`;
+                    } else if ((stripType === 'stripped' || stripType === 'keep customer data') && hasProjectStripTables && isImporting) {
+                        dumpMessage = `Creating ${compression.type === 'none' ? 'uncompressed' : compression.type} ${stripType} database dump (+ project tables)...`;
+                    }
+                    task.output = EnhancedProgress.step(5, 6, dumpMessage);
 
                     let dumpCommand: string;
                     const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
@@ -355,7 +378,24 @@ class DownloadTask {
                     } else if (config.settings.strip === 'keep customer data') {
                         const staticSettings = this.services.getConfig().getStaticSettings();
                         const keepCustomerOptions = staticSettings.settings?.databaseStripKeepCustomerData || '';
-                        stripOptions = keepCustomerOptions ? `--strip="${keepCustomerOptions}"` : '';
+
+                        // Add project-specific strip tables if available and importing
+                        const projectConfig = this.services.getConfig().getProjectConfig();
+                        const projectStripTables = (config.settings.import === 'yes' && projectConfig?.databaseStripDevelopment)
+                            ? projectConfig.databaseStripDevelopment
+                            : '';
+
+                        const combinedStripOptions = [keepCustomerOptions, projectStripTables]
+                            .filter(option => option.trim())
+                            .join(' ');
+
+                        stripOptions = combinedStripOptions ? `--strip="${combinedStripOptions}"` : '';
+
+                        if (projectStripTables) {
+                            logger.info('Added project-specific strip tables for keep customer data mode', {
+                                projectTables: projectStripTables
+                            });
+                        }
                     } else if (config.settings.strip === 'full and human readable') {
                         // FULL dump with human-readable format - NO stripping
                         stripOptions = '';
@@ -369,7 +409,24 @@ class DownloadTask {
                         // Default: apply development strip options
                         const staticSettings = this.services.getConfig().getStaticSettings();
                         const developmentStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
-                        stripOptions = developmentStripOptions ? `--strip="${developmentStripOptions}"` : '';
+
+                        // Add project-specific strip tables if available and importing
+                        const projectConfig = this.services.getConfig().getProjectConfig();
+                        const projectStripTables = (config.settings.import === 'yes' && projectConfig?.databaseStripDevelopment)
+                            ? projectConfig.databaseStripDevelopment
+                            : '';
+
+                        const combinedStripOptions = [developmentStripOptions, projectStripTables]
+                            .filter(option => option.trim())
+                            .join(' ');
+
+                        stripOptions = combinedStripOptions ? `--strip="${combinedStripOptions}"` : '';
+
+                        if (projectStripTables) {
+                            logger.info('Added project-specific strip tables for development mode', {
+                                projectTables: projectStripTables
+                            });
+                        }
                     }
 
                     // Escape filename for shell usage

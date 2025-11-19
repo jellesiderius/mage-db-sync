@@ -43,8 +43,14 @@ export class ConfigInitializer {
                 if (stats.isSymbolicLink()) {
                     // Preserve symlink
                     const linkTarget = fs.readlinkSync(samplePath);
-                    fs.symlinkSync(linkTarget, targetPath);
-                    info(`Created symlink ${targetPath} -> ${linkTarget}`);
+
+                    // Convert to absolute path if it's relative
+                    const absoluteTarget = path.isAbsolute(linkTarget)
+                        ? linkTarget
+                        : path.resolve(path.dirname(samplePath), linkTarget);
+
+                    fs.symlinkSync(absoluteTarget, targetPath);
+                    info(`Created symlink ${targetPath} -> ${absoluteTarget}`);
                 } else {
                     // Copy regular file
                     fs.copyFileSync(samplePath, targetPath);

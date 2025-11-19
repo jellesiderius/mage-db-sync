@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
 import { ServiceContainer } from '../core/ServiceContainer';
+import { ConfigPathResolver } from '../utils/ConfigPathResolver';
 
 interface CheckResult {
     success: boolean;
@@ -46,9 +47,10 @@ class ChecksTask {
             name: 'Download folder',
             check: async () => {
                 const exists = fs.existsSync(config.customConfig.localDatabaseFolderLocation);
+                const configPath = ConfigPathResolver.resolveConfigPath('settings.json') || ConfigPathResolver.getUserConfigDir() + '/settings.json';
                 return {
                     success: exists,
-                    error: exists ? undefined : `Download folder ${config.customConfig.localDatabaseFolderLocation} does not exist`
+                    error: exists ? undefined : `${config.customConfig.localDatabaseFolderLocation} does not exist\n[TIP] Check ${configPath} (general.databaseLocation)`
                 };
             }
         });
@@ -59,9 +61,10 @@ class ChecksTask {
                 name: 'SSH key file',
                 check: async () => {
                     const exists = fs.existsSync(config.customConfig.sshKeyLocation);
+                    const configPath = ConfigPathResolver.resolveConfigPath('settings.json') || ConfigPathResolver.getUserConfigDir() + '/settings.json';
                     return {
                         success: exists,
-                        error: exists ? undefined : `SSH key ${config.customConfig.sshKeyLocation} does not exist`
+                        error: exists ? undefined : `${config.customConfig.sshKeyLocation} does not exist\n[TIP] Check ${configPath} (ssh.keyLocation)`
                     };
                 }
             });
@@ -76,24 +79,25 @@ class ChecksTask {
                     const settingsConfig = this.services.getConfig().getSettingsConfig();
 
                     if (!settingsConfig.magentoBackend.adminUsername) {
-                        errors.push('Admin username is missing');
+                        errors.push('Admin username is missing (magentoBackend.adminUsername)');
                     }
                     if (!settingsConfig.magentoBackend.adminPassword) {
-                        errors.push('Admin password is missing');
+                        errors.push('Admin password is missing (magentoBackend.adminPassword)');
                     }
                     if (!settingsConfig.magentoBackend.adminEmailAddress) {
-                        errors.push('Admin email address is missing');
+                        errors.push('Admin email address is missing (magentoBackend.adminEmailAddress)');
                     }
                     if (!settingsConfig.general.localDomainExtension) {
-                        errors.push('Local domain extension is missing');
+                        errors.push('Local domain extension is missing (general.localDomainExtension)');
                     }
                     if (!settingsConfig.general.elasticsearchPort) {
-                        errors.push('ElasticSearch port is missing');
+                        errors.push('ElasticSearch port is missing (general.elasticsearchPort)');
                     }
 
+                    const configPath = ConfigPathResolver.resolveConfigPath('settings.json') || ConfigPathResolver.getUserConfigDir() + '/settings.json';
                     return {
                         success: errors.length === 0,
-                        error: errors.length > 0 ? errors.join(', ') : undefined
+                        error: errors.length > 0 ? `${errors.join(', ')}\n[TIP] Check ${configPath}` : undefined
                     };
                 }
             });
@@ -153,10 +157,8 @@ class ChecksTask {
             }
         });
 
-        const totalDuration = Date.now() - startTime;
-
         if (failedChecks.length > 0) {
-            throw new Error(`\n${failedChecks.join('\n')}\n\n[TIP] Completed ${parallelChecks.length} checks in ${totalDuration}ms (parallel)`);
+            throw new Error(failedChecks.join('\n'));
         }
     }
 

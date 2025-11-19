@@ -46,15 +46,20 @@ function copyOrLinkFile(sourcePath, targetPath) {
     if (stats.isSymbolicLink()) {
         // Source is a symlink - preserve it
         const linkTarget = fs.readlinkSync(sourcePath);
-        
+
+        // Convert to absolute path if it's relative
+        const absoluteTarget = path.isAbsolute(linkTarget)
+            ? linkTarget
+            : path.resolve(path.dirname(sourcePath), linkTarget);
+
         // If target exists, remove it first
         if (fs.existsSync(targetPath)) {
             fs.unlinkSync(targetPath);
         }
-        
-        // Create the same symlink at target location
-        fs.symlinkSync(linkTarget, targetPath);
-        return { type: 'symlink', target: linkTarget };
+
+        // Create the symlink at target location with absolute path
+        fs.symlinkSync(absoluteTarget, targetPath);
+        return { type: 'symlink', target: absoluteTarget };
     } else {
         // Source is a regular file - copy it
         fs.copyFileSync(sourcePath, targetPath);

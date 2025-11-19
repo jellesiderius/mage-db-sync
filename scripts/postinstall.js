@@ -62,16 +62,21 @@ function copyConfigFile(packageRoot, sampleRelativePath, targetRelativePath, act
             if (stats.isSymbolicLink()) {
                 // Package has a symlink - create the same symlink in user directory
                 const linkTarget = fs.readlinkSync(actualConfigPath);
-                
+
+                // Convert to absolute path if it's relative
+                const absoluteTarget = path.isAbsolute(linkTarget)
+                    ? linkTarget
+                    : path.resolve(path.dirname(actualConfigPath), linkTarget);
+
                 // Ensure target directory exists
                 const targetDir = path.dirname(targetPath);
                 if (!fs.existsSync(targetDir)) {
                     fs.mkdirSync(targetDir, { recursive: true });
                 }
-                
-                fs.symlinkSync(linkTarget, targetPath);
-                console.log(`✓ Created symlink: ${targetPath} -> ${linkTarget}`);
-                return { created: true, reason: 'symlink', target: linkTarget };
+
+                fs.symlinkSync(absoluteTarget, targetPath);
+                console.log(`✓ Created symlink: ${targetPath} -> ${absoluteTarget}`);
+                return { created: true, reason: 'symlink', target: absoluteTarget };
             }
         }
         

@@ -188,7 +188,13 @@ export class ConfigPathResolver {
                 if (stats.isSymbolicLink()) {
                     // Preserve symlink
                     const linkTarget = fs.readlinkSync(samplePath);
-                    fs.symlinkSync(linkTarget, userTargetPath);
+
+                    // Convert to absolute path if it's relative
+                    const absoluteTarget = path.isAbsolute(linkTarget)
+                        ? linkTarget
+                        : path.resolve(path.dirname(samplePath), linkTarget);
+
+                    fs.symlinkSync(absoluteTarget, userTargetPath);
                 } else {
                     // Copy regular file
                     fs.copyFileSync(samplePath, userTargetPath);

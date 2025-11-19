@@ -7,6 +7,7 @@ import { error } from './utils/Console';
 import VersionCheck from './utils/VersionCheck';
 import { StartController } from './controllers/StartController';
 import { OpenFolderController } from './controllers/OpenFolderController';
+import { OpenConfigController } from './controllers/OpenConfigController';
 import { SelfUpdateController } from './controllers/SelfUpdateController';
 import { ServiceContainer } from './core/ServiceContainer';
 import { ConfigInitializer } from './utils/ConfigInitializer';
@@ -142,6 +143,15 @@ async function main() {
             .description('Open the database download folder')
             .action(async () => {
                 const controller = new OpenFolderController();
+                await controller.execute();
+            });
+
+        // Open config folder command
+        program
+            .command('open-config')
+            .description('Open the configuration folder')
+            .action(async () => {
+                const controller = new OpenConfigController();
                 await controller.execute();
             });
 
