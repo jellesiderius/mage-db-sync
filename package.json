@@ -1,6 +1,6 @@
 {
     "name": "mage-db-sync",
-    "version": "2.1.3",
+    "version": "2.1.4",
     "description": "Database synchronizer for Magento, based on Magerun",
     "license": "MIT",
     "author": {
@@ -11,6 +11,28 @@
         "mage-db-sync": "bin/mage-db-sync.js"
     },
     "preferGlobal": true,
+    "keywords": [
+        "magento",
+        "magento2",
+        "database",
+        "sync",
+        "synchronizer",
+        "magerun",
+        "magerun2",
+        "development",
+        "dev-tools",
+        "database-import",
+        "database-export",
+        "database-dump",
+        "ssh",
+        "mysql",
+        "cli",
+        "magento-development",
+        "magento-tools",
+        "wordpress",
+        "database-migration",
+        "n98-magerun2"
+    ],
     "scripts": {
         "build": "tsc",
         "prepare": "npm run build",
