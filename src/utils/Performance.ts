@@ -104,6 +104,14 @@ export class SSHConnectionPool {
             .filter(conn => conn && conn !== null && typeof conn.dispose === 'function')
             .map(conn => {
                 try {
+                    // Add error handler before disposal to catch ECONNRESET
+                    if (conn.connection && typeof conn.connection.on === 'function') {
+                        conn.connection.removeAllListeners('error');
+                        conn.connection.on('error', () => {
+                            // Silently ignore errors during disposal
+                        });
+                    }
+
                     const disposeResult = conn.dispose();
                     return disposeResult && typeof disposeResult.catch === 'function'
                         ? disposeResult.catch(() => {})

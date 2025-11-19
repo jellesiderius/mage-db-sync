@@ -96,11 +96,25 @@ class DownloadTask {
         try {
             await SSHConnectionPool.getConnection(host, sshConfig, async () => {
                 await ssh.connect(sshConfig);
+
+                // Add error handler to prevent unhandled ECONNRESET errors
+                if (ssh && ssh.connection) {
+                    const logger = this.services.getLogger();
+                    ssh.connection.on('error', (err: Error) => {
+                        // Catch and log connection errors to prevent process crash
+                        if (err.message && err.message.includes('ECONNRESET')) {
+                            logger.debug('SSH connection reset', { host });
+                        } else {
+                            logger.error('SSH connection error', err, { host });
+                        }
+                    });
+                }
+
                 return ssh;
             });
         } catch (error) {
             const err = error as Error;
-            throw new Error(
+            throw UI.createError(
                 `Failed to connect to ${host}\n` +
                 `[TIP] Check your SSH credentials and key format\n` +
                 `Error: ${err.message}`
@@ -255,7 +269,7 @@ class DownloadTask {
                                     database: config.serverVariables.databaseName
                                 });
                             } catch (_e) {
-                                throw new Error(
+                                throw UI.createError(
                                     `Could not retrieve database name from server.\n` +
                                     `Magerun output: ${output}\n` +
                                     `[TIP] Check if Magerun can connect to the database on the server`
@@ -264,7 +278,7 @@ class DownloadTask {
                         }
 
                         if (!config.serverVariables.databaseName) {
-                            throw new Error(
+                            throw UI.createError(
                                 `Database name could not be determined.\n` +
                                 `[TIP] Check server Magento configuration and database connectivity`
                             );
@@ -507,7 +521,7 @@ class DownloadTask {
                         clearInterval(sizeCheckInterval);
 
                         if (result.code && result.code !== 0) {
-                            throw new Error(
+                            throw UI.createError(
                                 `Database dump failed\n[TIP] Check database permissions and disk space\nError: ${result.stderr}`
                             );
                         }
@@ -628,7 +642,7 @@ class DownloadTask {
                         rsync.on('exit', function (code: any) {
                             if (code !== 0) {
                                 reject(
-                                    new Error(
+                                    UI.createError(
                                         `Download failed with code ${code}\n[TIP] Check SSH connection and file permissions`
                                     )
                                 );
@@ -711,13 +725,13 @@ class DownloadTask {
                             });
                         }
                     }).catch((error: any) => {
-                        throw new Error(
+                        throw UI.createError(
                             `Could not read wp-config.php from server\n[TIP] Make sure WordPress is installed in wp/, blog/, or wordpress/ folder\nError: ${error.message}`
                         );
                     });
 
                     if (!config.wordpressConfig.database) {
-                        throw new Error(
+                        throw UI.createError(
                             `Could not parse WordPress database configuration from wp-config.php\n[TIP] Check if wp-config.php is properly formatted`
                         );
                     }
@@ -766,7 +780,7 @@ class DownloadTask {
 
                     await ssh.execCommand(dumpCommand).then(function (result: any) {
                         if (result.code && result.code !== 0) {
-                            throw new Error(
+                            throw UI.createError(
                                 `WordPress database dump failed\n[TIP] Check WordPress database credentials and permissions\nError: ${result.stderr}`
                             );
                         }

@@ -13,7 +13,13 @@ class MainController {
     protected services: ServiceContainer;
     public list = new Listr(
         [],
-        {concurrent: false}
+        {
+            concurrent: false,
+            exitOnError: true,
+            rendererOptions: {
+                collapseErrors: false
+            }
+        }
     );
     public ssh = new NodeSSH();
     public sshSecondDatabase = new NodeSSH();

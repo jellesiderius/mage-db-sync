@@ -6,6 +6,7 @@ import { Listr } from 'listr2';
 import { consoleCommand, localhostMagentoRootExec } from '../utils/Console';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ConfigPathResolver } from '../utils/ConfigPathResolver';
+import { UI } from '../utils/UI';
 
 interface CheckResult {
     success: boolean;
@@ -186,6 +187,28 @@ class ChecksTask {
             config.settings.import === 'yes' ||
             (config.settings.wordpressImport === 'yes' && config.settings.currentFolderhasWordpress)
         ) {
+            // Check if DDEV is running when isDdevActive is true
+            if (config.settings.isDdevActive) {
+                this.checkTasks.push({
+                    title: 'Checking DDEV project status',
+                    task: async (ctx: any, task: any): Promise<boolean> => {
+                        task.output = 'Verifying DDEV is running...';
+                        const commandService = this.services.getCommand();
+                        const isRunning = await commandService.isDdevActive();
+
+                        if (!isRunning) {
+                            throw UI.createError(
+                                `DDEV project is not running in this directory\n` +
+                                `[TIP] Start your DDEV project with: ddev start`
+                            );
+                        }
+
+                        task.output = 'DDEV project is running';
+                        return true;
+                    }
+                });
+            }
+
             // Check Magerun 2 version (requires command execution)
             this.checkTasks.push({
                 title: 'Checking Magerun2 version',

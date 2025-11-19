@@ -36,10 +36,18 @@ class StartController extends MainController {
             process.exit(0);
         } catch (e) {
             const error = e as Error;
+            const logger = this.services.getLogger();
+
+            // Log error for debugging
+            logger.error('Operation failed', error);
+
+            // Display user-friendly error message
+            console.log('\n');
             UI.error(`Operation failed: ${error.message}`);
 
-            if (error.stack) {
-                console.log('\n' + error.stack);
+            if (error.stack && process.env.DEBUG) {
+                console.log('\nStack trace:');
+                console.log(error.stack);
             }
 
             // Try to close SSH connections on error (might already be closed)
@@ -49,6 +57,8 @@ class StartController extends MainController {
                 // Ignore cleanup errors during error handling
             }
 
+            // Force exit with error code
+            process.exitCode = 1;
             process.exit(1);
         }
     };

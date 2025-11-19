@@ -61,10 +61,27 @@ export class UI {
     }
 
     /**
+     * Format error message with colored [TIP] sections
+     */
+    static formatErrorMessage(message: string): string {
+        // Replace [TIP] with colored version (magenta/purple)
+        return message.replace(/\[TIP\]/g, chalk.magenta.bold('[TIP]'));
+    }
+
+    /**
+     * Create an Error with formatted message (colored [TIP])
+     * Use this when throwing errors that contain [TIP] sections
+     */
+    static createError(message: string): Error {
+        return new Error(this.formatErrorMessage(message));
+    }
+
+    /**
      * Show error message
      */
     static error(message: string): void {
-        console.log(chalk.red('[ERROR]') + ' ' + chalk.white(message));
+        const formattedMessage = this.formatErrorMessage(message);
+        console.log(chalk.red('[ERROR]') + ' ' + chalk.white(formattedMessage));
     }
 
     /**
