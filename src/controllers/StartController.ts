@@ -33,8 +33,6 @@ class StartController extends MainController {
 
             await this.showCompletionMessage();
 
-            await SSHConnectionPool.closeAll();
-
             process.exit(0);
         } catch (e) {
             const error = e as Error;
@@ -44,7 +42,13 @@ class StartController extends MainController {
                 console.log('\n' + error.stack);
             }
 
-            await SSHConnectionPool.closeAll();
+            // Try to close SSH connections on error (might already be closed)
+            try {
+                await SSHConnectionPool.closeAll();
+            } catch (_cleanupError) {
+                // Ignore cleanup errors during error handling
+            }
+
             process.exit(1);
         }
     };

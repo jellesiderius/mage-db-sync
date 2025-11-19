@@ -1220,7 +1220,7 @@ class DownloadTask {
         }
 
         this.downloadTasks.push({
-            title: 'Cleaning up and closing SSH connection',
+            title: 'Cleaning up remote files',
             task: async (): Promise<void> => {
                 PerformanceMonitor.start('cleanup');
                 const logger = this.services.getLogger();
@@ -1252,6 +1252,17 @@ class DownloadTask {
                 }
 
                 PerformanceMonitor.end('cleanup');
+            }
+        });
+
+        // Close SSH connections as final step - no longer needed after download
+        this.downloadTasks.push({
+            title: 'Closing SSH connections',
+            task: async (): Promise<void> => {
+                const logger = this.services.getLogger();
+                logger.info('Closing SSH connections after download');
+                await SSHConnectionPool.closeAll();
+                logger.info('SSH connections closed successfully');
             }
         });
     };
