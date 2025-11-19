@@ -81,11 +81,36 @@ export class CommandService {
 
     /**
      * Check if DDEV is active in current directory
+     * @param targetDir Optional directory to check (defaults to current working directory)
      */
-    public async isDdevActive(): Promise<boolean> {
+    public async isDdevActive(targetDir?: string): Promise<boolean> {
         try {
-            const result = await this.execLocal('ddev', ['status']);
-            return result.exitCode === 0 && result.stdout.includes('running');
+            // Use ddev describe with JSON output for reliable parsing
+            const options = targetDir ? { cwd: targetDir } : {};
+            const result = await this.execLocal('ddev', ['describe', '-j'], options);
+
+            if (result.exitCode !== 0) {
+                return false;
+            }
+
+            // Parse JSON output to check status
+            const data = JSON.parse(result.stdout);
+
+            // Verify the project exists and is running
+            if (!data || !data.raw) {
+                return false;
+            }
+
+            // Check if project is running
+            const isRunning = data.raw.status === 'running';
+
+            // Verify the approot matches the target directory (resolve both to absolute paths)
+            const path = require('path');
+            const checkDir = targetDir ? path.resolve(targetDir) : process.cwd();
+            const approot = data.raw.approot ? path.resolve(data.raw.approot) : null;
+
+            // Both must match and project must be running
+            return isRunning && approot === checkDir;
         } catch {
             return false;
         }

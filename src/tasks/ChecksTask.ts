@@ -194,11 +194,14 @@ class ChecksTask {
                     task: async (ctx: any, task: any): Promise<boolean> => {
                         task.output = 'Verifying DDEV is running...';
                         const commandService = this.services.getCommand();
-                        const isRunning = await commandService.isDdevActive();
+
+                        // Check DDEV status in the import directory
+                        const importDir = config.settings.currentFolder;
+                        const isRunning = await commandService.isDdevActive(importDir);
 
                         if (!isRunning) {
                             throw UI.createError(
-                                `DDEV project is not running in this directory\n` +
+                                `DDEV project is not running in ${importDir}\n` +
                                 `[TIP] Start your DDEV project with: ddev start`
                             );
                         }
