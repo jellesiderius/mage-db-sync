@@ -104,7 +104,7 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: "Replacing URLs and doing some preperation for development",
+                title: "Replacing URLs and doing some preparation for development",
                 task: async (): Promise<void> => {
                     let dbQuery = '';
                     // Delete queries
