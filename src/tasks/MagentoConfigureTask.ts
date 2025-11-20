@@ -104,7 +104,7 @@ class MagentoConfigureTask {
 
         this.configureTasks.push(
             {
-                title: "Replacing URL's and doing some preperation for development",
+                title: "Replacing URLs and doing some preparation for development",
                 task: async (): Promise<void> => {
                     let dbQuery = '';
                     // Delete queries
@@ -173,7 +173,7 @@ class MagentoConfigureTask {
                         try {
                             const obj = JSON.parse(<string>allUrlsJson);
                             if (obj && typeof obj === `object`) {
-                                // @TODO: Add all URL's in overview:
+                                // @TODO: Add all URLs in overview:
                                 //console.log(obj);
                                 //process.exit();
                                 //objValue = JSON.parse(engineCheck)[0].Value;

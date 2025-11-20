@@ -155,7 +155,7 @@ class WordpressConfigureTask {
 
         this.configureTasks.push(
             {
-                title: `Configuring URL's for development`,
+                title: `Configuring URLs for development`,
                 task: async (ctx: any, task: any): Promise<void> => {
                     const isMultisite = config.wordpressConfig.isMultisite;
                     const multisiteType = config.wordpressConfig.multisiteType;
