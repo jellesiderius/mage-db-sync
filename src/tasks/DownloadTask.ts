@@ -28,6 +28,25 @@ class DownloadTask {
     private services: ServiceContainer;
     private useCompression: boolean = true; // Enable speed optimization
 
+    /**
+     * Convert project databaseStripDevelopment to string format
+     * Supports both string (backward compatible) and object format
+     */
+    private getProjectStripTablesString(projectStripTables: string | { default: string[]; custom: string[] } | undefined): string {
+        if (!projectStripTables) {
+            return '';
+        }
+        
+        if (typeof projectStripTables === 'string') {
+            return projectStripTables;
+        }
+        
+        // Object format: combine default and custom arrays
+        const defaultTables = projectStripTables.default || [];
+        const customTables = projectStripTables.custom || [];
+        return [...defaultTables, ...customTables].join(' ');
+    }
+
     constructor() {
         this.services = ServiceContainer.getInstance();
     }
@@ -293,6 +312,7 @@ class DownloadTask {
             // Check if project-specific strip tables exist and import is enabled
             const projectConfig = this.services.getConfig().getProjectConfig();
             const hasProjectStripTables = projectConfig?.databaseStripDevelopment ? true : false;
+            // Note: getProjectStripTablesString handles both string and object formats
             const isImporting = config.settings.import === 'yes';
 
             // Build title with custom strip info if applicable
@@ -391,12 +411,17 @@ class DownloadTask {
                         });
                     } else if (config.settings.strip === 'keep customer data') {
                         const staticSettings = this.services.getConfig().getStaticSettings();
-                        const keepCustomerOptions = staticSettings.settings?.databaseStripKeepCustomerData || '';
+                        const keepCustomerSettings = staticSettings.settings?.databaseStripKeepCustomerData;
+                        
+                        // Combine default and custom arrays
+                        const defaultTables = keepCustomerSettings?.default || [];
+                        const customTables = keepCustomerSettings?.custom || [];
+                        const keepCustomerOptions = [...defaultTables, ...customTables].join(' ');
 
                         // Add project-specific strip tables if available and importing
                         const projectConfig = this.services.getConfig().getProjectConfig();
                         const projectStripTables = (config.settings.import === 'yes' && projectConfig?.databaseStripDevelopment)
-                            ? projectConfig.databaseStripDevelopment
+                            ? this.getProjectStripTablesString(projectConfig.databaseStripDevelopment)
                             : '';
 
                         const combinedStripOptions = [keepCustomerOptions, projectStripTables]
@@ -408,6 +433,12 @@ class DownloadTask {
                         if (projectStripTables) {
                             logger.info('Added project-specific strip tables for keep customer data mode', {
                                 projectTables: projectStripTables
+                            });
+                        }
+                        
+                        if (customTables.length > 0) {
+                            logger.info('Using custom strip tables for keep customer data mode', {
+                                customTables: customTables
                             });
                         }
                     } else if (config.settings.strip === 'full and human readable') {
@@ -422,12 +453,17 @@ class DownloadTask {
                     } else {
                         // Default: apply development strip options
                         const staticSettings = this.services.getConfig().getStaticSettings();
-                        const developmentStripOptions = staticSettings.settings?.databaseStripDevelopment || '';
+                        const developmentSettings = staticSettings.settings?.databaseStripDevelopment;
+                        
+                        // Combine default and custom arrays
+                        const defaultTables = developmentSettings?.default || [];
+                        const customTables = developmentSettings?.custom || [];
+                        const developmentStripOptions = [...defaultTables, ...customTables].join(' ');
 
                         // Add project-specific strip tables if available and importing
                         const projectConfig = this.services.getConfig().getProjectConfig();
                         const projectStripTables = (config.settings.import === 'yes' && projectConfig?.databaseStripDevelopment)
-                            ? projectConfig.databaseStripDevelopment
+                            ? this.getProjectStripTablesString(projectConfig.databaseStripDevelopment)
                             : '';
 
                         const combinedStripOptions = [developmentStripOptions, projectStripTables]
@@ -439,6 +475,12 @@ class DownloadTask {
                         if (projectStripTables) {
                             logger.info('Added project-specific strip tables for development mode', {
                                 projectTables: projectStripTables
+                            });
+                        }
+                        
+                        if (customTables.length > 0) {
+                            logger.info('Using custom strip tables for development mode', {
+                                customTables: customTables
                             });
                         }
                     }

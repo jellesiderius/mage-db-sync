@@ -26,8 +26,14 @@ declare module '../../config/settings.json' {
 declare module '../../config/static-settings.json' {
     export interface StaticSettingsJson {
         settings: {
-            databaseStripDevelopment: string;
-            databaseStripKeepCustomerData: string;
+            databaseStripDevelopment: {
+                default: string[];
+                custom: string[];
+            };
+            databaseStripKeepCustomerData: {
+                default: string[];
+                custom: string[];
+            };
         };
     }
     const value: StaticSettingsJson;

@@ -46,14 +46,23 @@ export interface SettingsConfig {
 
 export interface StaticSettings {
     settings: {
-        databaseStripDevelopment: string;
-        databaseStripKeepCustomerData: string;
+        databaseStripDevelopment: {
+            default: string[];
+            custom: string[];
+        };
+        databaseStripKeepCustomerData: {
+            default: string[];
+            custom: string[];
+        };
     };
 }
 
 export interface ProjectConfig {
     core_config_data?: Record<string, Record<string, string | number>>;
-    databaseStripDevelopment?: string;
+    databaseStripDevelopment?: string | {
+        default: string[];
+        custom: string[];
+    };
     databaseStripFull?: string;
     wordpress_domains?: Record<string, string>;  // blog_id -> local domain
 }
