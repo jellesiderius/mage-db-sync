@@ -36,11 +36,11 @@ class DownloadTask {
         if (!projectStripTables) {
             return '';
         }
-        
+
         if (typeof projectStripTables === 'string') {
             return projectStripTables;
         }
-        
+
         // Object format: combine default and custom arrays
         const defaultTables = projectStripTables.default || [];
         const customTables = projectStripTables.custom || [];
@@ -235,15 +235,27 @@ class DownloadTask {
                     });
 
                 if (!magerunExists) {
-                    task.output = 'Uploading Magerun (0%)...';
-                    logger.info('Uploading Magerun', { file: config.serverVariables.magerunFile });
+                    task.output = 'Downloading Magerun from GitHub...';
+                    logger.info('Downloading Magerun from GitHub', { file: config.serverVariables.magerunFile });
 
-                    await ssh.putFile(
-                        `${__dirname}/../../files/${config.serverVariables.magerunFile}`,
-                        `${config.serverVariables.magentoRoot}/${config.serverVariables.magerunFile}`
+                    const githubUrl = `https://github.com/jellesiderius/mage-db-sync/raw/refs/heads/master/files/${config.serverVariables.magerunFile}`;
+                    const downloadCommand = sshNavigateToMagentoRootCommand(
+                        `curl -fsSL -o ${shellEscape(config.serverVariables.magerunFile)} ${shellEscape(githubUrl)} || wget -q -O ${shellEscape(config.serverVariables.magerunFile)} ${shellEscape(githubUrl)}`,
+                        config
                     );
 
-                    task.output = '✓ Magerun uploaded (100%)';
+                    const downloadResult = await ssh.execCommand(downloadCommand);
+
+                    if (downloadResult.code !== 0) {
+                        throw UI.createError(
+                            `Failed to download Magerun from GitHub\n` +
+                            `URL: ${githubUrl}\n` +
+                            `[TIP] Check internet connectivity on the server and that the file exists on GitHub\n` +
+                            `Error: ${downloadResult.stderr || downloadResult.stdout}`
+                        );
+                    }
+
+                    task.output = '✓ Magerun downloaded from GitHub (100%)';
                 } else {
                     logger.info('Magerun already exists', { file: config.serverVariables.magerunFile });
                     task.skip('Magerun already exists on server');
@@ -412,7 +424,7 @@ class DownloadTask {
                     } else if (config.settings.strip === 'keep customer data') {
                         const staticSettings = this.services.getConfig().getStaticSettings();
                         const keepCustomerSettings = staticSettings.settings?.databaseStripKeepCustomerData;
-                        
+
                         // Combine default and custom arrays
                         const defaultTables = keepCustomerSettings?.default || [];
                         const customTables = keepCustomerSettings?.custom || [];
@@ -435,7 +447,7 @@ class DownloadTask {
                                 projectTables: projectStripTables
                             });
                         }
-                        
+
                         if (customTables.length > 0) {
                             logger.info('Using custom strip tables for keep customer data mode', {
                                 customTables: customTables
@@ -454,7 +466,7 @@ class DownloadTask {
                         // Default: apply development strip options
                         const staticSettings = this.services.getConfig().getStaticSettings();
                         const developmentSettings = staticSettings.settings?.databaseStripDevelopment;
-                        
+
                         // Combine default and custom arrays
                         const defaultTables = developmentSettings?.default || [];
                         const customTables = developmentSettings?.custom || [];
@@ -477,7 +489,7 @@ class DownloadTask {
                                 projectTables: projectStripTables
                             });
                         }
-                        
+
                         if (customTables.length > 0) {
                             logger.info('Using custom strip tables for development mode', {
                                 customTables: customTables
