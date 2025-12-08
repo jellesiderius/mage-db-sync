@@ -1168,7 +1168,8 @@ class DownloadTask {
                         // Build rsync command with compression
                         // Note: Using trailing slash on source to sync contents, not the folder itself
                         // Using --partial to keep partially transferred files, --ignore-errors to continue on errors
-                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
+                        // Exclude cache folders to avoid syncing generated files
+                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors --exclude='catalog/cache' --exclude='product/cache' -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
 
                         if (config.databases.databaseData.password) {
                             const escapedPassword = shellEscape(config.databases.databaseData.password);
