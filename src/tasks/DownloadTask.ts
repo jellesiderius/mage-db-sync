@@ -1017,8 +1017,8 @@ class DownloadTask {
                             logger.info('Created destination directory', { path: destFolder });
                         }
 
-                        // Build rsync command
-                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
+                        // Build rsync command - keep it simple
+                        let rsyncCommand = `rsync -av -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
 
                         if (config.databases.databaseData.password) {
                             const escapedPassword = shellEscape(config.databases.databaseData.password);
@@ -1136,7 +1136,9 @@ class DownloadTask {
 
                     for (const folder of foldersToSync) {
                         folderIndex++;
-                        const source = `${config.serverVariables.magentoRoot}/${folder}`;
+                        // Ensure source has trailing slash to sync contents, not the folder itself
+                        const sourceFolder = folder.endsWith('/') ? folder : `${folder}/`;
+                        const source = `${config.serverVariables.magentoRoot}/${sourceFolder}`;
                         const escapedSource = shellEscape(source);
 
                         // Remove trailing slash from folder for destination
@@ -1147,7 +1149,10 @@ class DownloadTask {
                         task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Checking ${folder}...`);
 
                         // Check if remote folder exists (using escaped source for shell command)
-                        const checkResult = await ssh.execCommand(`test -d ${escapedSource} && echo "EXISTS" || echo "MISSING"`);
+                        // Remove trailing slash for test command
+                        const checkSource = source.endsWith('/') ? source.slice(0, -1) : source;
+                        const escapedCheckSource = shellEscape(checkSource);
+                        const checkResult = await ssh.execCommand(`test -d ${escapedCheckSource} && echo "EXISTS" || echo "MISSING"`);
                         const folderExists = checkResult.stdout.trim() === 'EXISTS';
 
                         if (!folderExists) {
@@ -1165,11 +1170,10 @@ class DownloadTask {
 
                         task.output = EnhancedProgress.step(folderIndex + 1, foldersToSync.length + 2, `Syncing ${folder}...`);
 
-                        // Build rsync command with compression
+                        // Build rsync command - keep it simple
                         // Note: Using trailing slash on source to sync contents, not the folder itself
-                        // Using --partial to keep partially transferred files, --ignore-errors to continue on errors
                         // Exclude cache folders to avoid syncing generated files
-                        let rsyncCommand = `rsync -avz --compress-level=6 --progress --partial --ignore-errors --exclude='catalog/cache' --exclude='product/cache' -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
+                        let rsyncCommand = `rsync -av --exclude='cache/' -e "${sshCommand}" ${databaseUsername}@${databaseServer}:${escapedSource} ${escapedDestFolder}`;
 
                         if (config.databases.databaseData.password) {
                             const escapedPassword = shellEscape(config.databases.databaseData.password);
@@ -1178,88 +1182,22 @@ class DownloadTask {
 
                         logger.info('Syncing folder', { folder, source, destination: destFolder, command: rsyncCommand });
 
-                        // Execute rsync with progress tracking
+                        // Execute rsync - keep it simple
                         try {
                             await new Promise<void>((resolve, reject) => {
-                                const rsync = require('child_process').exec(rsyncCommand);
-                                let lastUpdate = Date.now();
-                                let stderrOutput = '';
-
-                                const handleRsyncData = function (data: any) {
-                                    const dataStr = data.toString();
-                                    const now = Date.now();
-
-                                    // Extract speed from rsync output
-                                    const speedMatch = dataStr.match(/([\d.]+)(MB|KB|GB)\/s/);
-
-                                    if (speedMatch && now - lastUpdate > 500) {
-                                        const speedValue = parseFloat(speedMatch[1]);
-                                        const unit = speedMatch[2];
-
-                                        const displayText = `${chalk.gray(folder)} ${chalk.green('[DOWN]')} ${chalk.cyan(speedValue + ' ' + unit + '/s')}`;
-
-                                        task.output = displayText;
-                                        lastUpdate = now;
-                                    }
-                                };
-
-                                rsync.stdout.on('data', handleRsyncData);
-                                rsync.stderr.on('data', function(data: any) {
-                                    stderrOutput += data.toString();
-                                    handleRsyncData(data);
-                                });
-
-                                rsync.on('exit', function (code: any) {
-                                    // Exit codes:
-                                    // 0 = success
-                                    // 23 = partial transfer (some files couldn't be transferred)
-                                    // 24 = partial transfer due to vanished source files (files disappeared during transfer)
-                                    // We'll accept these as success since some files being unavailable is okay
-                                    if (code === 0 || code === 23 || code === 24) {
-                                        if (code === 23) {
-                                            logger.info('Partial transfer completed (some files skipped)', { folder });
-                                        } else if (code === 24) {
-                                            logger.info('Partial transfer completed (some source files vanished)', { folder });
-                                        }
-                                        resolve();
-                                    } else if (code === 20) {
-                                        // Exit code 20 often happens when destination has issues but transfer might have completed
-                                        // Log as warning but don't fail
-                                        logger.warn('Rsync exit code 20 (signal received or interrupted), checking if files transferred', { folder });
-
-                                        // Check if destination directory has content (successful transfer)
-                                        try {
-                                            const files = fs.readdirSync(destFolder);
-                                            if (files.length > 0) {
-                                                logger.info('Files were transferred despite exit code 20, marking as success', { folder, fileCount: files.length });
-                                                resolve();
-                                            } else {
-                                                logger.warn('No files transferred, treating as failure', { folder });
-                                                reject(new Error(`Rsync failed for ${folder} with exit code ${code}`));
-                                            }
-                                        } catch (err) {
-                                            logger.warn('Could not check destination directory', { folder, error: (err as Error).message });
-                                            reject(new Error(`Rsync failed for ${folder} with exit code ${code}`));
-                                        }
+                                require('child_process').exec(rsyncCommand, (error: any, stdout: string, stderr: string) => {
+                                    if (error) {
+                                        logger.error('Rsync failed', new Error(`Rsync failed for ${folder}: ${error.message}`));
+                                        logger.info('Rsync stderr', { stderr: stderr.substring(0, 500) });
+                                        reject(error);
                                     } else {
-                                        const errorMsg = `Rsync failed for ${folder} with exit code ${code}`;
-                                        logger.error(errorMsg, new Error(errorMsg));
-                                        logger.info('Failed rsync command', { command: rsyncCommand, source, destination: destFolder });
-                                        if (stderrOutput) {
-                                            logger.info('Rsync stderr output', { stderr: stderrOutput.substring(0, 500) });
-                                        }
-                                        reject(new Error(`${errorMsg}\nSource: ${source}\nDestination: ${destFolder}\nStderr: ${stderrOutput.substring(0, 200)}`));
+                                        logger.info('Folder sync complete', { folder });
+                                        resolve();
                                     }
-                                });
-
-                                rsync.on('error', function (err: any) {
-                                    logger.error('Rsync process error', err);
-                                    reject(err);
                                 });
                             });
 
                             syncedCount++;
-                            logger.info('Folder sync complete', { folder });
                         } catch (error) {
                             // Log the error but continue with other folders
                             const err = error as Error;
