@@ -76,7 +76,7 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
     return new Promise((resolve, _reject) => {
         exec(cmd, (error: ExecException | null, stdout: string, stderr: string) => {
             if (error && !skipErrors) {
-                throw new Error(String(error));
+                throw new Error(`${String(error)}${stdout ? `\nOutput: ${stdout}` : ''}`);
             }
             resolve(stdout ? stdout : stderr);
         });
