@@ -25,7 +25,8 @@ class SelectDatabaseQuestion {
             // Collects database data based on key
             this.databasesModel.collectDatabaseData(databaseKey, config.databases.databaseType, false, config);
 
-            // Set database data in config
+            // Set database key and data in config
+            config.databases.databaseKey = databaseKey;
             config.databases.databaseData = this.databasesModel.databaseData;
 
             // If local folder is set for project, use that as currentFolder

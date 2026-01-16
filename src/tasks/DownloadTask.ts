@@ -357,10 +357,12 @@ class DownloadTask {
                     task.output = EnhancedProgress.step(5, 6, dumpMessage);
 
                     let dumpCommand: string;
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
+                    const timestamp = Math.floor(new Date().getTime() / 1000);
+                    const databaseFileName = `${config.databases.databaseKey}_${config.databases.databaseType}_${timestamp}.sql${compression.extension}`;
 
-                    // Store compression info for later use
+                    // Store both compression info and filename for later use
                     config.compressionInfo = compression;
+                    config.databaseFileName = databaseFileName;
 
                     // Build dump command with best available compression
                     let stripOptions = '';
@@ -605,9 +607,10 @@ class DownloadTask {
                     const databaseServer = shellEscape(config.databases.databaseData.server);
                     const databasePort = config.databases.databaseData.port;
 
-                    // Use the compression info determined during dump
+                    // Use the compression info and filename determined during dump
                     const compression = config.compressionInfo || { type: 'none', extension: '' };
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
+                    const databaseFileName = config.databaseFileName;
+
                     const source = `~/${databaseFileName}`;
                     const destination = config.customConfig.localDatabaseFolderLocation;
                     const escapedSource = shellEscape(source);
@@ -1232,13 +1235,10 @@ class DownloadTask {
                 PerformanceMonitor.start('cleanup');
                 const logger = this.services.getLogger();
 
-                // Clean up Magento database (use the actual filename with compression extension)
-                if (config.serverVariables.databaseName) {
-                    const compression = config.compressionInfo || { type: 'none', extension: '' };
-                    const databaseFileName = `${config.serverVariables.databaseName}.sql${compression.extension}`;
-
-                    logger.info('Cleaning up database file on server', { file: databaseFileName });
-                    await ssh.execCommand(`rm -f ~/${databaseFileName}`);
+                // Clean up Magento database (use the filename stored during dump)
+                if (config.databaseFileName) {
+                    logger.info('Cleaning up database file on server', { file: config.databaseFileName });
+                    await ssh.execCommand(`rm -f ~/${config.databaseFileName}`);
                 }
 
                 // Clean up WordPress database if it was downloaded
