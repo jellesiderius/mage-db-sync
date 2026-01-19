@@ -340,6 +340,9 @@ class ImportTask {
                     // Import the database using magerun2 db:import
                     await this.importDatabase(task, config, sqlFilePath, sqlFileSize);
                     
+                    // Store the imported file path for cleanup
+                    ctx.importedSqlFile = sqlFilePath;
+                    
                     const duration = Date.now() - startTime;
                     const formattedDuration = ProgressDisplay.formatDuration(duration);
                     
@@ -356,18 +359,24 @@ class ImportTask {
                     const logger = this.services.getLogger();
                     task.output = 'Removing temporary SQL files...';
                     
-                    // Clean up SQL files (both compressed and uncompressed)
-                    const cleanupFiles = `${config.serverVariables.databaseName}.sql ${config.serverVariables.databaseName}.sql.gz`;
-                    
-                    await localhostMagentoRootExec(
-                        `rm -f ${cleanupFiles}`, 
-                        config, 
-                        true
-                    );
-                    
-                    logger.info('Cleanup complete', { 
-                        removed: cleanupFiles
-                    });
+                    // Clean up the actual imported SQL file
+                    if (ctx.importedSqlFile && fs.existsSync(ctx.importedSqlFile)) {
+                        fs.unlinkSync(ctx.importedSqlFile);
+                        logger.info('Cleanup complete', { 
+                            removed: ctx.importedSqlFile
+                        });
+                    } else {
+                        // Fallback: try to clean up based on database name (legacy behavior)
+                        const cleanupFiles = `${config.serverVariables.databaseName}.sql ${config.serverVariables.databaseName}.sql.gz`;
+                        await localhostMagentoRootExec(
+                            `rm -f ${cleanupFiles}`, 
+                            config, 
+                            true
+                        );
+                        logger.info('Cleanup complete (fallback)', { 
+                            removed: cleanupFiles
+                        });
+                    }
                     
                     task.output = 'Cleanup complete ✓';
                 }
