@@ -261,79 +261,112 @@ class ImportTask {
                     task.output = 'Locating SQL file...';
                     
                     const currentFolder = config.settings.currentFolder || process.cwd();
-                    const possibleExtensions = ['.sql.gz', '.sql'];
-                    const possiblePaths = [];
-                    
-                    // Build list of possible paths with supported extensions
-                    for (const ext of possibleExtensions) {
-                        possiblePaths.push(`${currentFolder}/${config.serverVariables.databaseName}${ext}`);
-                        if (config.databases?.databaseData?.database) {
-                            possiblePaths.push(`${currentFolder}/${config.databases.databaseData.database}${ext}`);
-                        }
-                        possiblePaths.push(`${currentFolder}/database${ext}`);
-                    }
-                    
                     let sqlFilePath = '';
                     let sqlFileSize = 0;
                     
-                    // Try to find the SQL file
-                    for (const path of possiblePaths) {
-                        if (fs.existsSync(path)) {
-                            sqlFilePath = path;
-                            sqlFileSize = fs.statSync(path).size;
-                            
-                            const compressionType = path.endsWith('.gz') ? 'gzip' : 'none';
-                            const isCompressed = compressionType !== 'none';
-                            
-                            logger.info('Found SQL file', { 
-                                path, 
-                                size: sqlFileSize, 
-                                compressed: isCompressed, 
-                                compressionType 
-                            });
-                            
-                            task.output = `Found SQL file: ${ProgressDisplay.formatBytes(sqlFileSize)}${isCompressed ? ` (${compressionType})` : ' (uncompressed)'}`;
-                            break;
-                        }
-                    }
-                    
-                    // If not found, scan directory
-                    if (!sqlFilePath || sqlFileSize === 0) {
-                        logger.warn('SQL file not found in expected locations, scanning directory...', { 
-                            tried: possiblePaths,
-                            currentFolder
+                    // First, check if the download task set the exact file location
+                    // This is the most reliable way to find the correct Magento database file
+                    if (config.finalMessages?.magentoDatabaseLocation && 
+                        fs.existsSync(config.finalMessages.magentoDatabaseLocation)) {
+                        sqlFilePath = config.finalMessages.magentoDatabaseLocation;
+                        sqlFileSize = fs.statSync(sqlFilePath).size;
+                        
+                        const compressionType = sqlFilePath.endsWith('.gz') ? 'gzip' : 'none';
+                        const isCompressed = compressionType !== 'none';
+                        
+                        logger.info('Using Magento database from download task', { 
+                            path: sqlFilePath, 
+                            size: sqlFileSize, 
+                            compressed: isCompressed, 
+                            compressionType 
                         });
                         
-                        try {
-                            const files = fs.readdirSync(currentFolder);
-                            const sqlFiles = files.filter((f: string) => 
-                                f.endsWith('.sql') || 
-                                f.endsWith('.sql.gz')
-                            );
-                            
-                            if (sqlFiles.length > 0) {
-                                // Prefer gzip compressed files over uncompressed
-                                const gzFiles = sqlFiles.filter((f: string) => f.endsWith('.gz'));
-                                const fileToUse = gzFiles.length > 0 ? gzFiles[0] : sqlFiles[0];
+                        task.output = `Found SQL file: ${ProgressDisplay.formatBytes(sqlFileSize)}${isCompressed ? ` (${compressionType})` : ' (uncompressed)'}`;
+                    }
+                    
+                    // Fallback: Try common naming patterns
+                    if (!sqlFilePath || sqlFileSize === 0) {
+                        const possibleExtensions = ['.sql.gz', '.sql'];
+                        const possiblePaths = [];
+                        
+                        // Build list of possible paths with supported extensions
+                        for (const ext of possibleExtensions) {
+                            possiblePaths.push(`${currentFolder}/${config.serverVariables.databaseName}${ext}`);
+                            if (config.databases?.databaseData?.database) {
+                                possiblePaths.push(`${currentFolder}/${config.databases.databaseData.database}${ext}`);
+                            }
+                            possiblePaths.push(`${currentFolder}/database${ext}`);
+                        }
+                        
+                        // Try to find the SQL file
+                        for (const path of possiblePaths) {
+                            if (fs.existsSync(path)) {
+                                sqlFilePath = path;
+                                sqlFileSize = fs.statSync(path).size;
                                 
-                                sqlFilePath = `${currentFolder}/${fileToUse}`;
-                                sqlFileSize = fs.statSync(sqlFilePath).size;
+                                const compressionType = path.endsWith('.gz') ? 'gzip' : 'none';
+                                const isCompressed = compressionType !== 'none';
                                 
-                                const compressionType = fileToUse.endsWith('.gz') ? 'gzip' : 'none';
-                                
-                                logger.info('Using SQL file found in directory', { 
-                                    path: sqlFilePath, 
+                                logger.info('Found SQL file', { 
+                                    path, 
                                     size: sqlFileSize, 
+                                    compressed: isCompressed, 
                                     compressionType 
                                 });
                                 
-                                task.output = `Using: ${fileToUse} (${ProgressDisplay.formatBytes(sqlFileSize)})`;
-                            } else {
-                                throw new Error(`No SQL files found in: ${currentFolder}`);
+                                task.output = `Found SQL file: ${ProgressDisplay.formatBytes(sqlFileSize)}${isCompressed ? ` (${compressionType})` : ' (uncompressed)'}`;
+                                break;
                             }
-                        } catch (e) {
-                            logger.error('Error scanning directory', e as Error);
-                            throw new Error(`Cannot find SQL file in: ${currentFolder}`);
+                        }
+                        
+                        // If still not found, scan directory but exclude WordPress databases
+                        if (!sqlFilePath || sqlFileSize === 0) {
+                            logger.warn('SQL file not found in expected locations, scanning directory...', { 
+                                tried: possiblePaths,
+                                currentFolder
+                            });
+                            
+                            try {
+                                const files = fs.readdirSync(currentFolder);
+                                
+                                // Filter SQL files, excluding known WordPress database patterns
+                                const wordpressDbName = config.wordpressConfig?.database || '';
+                                const sqlFiles = files.filter((f: string) => {
+                                    if (!f.endsWith('.sql') && !f.endsWith('.sql.gz')) {
+                                        return false;
+                                    }
+                                    // Exclude WordPress database files
+                                    if (wordpressDbName && f.startsWith(wordpressDbName)) {
+                                        logger.info('Excluding WordPress database from scan', { file: f });
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                                
+                                if (sqlFiles.length > 0) {
+                                    // Prefer gzip compressed files over uncompressed
+                                    const gzFiles = sqlFiles.filter((f: string) => f.endsWith('.gz'));
+                                    const fileToUse = gzFiles.length > 0 ? gzFiles[0] : sqlFiles[0];
+                                    
+                                    sqlFilePath = `${currentFolder}/${fileToUse}`;
+                                    sqlFileSize = fs.statSync(sqlFilePath).size;
+                                    
+                                    const compressionType = fileToUse.endsWith('.gz') ? 'gzip' : 'none';
+                                    
+                                    logger.info('Using SQL file found in directory', { 
+                                        path: sqlFilePath, 
+                                        size: sqlFileSize, 
+                                        compressionType 
+                                    });
+                                    
+                                    task.output = `Using: ${fileToUse} (${ProgressDisplay.formatBytes(sqlFileSize)})`;
+                                } else {
+                                    throw new Error(`No SQL files found in: ${currentFolder}`);
+                                }
+                            } catch (e) {
+                                logger.error('Error scanning directory', e as Error);
+                                throw new Error(`Cannot find SQL file in: ${currentFolder}`);
+                            }
                         }
                     }
                     
