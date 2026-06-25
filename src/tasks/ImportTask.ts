@@ -25,15 +25,70 @@ class ImportTask {
      * Simplified import using magerun2 db:import exclusively
      * magerun2 handles gzip compression natively!
      */
-    private async importDatabase(
-        task: any, 
-        config: any, 
-        sqlFilePath: string, 
+    private async importDatabaseMysql(
+        task: any,
+        config: any,
+        sqlFilePath: string,
         sqlFileSize: number
     ): Promise<void> {
         const logger = this.services.getLogger();
+        const { spawn, execFileSync } = require('child_process');
+
+        // Resolve Magento root — prefer the inline localPath option over config (which may still
+        // point to process.cwd() if something upstream didn't set currentFolder)
+        const magentoRoot = config.settings.nonInteractiveOptions?.localPath
+            || config.settings.currentFolder
+            || process.cwd();
+
+        // Read DB credentials from local env.php — use execFileSync with args array so the
+        // shell never sees the PHP code and cannot expand $variable placeholders
+        const envPhpPath = `${magentoRoot}/app/etc/env.php`;
+        const phpCode = `$e=include('${envPhpPath}');$db=$e['db']['connection']['default'];$h=$db['host']??'127.0.0.1';$p='3306';if(strpos($h,':')!==false){list($h,$p)=explode(':',$h,2);}echo $h.' '.$p.' '.$db['dbname'].' '.$db['username'].' '.$db['password'];`;
+        const creds = execFileSync('php', ['-r', phpCode], { encoding: 'utf8' }).trim().split(' ');
+        const [dbHost, dbPort, dbName, dbUser, dbPass] = creds;
+
+        task.output = `Importing via mysql (${sqlFileSize > 0 ? Math.round(sqlFileSize / 1024 / 1024) + ' MB' : 'unknown size'})...`;
+        logger.info('Importing database via mysql fallback', { host: dbHost, db: dbName });
+
+        const isGzip = sqlFilePath.endsWith('.gz');
+        const shellCmd = isGzip
+            ? `gunzip -c '${sqlFilePath}' | mysql -h '${dbHost}' -P '${dbPort}' -u '${dbUser}' '-p${dbPass}' '${dbName}'`
+            : `mysql -h '${dbHost}' -P '${dbPort}' -u '${dbUser}' '-p${dbPass}' '${dbName}' < '${sqlFilePath}'`;
+
+        await new Promise<void>((resolve, reject) => {
+            const proc = spawn('sh', ['-c', shellCmd]);
+            proc.stderr.on('data', (data: Buffer) => {
+                const msg = data.toString();
+                if (!msg.includes('Using a password')) {
+                    logger.debug('mysql stderr', { msg });
+                }
+            });
+            proc.on('close', (code: number) => {
+                if (code === 0) resolve();
+                else reject(new Error(`mysql import failed with exit code ${code}`));
+            });
+            proc.on('error', (err: Error) => reject(err));
+        });
+
+        task.output = 'Import complete (mysql)';
+        logger.info('mysql fallback import complete');
+    }
+
+    private async importDatabase(
+        task: any,
+        config: any,
+        sqlFilePath: string,
+        sqlFileSize: number
+    ): Promise<void> {
+        // Use raw mysql if magerun2 is unavailable, or if it runs via docker exec
+        // (docker exec can't access the SQL file on the Mac host)
+        if (config.settings.noLocalMagerun || config.settings.magerun2CommandLocal?.includes('docker exec')) {
+            return this.importDatabaseMysql(task, config, sqlFilePath, sqlFileSize);
+        }
+
+        const logger = this.services.getLogger();
         const startTime = Date.now();
-        
+
         // Detect compression type from filename (only gzip supported)
         const compressionType = sqlFilePath.endsWith('.gz') ? 'gzip' : 'none';
         const isCompressed = compressionType !== 'none';
@@ -250,12 +305,14 @@ class ImportTask {
                         database: config.serverVariables.databaseName
                     });
 
-                    // Create database first
-                    task.output = 'Creating database...';
-                    await localhostMagentoRootExec(
-                        `${config.settings.magerun2CommandLocal} db:create -q`, 
-                        config
-                    );
+                    // Create database first (skip when using mysql fallback — DB already exists)
+                    if (!config.settings.noLocalMagerun) {
+                        task.output = 'Creating database...';
+                        await localhostMagentoRootExec(
+                            `${config.settings.magerun2CommandLocal} db:create -q`,
+                            config
+                        );
+                    }
                     
                     // Find SQL file
                     task.output = 'Locating SQL file...';
@@ -370,6 +427,30 @@ class ImportTask {
                         }
                     }
                     
+                    // Backup existing local DB before overwriting (if --backup)
+                    if (config.settings.nonInteractiveOptions?.backup) {
+                        task.output = 'Backing up existing local database...';
+                        const { execFileSync, spawnSync } = require('child_process');
+                        const magentoRoot = config.settings.nonInteractiveOptions?.localPath
+                            || config.settings.currentFolder
+                            || process.cwd();
+                        const envPhpPath = `${magentoRoot}/app/etc/env.php`;
+                        const phpCode = `$e=include('${envPhpPath}');$db=$e['db']['connection']['default'];$h=$db['host']??'127.0.0.1';$p='3306';if(strpos($h,':')!==false){list($h,$p)=explode(':',$h,2);}echo $h.' '.$p.' '.$db['dbname'].' '.$db['username'].' '.$db['password'];`;
+                        const creds = execFileSync('php', ['-r', phpCode], { encoding: 'utf8' }).trim().split(' ');
+                        const [bHost, bPort, bName, bUser, bPass] = creds;
+                        const ts = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+                        const backupPath = `${config.customConfig.localDatabaseFolderLocation || process.cwd()}/local-backup-${ts}.sql.gz`;
+                        const backupResult = spawnSync('sh', ['-c',
+                            `mysqldump -h '${bHost}' -P '${bPort}' -u '${bUser}' '-p${bPass}' '${bName}' | gzip -1 > '${backupPath}'`
+                        ]);
+                        if (backupResult.status !== 0) {
+                            const logger = this.services.getLogger();
+                            logger.warn('Local database backup failed (continuing)', { backupPath });
+                        } else {
+                            task.output = `Backup saved → ${backupPath}`;
+                        }
+                    }
+
                     // Import the database using magerun2 db:import
                     await this.importDatabase(task, config, sqlFilePath, sqlFileSize);
                     

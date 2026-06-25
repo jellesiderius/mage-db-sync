@@ -1,14 +1,34 @@
 import { error } from "console";
 import inquirer from 'inquirer'
 import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
+import { NonInteractiveOptions } from "../types";
 
 class ConfigurationQuestions {
     private questionsOne: any[] = [];
     private questionsTwo: any[] = [];
     private questionsThree: any[] = [];
 
-    configure = async (config: any) => {
+    configure = async (config: any, opts?: NonInteractiveOptions) => {
         inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);
+
+        // Non-interactive: apply strip and import options directly without prompting
+        if (opts?.nonInteractive) {
+            if (opts.strip !== undefined && config.settings.syncTypes && config.settings.syncTypes.includes('Magento database')) {
+                config.settings.stripMode = 'preset';
+                // strip='none' maps to 'full' (download the complete database unmodified)
+                config.settings.strip = opts.strip === 'none' ? 'full' : opts.strip;
+            }
+
+            if (opts.import !== undefined && config.settings.currentFolderIsMagento && config.settings.syncTypes && config.settings.syncTypes.includes('Magento database')) {
+                config.settings.import = opts.import;
+                if (config.settings.import === 'yes') {
+                    config.customConfig.localDatabaseFolderLocation = config.settings.currentFolder;
+                }
+            }
+
+            return;
+        }
+
         await this.addQuestions(config);
 
         // Set import configs
@@ -17,7 +37,7 @@ class ConfigurationQuestions {
             .then((answers) => {
                 // Set stripped setting
                 config.settings.stripMode = answers.stripMode;
-                
+
                 if (answers.stripMode === 'preset') {
                     config.settings.strip = answers.strip;
                 } else if (answers.stripMode === 'custom') {
@@ -40,7 +60,7 @@ class ConfigurationQuestions {
 
                 // Set wordpress download value
                 config.settings.wordpressDownload = answers.wordpressDownload;
-                
+
                 // Set wordpress uploads sync value (only asked if Images is checked)
                 if (answers.wordpressUploadsSync) {
                     config.settings.wordpressUploadsSync = answers.wordpressUploadsSync;
@@ -106,7 +126,7 @@ class ConfigurationQuestions {
                     name: 'strip',
                     default: 'stripped',
                     message: 'Select a preset configuration:',
-                    choices: ['stripped', 'keep customer data', 'full', 'full and human readable'],
+                    choices: ['stripped', 'keep customer data', 'anonymized', 'full', 'full and human readable'],
                     when: (answers: any) => answers.stripMode === 'preset'
                 },
                 {

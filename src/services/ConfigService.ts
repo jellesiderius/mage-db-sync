@@ -128,7 +128,7 @@ export class ConfigService {
                 localDomainExtension: this.settingsConfig.general.localDomainExtension
             },
             requirements: {
-                magerun2Version: '7.4.0'
+                magerun2Version: '9.5.1'
             },
             serverVariables: {
                 magentoVersion: 2,

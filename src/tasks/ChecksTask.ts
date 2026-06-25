@@ -221,9 +221,22 @@ class ChecksTask {
                         return true;
                     }
 
-                    let installedMagerun2Version: any = await consoleCommand('magerun2 -V', false);
-                    installedMagerun2Version = String(installedMagerun2Version).split(' ')[1];
+                    const magerun2Cmd = config.settings.magerun2CommandLocal || 'magerun2';
+                    // Use skipErrors=true so a missing binary resolves instead of crashing the process
+                    const magerun2Output = String(await consoleCommand(`${magerun2Cmd} -V`, true));
 
+                    if (magerun2Output.includes('not found') || magerun2Output.includes('No such file')) {
+                        config.settings.noLocalMagerun = true;
+                        task.output = 'magerun2 not found locally — will use mysql fallback for import';
+                        return true;
+                    }
+
+                    if (magerun2Output.includes('Magento Core Commands cannot be loaded')) {
+                        config.settings.noMagentoCoreCommands = true;
+                        task.output = 'magerun2 found but Magento Core not loadable — DB commands work, Magento-native commands skipped';
+                    }
+
+                    let installedMagerun2Version: any = magerun2Output.split(' ')[1];
                     task.output = `Found Magerun2 v${installedMagerun2Version}`;
 
                     if (installedMagerun2Version < config.requirements.magerun2Version) {
@@ -248,8 +261,16 @@ class ChecksTask {
                             return true;
                         }
 
+                        // Skip when magerun2 is unavailable or a custom command (e.g. docker exec)
+                        if (config.settings.noLocalMagerun ||
+                            (config.settings.magerun2CommandLocal && config.settings.magerun2CommandLocal !== 'magerun2')) {
+                            task.output = 'Skipping DB host check (magerun2 unavailable)';
+                            return true;
+                        }
+
+                        const magerun2Cmd = config.settings.magerun2CommandLocal || 'magerun2';
                         let host = await localhostMagentoRootExec(
-                            `magerun2 db:info --format=json`,
+                            `${magerun2Cmd} db:info --format=json`,
                             config
                         );
                         host = JSON.parse(host as string);

@@ -1,12 +1,26 @@
 import { error } from "console";
 import inquirer from 'inquirer'
 import DatabasesModel from "../models/DatabasesModel";
+import { NonInteractiveOptions } from "../types";
 
 class DatabaseTypeQuestion {
     private databasesModel = new DatabasesModel();
     private questions: any[] = [];
 
-    configure = async (config: any) => {
+    configure = async (config: any, opts?: NonInteractiveOptions) => {
+        // Inline mode: source/target were already applied by StartController.applyInlineParams
+        if (opts?.inlineMode) {
+            return;
+        }
+
+        // Non-interactive: use provided database type directly
+        if (opts?.databaseType) {
+            config.databases.databaseType = opts.databaseType;
+            await this.databasesModel.collectDatabaseData('', opts.databaseType, false, config);
+            config.databases.databasesList = this.databasesModel.databasesList;
+            return;
+        }
+
         await this.addQuestions(config);
 
         // Set database type

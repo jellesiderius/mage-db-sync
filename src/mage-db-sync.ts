@@ -13,6 +13,7 @@ import { ServiceContainer } from './core/ServiceContainer';
 import { ConfigInitializer } from './utils/ConfigInitializer';
 import { ConfigPathResolver } from './utils/ConfigPathResolver';
 import {UI} from "./utils/UI";
+import { NonInteractiveOptions } from './types';
 
 // Remove warning listeners
 process.removeAllListeners('warning');
@@ -132,9 +133,105 @@ async function main() {
         program
             .command('start')
             .description('Start database synchronization')
-            .action(async () => {
+            .option('-y, --non-interactive', 'Skip all prompts; fail if required flags are missing')
+            .option('--database-type <type>', 'Database type: staging | production')
+            .option('--database <key>', 'Exact key from databases JSON config')
+            .option('--strip <mode>', 'Strip mode: stripped | "keep customer data" | full | "full and human readable" | none')
+            .option('--import <yes|no>', 'Whether to import the DB locally after download')
+            .option('--no-import', 'Shorthand for --import=no')
+            .option('--sync-types <types>', 'Comma-separated sync types: "Magento database,media" etc.')
+            .option('--target <target>', 'Target: local | staging (default: local)')
+            .option('--staging-base-url <url>', 'Base URL to set on staging after import (optional)')
+            .option('--source-ssh <user@host>', 'SSH login for source server (skips config file lookup)')
+            .option('--source-path <path>', 'Absolute Magento root path on source server')
+            .option('--source-port <n>', 'SSH port for source (default: 22)', parseInt)
+            .option('--ssh-key <path>', 'SSH private key path (applies to both source and target)')
+            .option('--target-ssh <user@host>', 'SSH login for remote staging target')
+            .option('--target-path <path>', 'Absolute Magento root path on staging target')
+            .option('--target-port <n>', 'SSH port for target (default: 22)', parseInt)
+            .option('--local-path <path>', 'Local Magento root path (for --target=local inline mode)')
+            .option('--local-magerun2 <cmd>', 'Override local magerun2 command (e.g. "docker exec mycontainer magerun2")')
+            .option('--backup', 'Dump the target database before overwriting it')
+            .action(async (cmdOptions) => {
+                const opts: NonInteractiveOptions = {};
+
+                if (cmdOptions.nonInteractive) {
+                    opts.nonInteractive = true;
+                }
+                if (cmdOptions.databaseType) {
+                    opts.databaseType = cmdOptions.databaseType as 'staging' | 'production';
+                }
+                if (cmdOptions.database) {
+                    opts.database = cmdOptions.database;
+                }
+                if (cmdOptions.strip) {
+                    opts.strip = cmdOptions.strip as NonInteractiveOptions['strip'];
+                }
+                // --no-import sets cmdOptions.import to false; explicit --import <yes|no> gives a string
+                if (cmdOptions.import === false) {
+                    opts.import = 'no';
+                } else if (typeof cmdOptions.import === 'string') {
+                    opts.import = cmdOptions.import as 'yes' | 'no';
+                }
+                if (cmdOptions.syncTypes) {
+                    opts.syncTypes = (cmdOptions.syncTypes as string).split(',').map((s: string) => s.trim());
+                }
+                if (cmdOptions.target) {
+                    opts.target = cmdOptions.target as 'local' | 'staging';
+                }
+                if (cmdOptions.stagingBaseUrl) {
+                    opts.stagingBaseUrl = cmdOptions.stagingBaseUrl;
+                }
+                if (cmdOptions.sourceSsh) {
+                    opts.sourceSsh = cmdOptions.sourceSsh;
+                    opts.inlineMode = true;
+                    opts.nonInteractive = true;
+                }
+                if (cmdOptions.sourcePath) {
+                    opts.sourcePath = cmdOptions.sourcePath;
+                }
+                if (cmdOptions.sourcePort) {
+                    opts.sourcePort = cmdOptions.sourcePort;
+                }
+                if (cmdOptions.sshKey) {
+                    opts.sshKey = cmdOptions.sshKey;
+                }
+                if (cmdOptions.targetSsh) {
+                    opts.targetSsh = cmdOptions.targetSsh;
+                }
+                if (cmdOptions.targetPath) {
+                    opts.targetPath = cmdOptions.targetPath;
+                }
+                if (cmdOptions.targetPort) {
+                    opts.targetPort = cmdOptions.targetPort;
+                }
+                if (cmdOptions.localPath) {
+                    opts.localPath = cmdOptions.localPath;
+                }
+                if (cmdOptions.localMagerun2) {
+                    opts.localMagerun2 = cmdOptions.localMagerun2;
+                }
+                if (cmdOptions.backup) {
+                    opts.backup = true;
+                }
+
+                // Self-sync guard for inline mode
+                if (opts.inlineMode && opts.sourceSsh && opts.targetSsh) {
+                    if (opts.sourceSsh === opts.targetSsh && opts.sourcePath === opts.targetPath) {
+                        error('Source and target are identical — refusing to sync a server to itself.');
+                        process.exit(1);
+                    }
+                }
+
+                if (opts.nonInteractive && !opts.inlineMode) {
+                    if (!opts.databaseType || !opts.database) {
+                        error('--non-interactive requires both --database-type and --database to be set.');
+                        process.exit(1);
+                    }
+                }
+
                 const controller = new StartController();
-                await controller.execute();
+                await controller.execute(opts);
             });
 
         // Open folder command

@@ -109,10 +109,14 @@ export interface AppConfig {
         runCommands: boolean;
         magerun2Command: string;
         magerun2CommandLocal: string;
+        noLocalMagerun?: boolean;
+        noMagentoCoreCommands?: boolean;
         wpCommandLocal: string;
         databaseCommand: string;
         syncImageTypes: string[] | null;
         syncTypes: string[] | null;
+        remoteStagingSync?: boolean;
+        nonInteractiveOptions?: NonInteractiveOptions;
     };
     finalMessages: {
         magentoDatabaseLocation: string;
@@ -127,7 +131,10 @@ export interface AppConfig {
     databases: {
         databasesList: DatabaseListItem[] | null;
         databaseType: string | null;
+        databaseKey?: string | null;
         databaseData: DatabaseConfig | null;
+        stagingDatabaseData?: DatabaseConfig | null;
+        stagingDatabaseKey?: string | null;
     };
     wordpressConfig: {
         prefix: string;
@@ -156,6 +163,28 @@ export interface CommandResult {
     exitCode: number;
 }
 
+export interface NonInteractiveOptions {
+    nonInteractive?: boolean;
+    databaseType?: 'staging' | 'production';
+    database?: string;
+    strip?: 'stripped' | 'keep customer data' | 'full' | 'full and human readable' | 'anonymized' | 'none';
+    import?: 'yes' | 'no';
+    syncTypes?: string[];
+    target?: 'local' | 'staging';
+    stagingBaseUrl?: string;
+    inlineMode?: boolean;
+    sourceSsh?: string;
+    sourcePath?: string;
+    sourcePort?: number;
+    sshKey?: string;
+    targetSsh?: string;
+    targetPath?: string;
+    targetPort?: number;
+    localPath?: string;
+    localMagerun2?: string;
+    backup?: boolean;
+}
+
 export type DatabaseType = 'staging' | 'production';
-export type StripType = 'development' | 'keep customer data' | 'full and human readable' | 'staging';
+export type StripType = 'development' | 'keep customer data' | 'full and human readable' | 'staging' | 'full' | 'anonymized';
 export type SyncType = 'media' | 'pub/media' | 'var/import';

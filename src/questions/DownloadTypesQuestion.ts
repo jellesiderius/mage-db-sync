@@ -1,11 +1,18 @@
 import { error } from "console";
 import inquirer from 'inquirer'
 import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
+import { NonInteractiveOptions } from "../types";
 
 class DownloadTypesQuestion {
     private questionsOne: any[] = [];
 
-    configure = async (config: any) => {
+    configure = async (config: any, opts?: NonInteractiveOptions) => {
+        // Non-interactive: use provided sync types directly
+        if (opts?.syncTypes) {
+            config.settings.syncTypes = opts.syncTypes;
+            return;
+        }
+
         inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);
         await this.addQuestions(config);
 

@@ -93,6 +93,37 @@ class DatabasesModel {
             }
         }
     }
+
+    // Load staging connection details by key from staging.json into config.databases.stagingDatabaseData
+    collectStagingDatabaseData = (stagingKey: string, config: any): void => {
+        const dbFilePath = ConfigPathResolver.resolveConfigPathOrThrow('databases/staging.json');
+        const dbConfig = JSON.parse(fs.readFileSync(dbFilePath, 'utf-8'));
+        const databases: Record<string, any> = dbConfig.databases;
+
+        if (!databases[stagingKey]) {
+            throw new Error(`Staging database key "${stagingKey}" not found in staging.json`);
+        }
+
+        const db = databases[stagingKey];
+        config.databases.stagingDatabaseKey = stagingKey;
+        config.databases.stagingDatabaseData = {
+            username: db.username,
+            password: db.password || '',
+            server: db.server,
+            domainFolder: db.domainFolder,
+            port: parseInt(db.port) || 22,
+            localProjectFolder: db.localProjectFolder || '',
+            externalProjectFolder: db.externalProjectFolder,
+            wordpress: db.wordpress || false,
+            externalPhpPath: db.externalPhpPath || '',
+            localProjectUrl: db.localProjectUrl || '',
+            commandsFolder: db.commandsFolder || '',
+            sshKeyName: db.sshKeyName || '',
+            sshKeyLocation: db.sshKeyName
+                ? `${os.userInfo().homedir}/.ssh/${db.sshKeyName}`
+                : config.customConfig.sshKeyLocation,
+        };
+    }
 }
 
 export default DatabasesModel;

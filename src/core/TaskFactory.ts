@@ -13,6 +13,7 @@ import DownloadTask from '../tasks/DownloadTask';
 import ImportTask from '../tasks/ImportTask';
 import MagentoConfigureTask from '../tasks/MagentoConfigureTask';
 import WordpressConfigureTask from '../tasks/WordpressConfigureTask';
+import StagingDeployTask from '../tasks/StagingDeployTask';
 
 export class TaskFactory {
     private static instance: TaskFactory;
@@ -62,5 +63,12 @@ export class TaskFactory {
      */
     public createWordpressConfigureTask(): WordpressConfigureTask {
         return new WordpressConfigureTask();
+    }
+
+    /**
+     * Create StagingDeployTask instance
+     */
+    public createStagingDeployTask(): StagingDeployTask {
+        return new StagingDeployTask();
     }
 }

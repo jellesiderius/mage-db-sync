@@ -27,6 +27,32 @@ class MagentoConfigureTask {
      * Execute SQL query - uses direct MySQL for DDEV, magerun2 for standard
      * This is much faster for DDEV as it skips the magerun2 wrapper
      */
+    private getMysqlCreds(config: any): {host: string, port: string, db: string, user: string, pass: string} {
+        const { execFileSync } = require('child_process');
+        const magentoRoot = config.settings.nonInteractiveOptions?.localPath
+            || config.settings.currentFolder
+            || process.cwd();
+        const envPhpPath = `${magentoRoot}/app/etc/env.php`;
+        const phpCode = `$e=include('${envPhpPath}');$db=$e['db']['connection']['default'];$h=$db['host']??'127.0.0.1';$p='3306';if(strpos($h,':')!==false){list($h,$p)=explode(':',$h,2);}echo $h.' '.$p.' '.$db['dbname'].' '.$db['username'].' '.$db['password'];`;
+        const parts = execFileSync('php', ['-r', phpCode], { encoding: 'utf8' }).trim().split(' ');
+        return { host: parts[0], port: parts[1], db: parts[2], user: parts[3], pass: parts[4] };
+    }
+
+    private async runMysqlQuery(query: string, config: any, skipErrors = false): Promise<string> {
+        const { execFileSync } = require('child_process');
+        const c = this.getMysqlCreds(config);
+        try {
+            const result = execFileSync('mysql',
+                ['-h', c.host, '-P', c.port, '-u', c.user, `-p${c.pass}`, c.db, '-e', query],
+                { encoding: 'utf8' }
+            );
+            return result || '';
+        } catch (err: any) {
+            if (skipErrors) return '';
+            throw err;
+        }
+    }
+
     private async executeQuery(query: string, config: any): Promise<void> {
         if (config.settings.isDdevActive) {
             // Direct MySQL for DDEV - much faster!
@@ -34,6 +60,8 @@ class MagentoConfigureTask {
                 .replace(/\\/g, '\\\\')  // Escape backslashes first
                 .replace(/"/g, '\\"');    // Then escape double quotes
             await localhostMagentoRootExec(`ddev mysql -e "${escapedQuery}"`, config);
+        } else if (config.settings.noLocalMagerun) {
+            await this.runMysqlQuery(query, config);
         } else {
             // Standard environment uses magerun2
             await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${query}"`, config);
@@ -63,6 +91,8 @@ class MagentoConfigureTask {
                         let result: string;
                         if (config.settings.isDdevActive) {
                             result = await localhostMagentoRootExec(`ddev mysql -e "${query}"`, config, true) as string;
+                        } else if (config.settings.noLocalMagerun) {
+                            result = await this.runMysqlQuery(query, config, true);
                         } else {
                             result = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:query "${query}"`, config, true) as string;
                         }
@@ -257,19 +287,24 @@ class MagentoConfigureTask {
                     // This is faster than running 3 separate commands
                     const dbQuery = `DELETE FROM admin_user; ALTER TABLE admin_user AUTO_INCREMENT = 1;`;
                     
-                    // Run db query and auth entries in parallel
-                    await Promise.all([
-                        this.executeQuery(dbQuery, config),
-                        localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config)
-                    ]);
+                    if (config.settings.noLocalMagerun || config.settings.noMagentoCoreCommands) {
+                        // mysql/db-only fallback: only run the SQL part; skip auth entries and admin:user:create
+                        await this.executeQuery(dbQuery, config);
+                    } else {
+                        // Run db query and auth entries in parallel
+                        await Promise.all([
+                            this.executeQuery(dbQuery, config),
+                            localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} db:add-default-authorization-entries`, config)
+                        ]);
 
-                    // Create a new admin user
-                    const settingsConfig = this.services.getConfig().getSettingsConfig();
-                    const createUserCmd = config.settings.isDdevActive
-                        ? `ddev exec bin/magento admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`
-                        : `${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`;
-                    
-                    await localhostMagentoRootExec(createUserCmd, config);
+                        // Create a new admin user
+                        const settingsConfig = this.services.getConfig().getSettingsConfig();
+                        const createUserCmd = config.settings.isDdevActive
+                            ? `ddev exec bin/magento admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`
+                            : `${config.settings.magerun2CommandLocal} admin:user:create --admin-user=${settingsConfig.magentoBackend.adminUsername} --admin-password=${settingsConfig.magentoBackend.adminPassword} --admin-email=${settingsConfig.magentoBackend.adminEmailAddress} --admin-firstname=Firstname --admin-lastname=Lastname`;
+
+                        await localhostMagentoRootExec(createUserCmd, config);
+                    }
                 }
             }
         );
@@ -301,7 +336,11 @@ class MagentoConfigureTask {
             {
                 title: 'Configuring cache',
                 task: async (): Promise<void> => {
-                    await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
+                    if (config.settings.noLocalMagerun) {
+                        await this.executeQuery(`INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', 0, 'system/full_page_cache/caching_application', '1') ON DUPLICATE KEY UPDATE value = '1';`, config);
+                    } else {
+                        await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:set system/full_page_cache/caching_application 1`, config);
+                    }
                 }
             }
         );
@@ -311,6 +350,7 @@ class MagentoConfigureTask {
                 {
                     title: 'Removing placeholder configuration',
                     task: async (): Promise<void> => {
+                        if (config.settings.noLocalMagerun) return;
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} config:store:delete catalog/placeholder/* --all`, config);
                     }
                 }
@@ -321,6 +361,7 @@ class MagentoConfigureTask {
             {
                 title: 'Creating a dummy customer on every website',
                 task: async (): Promise<void> => {
+                    if (config.settings.noLocalMagerun || config.settings.noMagentoCoreCommands) return;
                     // Create new dummy customers for all websites IN PARALLEL - MUCH faster!
                     // Get all websites
                     let allWebsites = await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:website:list --format=json`, config);
@@ -368,6 +409,7 @@ class MagentoConfigureTask {
             {
                 title: 'Synchronizing module versions on localhost',
                 task: async (): Promise<void> => {
+                    if (config.settings.noLocalMagerun || config.settings.noMagentoCoreCommands) return;
                     // Downgrade module data in database
                     if (config.settings.isDdevActive) {
                         await localhostMagentoRootExec(`${config.settings.magerun2CommandLocal} sys:setup:downgrade-versions`, config, true);
@@ -387,7 +429,7 @@ class MagentoConfigureTask {
                     task: async (): Promise<void> => {
 
                         // Magerun2 commands
-                        if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
+                        if (!config.settings.noLocalMagerun && config.settings.magerun2Command && config.settings.magerun2Command.length > 0) {
                             await localhostMagentoRootExec(config.settings.magerun2Command, config, false, true);
                         }
 
@@ -468,6 +510,30 @@ class MagentoConfigureTask {
             {
                 title: 'Reindexing & flushing Magento caches',
                 task: async (): Promise<void> => {
+                    if (config.settings.noLocalMagerun || config.settings.noMagentoCoreCommands) {
+                        // Gather URLs via SQL
+                        const { execFileSync } = require('child_process');
+                        const magentoRoot = config.settings.nonInteractiveOptions?.localPath || config.settings.currentFolder || process.cwd();
+                        const envPhpPath = `${magentoRoot}/app/etc/env.php`;
+                        const phpCode = `$e=include('${envPhpPath}');$db=$e['db']['connection']['default'];$h=$db['host']??'127.0.0.1';$p='3306';if(strpos($h,':')!==false){list($h,$p)=explode(':',$h,2);}echo $h.' '.$p.' '.$db['dbname'].' '.$db['username'].' '.$db['password'];`;
+                        const creds = execFileSync('php', ['-r', phpCode], { encoding: 'utf8' }).trim().split(' ');
+                        const [dbHost, dbPort, dbName, dbUser, dbPass] = creds;
+                        try {
+                            const urlRows = execFileSync('mysql', [
+                                `-h${dbHost}`, `-P${dbPort}`, `-u${dbUser}`, `-p${dbPass}`, dbName,
+                                '-BNe', `SELECT value FROM core_config_data WHERE path = 'web/secure/base_url' AND scope = 'default' LIMIT 1`
+                            ], { encoding: 'utf8' }).trim();
+                            if (urlRows) {
+                                const url = urlRows.split('\n')[0].trim();
+                                if (url && !config.finalMessages.domains.includes(url)) {
+                                    config.finalMessages.domains.push(url);
+                                }
+                            }
+                        } catch (_e) {
+                            // URL gathering failed — not critical
+                        }
+                        return;
+                    }
                     // Run cache and reindex operations separately for better error handling
                     if (config.settings.elasticSearchUsed) {
                         // Clear search engine index (ignore errors if doesn't exist)
