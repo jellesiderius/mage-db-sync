@@ -92,13 +92,12 @@ class ImportTask {
             const avgSpeed = elapsed > 0 ? (estimatedBytes / (elapsed / 1000)) : 0;
             
             // Show different status based on phase
-            let statusText = '';
             if (isInFinalPhase) {
                 const elapsedSeconds = Math.floor(elapsed / 1000);
-                statusText = chalk.yellow(`(finalizing database... ${elapsedSeconds}s elapsed)`);
+                const statusText = chalk.yellow(`(finalizing database... ${elapsedSeconds}s elapsed)`);
                 task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${statusText}`;
             } else if (percentage >= 80) {
-                statusText = chalk.yellow('(processing indexes and constraints...)');
+                const statusText = chalk.yellow('(processing indexes and constraints...)');
                 task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + sizeInfo)}${compressionInfo} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(avgSpeed))} ${statusText}`;
             } else {
                 task.output = `${progressBar} ${chalk.bold.cyan(percentage + '%')} ${chalk.gray(ProgressDisplay.formatBytes(estimatedBytes) + ' / ' + sizeInfo)}${compressionInfo} ${chalk.cyan('~' + ProgressDisplay.formatSpeed(avgSpeed))}`;
@@ -365,7 +364,7 @@ class ImportTask {
                                 }
                             } catch (e) {
                                 logger.error('Error scanning directory', e as Error);
-                                throw new Error(`Cannot find SQL file in: ${currentFolder}`);
+                                throw new Error(`Cannot find SQL file in: ${currentFolder}`, { cause: e });
                             }
                         }
                     }

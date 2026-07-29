@@ -11,8 +11,8 @@ class DatabaseTypeQuestion {
 
         // Set database type
         await inquirer
-        .prompt(this.questions)
-        .then((answers: { databaseType: any; }) => {
+        .prompt<{ databaseType: string }>(this.questions)
+        .then((answers) => {
             // Set the database type
             config.databases.databaseType = answers.databaseType;
 
@@ -23,7 +23,8 @@ class DatabaseTypeQuestion {
             config.databases.databasesList = this.databasesModel.databasesList;
         })
         .catch((err: { message: any; }) => {
-            error(`Something went wrong: ${err.message}`)
+            error(`Something went wrong: ${err.message}`);
+            throw err;
         });
     }
 
@@ -31,7 +32,7 @@ class DatabaseTypeQuestion {
     addQuestions = async (_config: any) => {
         this.questions.push(
             {
-                type: 'list',
+                type: 'select',
                 name: 'databaseType',
                 message: 'Set database type',
                 default: 'staging',

@@ -1,12 +1,10 @@
 import { error } from "console";
 import inquirer from 'inquirer'
-import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
 
 class DownloadTypesQuestion {
     private questionsOne: any[] = [];
 
     configure = async (config: any) => {
-        inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);
         await this.addQuestions(config);
 
         // Set import configs
@@ -16,7 +14,8 @@ class DownloadTypesQuestion {
                 config.settings.syncTypes = answers.syncTypes;
             })
             .catch((err: { message: any; }) => {
-                error(`Something went wrong: ${err.message}`)
+                error(`Something went wrong: ${err.message}`);
+                throw err;
             });
     }
 

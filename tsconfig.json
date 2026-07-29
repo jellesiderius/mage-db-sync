@@ -21,6 +21,7 @@
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
         "pretty": true,
         "sourceMap": true,
         "declaration": true,

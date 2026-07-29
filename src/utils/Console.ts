@@ -87,7 +87,7 @@ const consoleCommand = (cmd: string, skipErrors: boolean) => {
 const sshNavigateToMagentoRootCommand = (command: string, config: any, _useSecondDatabase: boolean = false, log: boolean = false) => {
     const databaseData = config.databases.databaseData;
 
-    let returnString = '';
+    let returnString: string;
 
     // See if external project folder is filled in, otherwise try default path
     if (databaseData.externalProjectFolder && databaseData.externalProjectFolder.length > 0) {

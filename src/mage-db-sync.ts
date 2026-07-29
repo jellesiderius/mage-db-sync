@@ -104,7 +104,11 @@ async function main() {
         description += `• Github: https://github.com/jellesiderius/mage-db-sync\n`;
         description += `• Docs: https://github.com/jellesiderius/mage-db-sync/wiki\n`;
         description += `• Issues: https://github.com/jellesiderius/mage-db-sync/issues`;
-        description += `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))} ${kleur.bold('HYPER')} (https://www.hypershop.nl)`;
+        const sponsorBlock = [
+            kleur.gray('Sponsored by:'),
+            `• ${kleur.bold('HYPER')} ${kleur.gray('- Magento Agency')}: https://www.hypershop.nl`,
+            `• ${kleur.bold('BerryPath')} ${kleur.gray('- Guided Selling for E-commerce')}: https://www.berrypath.eu`
+        ].join('\n');
         
         // Wait up to 1.5 seconds for version check (reasonable timeout)
         const raceResult = await Promise.race([
@@ -114,11 +118,9 @@ async function main() {
         
         // If version check completed, add update message
         if (raceResult === 'completed' && versionCheck.config.currentVersion < versionCheck.config.latestVersion) {
-            description = description.replace(
-                `\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))}`,
-                `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}\n\n${kleur.bgYellow(kleur.bold(' Sponsored by '))}`
-            );
+            description += `\n\n${kleur.yellow('Update available!')} Run 'mage-db-sync self-update' for version ${versionCheck.config.latestVersion}`;
         }
+        description += `\n\n${sponsorBlock}`;
 
         // Setup CLI
         const program = new Command();
@@ -127,6 +129,10 @@ async function main() {
             .version(packageJson.version)
             .usage('<command> [options]')
             .description(description);
+
+        program.hook('preAction', () => {
+            console.log(`\n${sponsorBlock}\n`);
+        });
 
         // Start command - main sync operation
         program

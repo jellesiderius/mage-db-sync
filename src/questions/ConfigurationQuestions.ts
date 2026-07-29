@@ -1,6 +1,5 @@
 import { error } from "console";
 import inquirer from 'inquirer'
-import { CheckboxPlusPrompt } from 'inquirer-ts-checkbox-plus-prompt';
 
 class ConfigurationQuestions {
     private questionsOne: any[] = [];
@@ -8,7 +7,6 @@ class ConfigurationQuestions {
     private questionsThree: any[] = [];
 
     configure = async (config: any) => {
-        inquirer.registerPrompt('checkbox-plus', CheckboxPlusPrompt);
         await this.addQuestions(config);
 
         // Set import configs
@@ -52,7 +50,8 @@ class ConfigurationQuestions {
                 }
             })
             .catch((err: { message: any; }) => {
-                error(`Something went wrong: ${err.message}`)
+                error(`Something went wrong: ${err.message}`);
+                throw err;
             });
 
         if (config.settings.wordpressDownload && config.settings.wordpressDownload == 'yes') {
@@ -69,7 +68,8 @@ class ConfigurationQuestions {
                     }
                 })
                 .catch((err: { message: any; }) => {
-                    error(`Something went wrong: ${err.message}`)
+                    error(`Something went wrong: ${err.message}`);
+                    throw err;
                 });
         }
 
@@ -82,7 +82,8 @@ class ConfigurationQuestions {
                     config.settings.syncImageTypes = answers.syncImageTypes;
                 })
                 .catch((err: { message: any; }) => {
-                    error(`Something went wrong: ${err.message}`)
+                    error(`Something went wrong: ${err.message}`);
+                    throw err;
                 });
         }
     }
@@ -92,7 +93,7 @@ class ConfigurationQuestions {
         if (config.settings.syncTypes.includes('Magento database')) {
             this.questionsOne.push(
                 {
-                    type: 'list',
+                    type: 'select',
                     name: 'stripMode',
                     default: 'preset',
                     message: 'How do you want to configure database stripping?',
@@ -102,7 +103,7 @@ class ConfigurationQuestions {
                     ]
                 },
                 {
-                    type: 'list',
+                    type: 'select',
                     name: 'strip',
                     default: 'stripped',
                     message: 'Select a preset configuration:',
@@ -131,7 +132,7 @@ class ConfigurationQuestions {
         if (config.settings.currentFolderIsMagento && config.settings.syncTypes.includes('Magento database')) {
             this.questionsOne.push(
                 {
-                    type: 'list',
+                    type: 'select',
                     name: 'import',
                     default: 'yes',
                     message: 'Import Magento database?',
@@ -144,7 +145,7 @@ class ConfigurationQuestions {
             if (config.settings.rsyncInstalled) {
                 this.questionsOne.push(
                     {
-                        type: 'list',
+                        type: 'select',
                         name: 'syncImages',
                         default: 'no',
                         message: 'Synchronize Magento media images?',
@@ -157,7 +158,7 @@ class ConfigurationQuestions {
         if (config.settings.magerun2Command && config.settings.magerun2Command.length > 0 || config.settings.databaseCommand && config.settings.databaseCommand.length > 0) {
             this.questionsOne.push(
                 {
-                    type: 'list',
+                    type: 'select',
                     name: 'runCommands',
                     default: 'yes',
                     message: 'Run project commands?',
@@ -169,7 +170,7 @@ class ConfigurationQuestions {
         if (config.databases.databaseData.wordpress && config.settings.syncTypes.includes('Wordpress database')) {
             this.questionsOne.push(
                 {
-                    type: 'list',
+                    type: 'select',
                     name: 'wordpressDownload',
                     default: 'yes',
                     message: 'Download wordpress database?',
@@ -181,7 +182,7 @@ class ConfigurationQuestions {
             if (config.settings.syncTypes.includes('Images') && config.settings.rsyncInstalled) {
                 this.questionsOne.push(
                     {
-                        type: 'list',
+                        type: 'select',
                         name: 'wordpressUploadsSync',
                         default: 'yes',
                         message: 'Sync WordPress uploads (wp/wp-content/uploads)?',
@@ -193,7 +194,7 @@ class ConfigurationQuestions {
             if (config.settings.currentFolderhasWordpress) {
                 this.questionsTwo.push(
                     {
-                        type: 'list',
+                        type: 'select',
                         name: 'wordpressImport',
                         default: 'yes',
                         message: 'Import and configure WordPress database?',

@@ -1,26 +1,38 @@
-import inquirer from 'inquirer'
+import search from '@inquirer/search';
 import DatabasesModel from "../models/DatabasesModel";
 import * as path from 'path';
 import * as fs from 'fs';
 import CommandExists from "command-exists";
 
-const searchList = require('inquirer-search-list');
-inquirer.registerPrompt('search-list', searchList);
-
 class SelectDatabaseQuestion {
     private databasesModel = new DatabasesModel();
-    private questions: any[] = [];
 
     configure = async (config: any) => {
-        await this.addQuestions(config);
+        try {
+            const choices = config.databases.databasesList.map((database: string) => ({
+                name: database,
+                value: database
+            }));
+            const selectedDatabase = await search<string>({
+                message: 'Select or search database',
+                source: async (term) => {
+                    const normalizedTerm = term?.trim().toLowerCase();
+                    if (!normalizedTerm) {
+                        return choices;
+                    }
 
-        await inquirer
-        .prompt(this.questions)
-        .then(async (answers) => {
+                    return choices.filter(({ name }: { name: string }) =>
+                        name.toLowerCase().includes(normalizedTerm)
+                    );
+                }
+            });
+
             // Get database key to get database settings
             const keyRegex = /\((.*)\)/i;
-            const selectedDatabase = answers.database;
-            const databaseKey = selectedDatabase.match(keyRegex)[1];
+            const databaseKey = selectedDatabase.match(keyRegex)?.[1];
+            if (!databaseKey) {
+                throw new Error(`Invalid database selection: ${selectedDatabase}`);
+            }
 
             // Collects database data based on key
             this.databasesModel.collectDatabaseData(databaseKey, config.databases.databaseType, false, config);
@@ -66,23 +78,11 @@ class SelectDatabaseQuestion {
             ) {
                 config.settings.currentFolderhasWordpress = true;
             }
-
-        })
-        .catch((err: { message: any; }) => {
-            console.error(`Something went wrong: ${err.message}`)
-        });
-    }
-
-    // Add questions
-    addQuestions = async (config: any) => {
-        this.questions.push(
-            {
-                type: 'search-list',
-                name: 'database',
-                message: 'Select or search database',
-                choices: config.databases.databasesList
-            }
-        )
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error(`Something went wrong: ${message}`);
+            throw err;
+        }
     }
 }
 

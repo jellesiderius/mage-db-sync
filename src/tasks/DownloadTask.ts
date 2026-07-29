@@ -365,7 +365,7 @@ class DownloadTask {
                     config.databaseFileName = databaseFileName;
 
                     // Build dump command with best available compression
-                    let stripOptions = '';
+                    let stripOptions: string;
                     let humanReadable = '';
 
                     if (config.settings.strip === 'custom') {
