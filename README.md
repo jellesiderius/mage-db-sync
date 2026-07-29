@@ -6,3 +6,10 @@ This tool downloads clean/stripped Magento databases over a SSH connection, impo
 
 ## Getting started
 Follow the [documentation](https://github.com/jellesiderius/mage-db-sync/wiki) and get started.
+
+## Sponsors
+
+This project is proudly supported by:
+
+- [HYPER — Magento Agency](https://www.hypershop.nl)
+- [BerryPath — Guided Selling for E-commerce](https://www.berrypath.eu)
