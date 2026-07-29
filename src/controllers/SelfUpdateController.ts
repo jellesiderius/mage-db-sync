@@ -1,11 +1,12 @@
 import {getInstalledPath} from 'get-installed-path';
 import { success, error, info, warning} from "../utils/Console";
 import VersionCheck from "../utils/VersionCheck";
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
+import path from 'path';
 import semver from 'semver';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 class SelfUpdateController {
     private versionCheck = new VersionCheck();
@@ -39,9 +40,46 @@ class SelfUpdateController {
 
                 // Update via npm
                 info('Installing latest version from npm...');
-                await execAsync('npm install -g mage-db-sync@latest', {
-                    env: { ...process.env, NODE_ENV: 'production' }
-                });
+                const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+                await execFileAsync(
+                    npmExecutable,
+                    ['install', '-g', `mage-db-sync@${config.latestVersion}`],
+                    { env: { ...process.env, NODE_ENV: 'production' } }
+                );
+
+                info('Verifying the installed package...');
+                try {
+                    const verifyScript = path.join(
+                        config.npmPath,
+                        'scripts',
+                        'verify-installed.js'
+                    );
+                    await execFileAsync(
+                        process.execPath,
+                        [verifyScript, config.npmPath, config.latestVersion],
+                        { env: { ...process.env, NODE_ENV: 'production' } }
+                    );
+                } catch (verificationError) {
+                    warning('The updated package failed its integrity check. Rolling back...');
+
+                    try {
+                        await execFileAsync(
+                            npmExecutable,
+                            ['install', '-g', `mage-db-sync@${config.currentVersion}`],
+                            { env: { ...process.env, NODE_ENV: 'production' } }
+                        );
+                    } catch (rollbackError) {
+                        throw new Error(
+                            `Update verification failed and rollback to ${config.currentVersion} also failed.`,
+                            { cause: rollbackError }
+                        );
+                    }
+
+                    throw new Error(
+                        `Update verification failed. Restored mage-db-sync ${config.currentVersion}.`,
+                        { cause: verificationError }
+                    );
+                }
 
                 success(`\n✓ Successfully updated mage-db-sync to ${config.latestVersion}!`);
                 info('\n💡 Your configuration files in ~/.mage-db-sync/config remain unchanged.\n');
