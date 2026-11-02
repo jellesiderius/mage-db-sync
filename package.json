@@ -1,6 +1,6 @@
 {
     "name": "mage-db-sync",
-    "version": "2.2.10",
+    "version": "2.2.11",
     "description": "Database synchronizer for Magento, based on Magerun",
     "license": "MIT",
     "author": {
@@ -79,7 +79,10 @@
         "ssh2": "^1.17.0",
         "tslib": "^2.6.2",
         "winston": "^3.19.0",
-        "zod": "^4.4.3"
+        "zod": "^4.6.7"
+    },
+    "overrides": {
+        "minimatch": "^11.0.4"
     },
     "engines": {
         "node": ">=24.0.0"

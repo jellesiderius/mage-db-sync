@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "commonjs",
+        "module": "Node20",
         "lib": [
             "ES2022"
         ],
@@ -20,7 +20,7 @@
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
+        "moduleResolution": "Node16",
         "ignoreDeprecations": "6.0",
         "pretty": true,
         "sourceMap": true,
