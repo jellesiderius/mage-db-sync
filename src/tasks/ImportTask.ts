@@ -139,7 +139,9 @@ class ImportTask {
             
             await new Promise<void>((resolve, reject) => {
                 // Use shell to execute the cd + command
-                const proc = spawn('sh', ['-c', `cd ${escapedFolder} && ${importCommand}`]);
+                // Wait for Mutagen to push the dump into the DDEV container
+                const syncCommand = config.settings.isDdevActive ? '(ddev mutagen sync || true) && ' : '';
+                const proc = spawn('sh', ['-c', `cd ${escapedFolder} && ${syncCommand}${importCommand}`]);
                 
                 let lastOutput = '';
                 
