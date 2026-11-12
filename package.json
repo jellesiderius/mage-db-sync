@@ -1,6 +1,6 @@
 {
     "name": "mage-db-sync",
-    "version": "2.2.11",
+    "version": "2.3.0",
     "description": "Database synchronizer for Magento, based on Magerun",
     "license": "MIT",
     "author": {
@@ -40,6 +40,7 @@
         "postinstall": "node scripts/postinstall.js",
         "migrate-config": "node scripts/migrate-config.js",
         "dev": "ts-node src/mage-db-sync.ts",
+        "test": "npm run build && node --test tests/*.test.cjs",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
         "verify:package": "node scripts/verify-package.js",

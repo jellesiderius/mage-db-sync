@@ -1,10 +1,12 @@
-import { localhostMagentoRootExec, shellEscape } from '../utils/Console';
+import { localhostMagentoRootExec } from '../utils/Console';
 import { Listr } from 'listr2';
 import { ServiceContainer } from '../core/ServiceContainer';
 import { ProgressDisplay } from '../utils/ProgressDisplay';
 import { EnhancedProgress } from '../utils/EnhancedProgress';
 import chalk from 'chalk';
 import * as fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
 
 interface TaskItem {
     title: string;
@@ -107,41 +109,52 @@ class ImportTask {
         try {
             // Use magerun2 db:import with explicit compression flag
             // NOTE: --compression and --optimize are mutually exclusive!
-            const filename = sqlFilePath.split('/').pop(); // Get just the filename
+            const filename = path.basename(sqlFilePath);
             
-            // Build import command
-            let importCommand = `${config.settings.magerun2CommandLocal} db:import ${filename}`;
+            const importCommand = config.settings.isDdevActive ? 'ddev' : 'magerun2';
+            const importArgs = config.settings.isDdevActive ? ['exec', '--raw', '--', 'magerun2'] : [];
+            importArgs.push('db:import');
             
             // Add compression flag if file is compressed
             // NOTE: --optimize doesn't work with compression, so we skip it for compressed files
             if (isCompressed) {
-                importCommand += ` --compression=${compressionType}`;
+                importArgs.push(`--compression=${compressionType}`);
             } else {
                 // Only use --optimize for uncompressed files (not compatible with --compression)
-                importCommand += ` --optimize`;
+                importArgs.push('--optimize');
             }
             
-            importCommand += ` --drop` +  // Drop and recreate database
-                           ` --force` + // Continue on SQL errors
-                           ` --skip-authorization-entry-creation`; // We'll add them later
+            importArgs.push(
+                '--drop', // Drop and recreate database
+                '--force', // Continue on SQL errors
+                '--skip-authorization-entry-creation', // We'll add them later
+                '--', // Treat filenames starting with a dash as positional arguments
+                filename
+            );
             // NOTE: Removed -q flag to allow magerun2's progress output
             
             logger.info('Executing magerun2 db:import', { 
                 command: importCommand,
+                args: importArgs,
                 compressionType,
                 hasCompressionFlag: isCompressed,
                 hasOptimize: !isCompressed // Only optimize uncompressed files
             });
             
-            // Execute with streaming output to capture real progress
-            const { spawn } = require('child_process');
-            const escapedFolder = shellEscape(config.settings.currentFolder);
+            const cwd = config.settings.currentFolder;
+
+            // Wait for Mutagen to push the dump into DDEV; projects without Mutagen may fail.
+            if (config.settings.isDdevActive) {
+                await new Promise<void>((resolve) => {
+                    const sync = spawn('ddev', ['mutagen', 'sync'], { cwd, shell: false, stdio: 'ignore' });
+                    sync.on('error', () => resolve());
+                    sync.on('close', () => resolve());
+                });
+            }
             
+            // Execute with streaming output, passing paths and filenames without a shell.
             await new Promise<void>((resolve, reject) => {
-                // Use shell to execute the cd + command
-                // Wait for Mutagen to push the dump into the DDEV container
-                const syncCommand = config.settings.isDdevActive ? '(ddev mutagen sync || true) && ' : '';
-                const proc = spawn('sh', ['-c', `cd ${escapedFolder} && ${syncCommand}${importCommand}`]);
+                const proc = spawn(importCommand, importArgs, { cwd, shell: false });
                 
                 let lastOutput = '';
                 

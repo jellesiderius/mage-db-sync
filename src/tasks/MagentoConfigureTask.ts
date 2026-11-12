@@ -106,6 +106,12 @@ class MagentoConfigureTask {
             {
                 title: "Replacing URLs and doing some preparation for development",
                 task: async (): Promise<void> => {
+                    // Disable query logging before applying configuration or reindexing.
+                    const disableQueryLogging = config.settings.isDdevActive
+                        ? 'ddev exec bin/magento dev:query-log:disable'
+                        : `${config.settings.magerun2CommandLocal} dev:query-log:disable`;
+                    await localhostMagentoRootExec(disableQueryLogging, config);
+
                     let dbQuery = '';
                     // Delete queries
                     let dbQueryRemove = "DELETE FROM core_config_data WHERE path LIKE 'web/cookie/cookie_domain';";
